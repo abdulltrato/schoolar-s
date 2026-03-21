@@ -2,7 +2,7 @@
 
 ## 🧠 Visão Geral
 
-O **SUBSTRATO EDUCAÇÃO** é um módulo do ecossistema SUBSTRATO responsável por gerir, monitorar e evoluir o ensino primário com base em competências. O sistema traduz o modelo curricular nacional numa infraestrutura digital escalável, capaz de operar desde uma escola local até nível nacional.
+O **SUBSTRATO EDUCAÇÃO** é um módulo do ecossistema SUBSTRATO responsável por gerir, monitorar e evoluir o ensino básico com base em competências. O sistema traduz o modelo curricular nacional numa infraestrutura digital escalável, capaz de operar desde uma escola local até nível nacional.
 
 ## 📋 Sumário
 
@@ -28,7 +28,7 @@ O **SUBSTRATO EDUCAÇÃO** é um módulo do ecossistema SUBSTRATO responsável p
 
 ## 🎯 Objetivo
 
-Digitalizar e operacionalizar o ensino baseado em:
+Digitalizar e operacionalizar o ensino básico (1ª a 12ª classe) baseado em:
 
 - Competências
 - Avaliação contínua
@@ -75,8 +75,12 @@ Digitalizar e operacionalizar o ensino baseado em:
 ### 👨‍🎓 Aluno
 
 - Identificação
-- Classe (1ª–6ª)
-- Ciclo (1º ou 2º)
+- Classe (1ª–12ª)
+- Ciclo:
+  - 1º Ciclo (Ensino Primário): 1ª, 2ª, 3ª
+  - 2º Ciclo (Ensino Primário): 4ª, 5ª, 6ª
+  - 3º Ciclo (Ensino Secundário): 7ª, 8ª, 9ª
+  - 4º Ciclo (Ensino Secundário): 10ª, 11ª, 12ª
 - Estado de progressão
 - Competências adquiridas
 - Avaliações
@@ -395,7 +399,7 @@ O Schoolar-S reutiliza a arquitetura, eventos e modelo multi-tenant do ecossiste
 
 1. Clone o repositório:
    ```bash
-   git clone https://github.com/seu-usuario/schoolar-s.git
+   git clone https://github.com/abdulltrato/schoolar-s.git
    cd schoolar-s
    ```
 
