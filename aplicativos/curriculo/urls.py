@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     AreaCurricularViewSet, DisciplinaViewSet, CompetenciaViewSet,
-    CurriculoBaseViewSet, CurriculoLocalViewSet
+    CurriculoBaseViewSet, CurriculoLocalViewSet, PlanoCurricularDisciplinaViewSet
 )
 
 router = DefaultRouter()
@@ -11,6 +11,7 @@ router.register(r'disciplinas', DisciplinaViewSet)
 router.register(r'competencias', CompetenciaViewSet)
 router.register(r'curriculos-base', CurriculoBaseViewSet)
 router.register(r'curriculos-local', CurriculoLocalViewSet)
+router.register(r'planos-disciplina', PlanoCurricularDisciplinaViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

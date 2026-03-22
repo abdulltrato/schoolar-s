@@ -1,11 +1,12 @@
 from rest_framework import serializers
-from .models import AreaCurricular, Disciplina, Competencia, CurriculoBase, CurriculoLocal
+
+from .models import AreaCurricular, Competencia, CurriculoBase, CurriculoLocal, Disciplina, PlanoCurricularDisciplina
 
 
 class AreaCurricularSerializer(serializers.ModelSerializer):
     class Meta:
         model = AreaCurricular
-        fields = '__all__'
+        fields = "__all__"
 
 
 class DisciplinaSerializer(serializers.ModelSerializer):
@@ -14,7 +15,7 @@ class DisciplinaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Disciplina
-        fields = '__all__'
+        fields = "__all__"
 
 
 class CompetenciaSerializer(serializers.ModelSerializer):
@@ -29,7 +30,7 @@ class CompetenciaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Competencia
-        fields = '__all__'
+        fields = "__all__"
 
 
 class CurriculoBaseSerializer(serializers.ModelSerializer):
@@ -44,7 +45,7 @@ class CurriculoBaseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CurriculoBase
-        fields = '__all__'
+        fields = "__all__"
 
 
 class CurriculoLocalSerializer(serializers.ModelSerializer):
@@ -59,4 +60,22 @@ class CurriculoLocalSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CurriculoLocal
-        fields = '__all__'
+        fields = "__all__"
+
+
+class PlanoCurricularDisciplinaSerializer(serializers.ModelSerializer):
+    disciplina_nome = serializers.CharField(source="disciplina_classe.disciplina.nome", read_only=True)
+    classe = serializers.IntegerField(source="disciplina_classe.classe.numero", read_only=True)
+    ano_letivo = serializers.CharField(source="disciplina_classe.ano_letivo.codigo", read_only=True)
+    competencias_previstas = CompetenciaSerializer(many=True, read_only=True)
+    competencia_ids = serializers.PrimaryKeyRelatedField(
+        source="competencias_previstas",
+        queryset=Competencia.objects.all(),
+        many=True,
+        write_only=True,
+        required=False,
+    )
+
+    class Meta:
+        model = PlanoCurricularDisciplina
+        fields = "__all__"

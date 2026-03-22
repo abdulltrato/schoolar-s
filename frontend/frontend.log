@@ -1,0 +1,28 @@
+
+> schoolar-s-frontend@0.1.0 dev
+> next dev --hostname 127.0.0.1 --port 3000
+
+   ▲ Next.js 15.5.14
+   - Local:        http://127.0.0.1:3000
+   - Network:      http://127.0.0.1:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2.7s
+ ○ Compiling /gestao ...
+ ✓ Compiled /gestao in 5.5s (600 modules)
+ GET /gestao 200 in 6309ms
+ ○ Compiling / ...
+ ✓ Compiled / in 859ms (608 modules)
+ GET / 200 in 1577ms
+ GET /gestao 200 in 704ms
+ GET / 200 in 86ms
+ GET /gestao 200 in 86ms
+ ✓ Compiled /curriculo in 392ms (610 modules)
+ ✓ Compiled in 271ms (235 modules)
+ GET /curriculo 200 in 681ms
+ GET /curriculo 200 in 160ms
+ GET /curriculo 200 in 62ms
+ ✓ Compiled /avaliacao in 335ms (598 modules)
+ GET /avaliacao 200 in 500ms
+ GET /avaliacao?ano=&periodo=&turma= 200 in 1817ms

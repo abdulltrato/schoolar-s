@@ -14,7 +14,13 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-secret-key")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
 
-ALLOWED_HOSTS = [host.strip() for host in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if host.strip()]
+default_allowed_hosts = ["localhost", "127.0.0.1", "0.0.0.0", "testserver"]
+configured_allowed_hosts = [
+    host.strip()
+    for host in os.getenv("DJANGO_ALLOWED_HOSTS", ",".join(default_allowed_hosts)).split(",")
+    if host.strip()
+]
+ALLOWED_HOSTS = list(dict.fromkeys(configured_allowed_hosts + default_allowed_hosts))
 
 
 # Application definition
@@ -23,7 +29,7 @@ SHARED_APPS = [
     # "django_tenants",  # mandatory
     # "tenants",  # you must list the app where your tenant model resides in
 
-    # "jazzmin",
+    "jazzmin",
 
     "django.contrib.admin",
     "django.contrib.auth",

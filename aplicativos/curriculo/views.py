@@ -1,7 +1,11 @@
-from .models import AreaCurricular, Disciplina, Competencia, CurriculoBase, CurriculoLocal
+from .models import AreaCurricular, Competencia, CurriculoBase, CurriculoLocal, Disciplina, PlanoCurricularDisciplina
 from .serializers import (
-    AreaCurricularSerializer, DisciplinaSerializer, CompetenciaSerializer,
-    CurriculoBaseSerializer, CurriculoLocalSerializer
+    AreaCurricularSerializer,
+    CompetenciaSerializer,
+    CurriculoBaseSerializer,
+    CurriculoLocalSerializer,
+    DisciplinaSerializer,
+    PlanoCurricularDisciplinaSerializer,
 )
 from nucleo.viewsets import RobustModelViewSet
 
@@ -43,3 +47,25 @@ class CurriculoLocalViewSet(RobustModelViewSet):
     search_fields = ("tenant_id",)
     ordering_fields = ("id", "tenant_id", "ciclo")
     ordering = ("tenant_id", "ciclo")
+
+
+class PlanoCurricularDisciplinaViewSet(RobustModelViewSet):
+    queryset = PlanoCurricularDisciplina.objects.select_related(
+        "disciplina_classe",
+        "disciplina_classe__ano_letivo",
+        "disciplina_classe__classe",
+        "disciplina_classe__disciplina",
+    ).prefetch_related("competencias_previstas").all()
+    serializer_class = PlanoCurricularDisciplinaSerializer
+    search_fields = (
+        "disciplina_classe__ano_letivo__codigo",
+        "disciplina_classe__classe__nome",
+        "disciplina_classe__disciplina__nome",
+    )
+    ordering_fields = (
+        "id",
+        "disciplina_classe__ano_letivo__codigo",
+        "disciplina_classe__classe__numero",
+        "disciplina_classe__disciplina__nome",
+    )
+    ordering = ("disciplina_classe__ano_letivo__codigo", "disciplina_classe__classe__numero")
