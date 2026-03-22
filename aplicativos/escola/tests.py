@@ -111,3 +111,9 @@ class EscolaModelTests(TestCase):
         )
 
         self.assertEqual(atribuicao.classe, self.classe)
+
+    def test_define_secundario_e_ciclo_1_para_classe_7(self):
+        classe = Classe.objects.create(numero=7, ciclo=1)
+
+        self.assertEqual(classe.nivel_ensino, "secundario")
+        self.assertEqual(classe.ciclo, 1)

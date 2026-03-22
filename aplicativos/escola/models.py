@@ -43,13 +43,25 @@ class Classe(models.Model):
     ciclo = models.PositiveSmallIntegerField(verbose_name="Ciclo")
     nome = models.CharField(max_length=50, blank=True, verbose_name="Nome")
 
-    def clean(self):
-        if not 1 <= self.numero <= 6:
-            raise ValidationError({"numero": "A classe deve estar entre 1 e 6."})
+    @staticmethod
+    def nivel_ensino_para_classe(numero: int) -> str:
+        return "primario" if numero <= 6 else "secundario"
 
-        ciclo_esperado = 1 if self.numero <= 3 else 2
-        if self.ciclo != ciclo_esperado:
-            raise ValidationError({"ciclo": "O ciclo deve corresponder a classe."})
+    @staticmethod
+    def ciclo_para_classe(numero: int) -> int:
+        if numero <= 3 or 7 <= numero <= 9:
+            return 1
+        return 2
+
+    @property
+    def nivel_ensino(self) -> str:
+        return self.nivel_ensino_para_classe(self.numero)
+
+    def clean(self):
+        if not 1 <= self.numero <= 12:
+            raise ValidationError({"numero": "A classe deve estar entre 1 e 12."})
+
+        self.ciclo = self.ciclo_para_classe(self.numero)
 
         if not self.nome:
             self.nome = f"{self.numero}a Classe"

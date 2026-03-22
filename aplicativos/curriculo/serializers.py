@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from .models import AreaCurricular, Competencia, CurriculoBase, CurriculoLocal, Disciplina, PlanoCurricularDisciplina
+from aplicativos.escola.models import Classe
 
 
 class AreaCurricularSerializer(serializers.ModelSerializer):
@@ -24,6 +25,11 @@ class CompetenciaSerializer(serializers.ModelSerializer):
         source="disciplina",
         queryset=Disciplina.objects.all(),
         write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    classe = serializers.PrimaryKeyRelatedField(
+        queryset=Classe.objects.all(),
         required=False,
         allow_null=True,
     )

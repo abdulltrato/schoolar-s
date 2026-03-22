@@ -12,7 +12,9 @@ class AlunoCompetenciaSerializer(serializers.ModelSerializer):
 
 class AlunoSerializer(serializers.ModelSerializer):
     competencias = AlunoCompetenciaSerializer(source='alunocompetencia_set', many=True, read_only=True)
+    ciclo = serializers.IntegerField(read_only=True)
+    nivel_ensino = serializers.CharField(read_only=True)
 
     class Meta:
         model = Aluno
-        fields = ['id', 'nome', 'data_nascimento', 'classe', 'ciclo', 'estado', 'competencias']
+        fields = ['id', 'nome', 'data_nascimento', 'classe', 'ciclo', 'nivel_ensino', 'estado', 'competencias']

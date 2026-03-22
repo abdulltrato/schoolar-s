@@ -20,9 +20,11 @@ class AnoLetivoSerializer(serializers.ModelSerializer):
 
 
 class ClasseSerializer(serializers.ModelSerializer):
+    nivel_ensino = serializers.CharField(read_only=True)
+
     class Meta:
         model = Classe
-        fields = "__all__"
+        fields = ["id", "numero", "ciclo", "nivel_ensino", "nome"]
 
 
 class EscolaSerializer(serializers.ModelSerializer):

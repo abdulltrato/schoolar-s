@@ -17,17 +17,33 @@ class Aluno(models.Model):
 
     nome = models.CharField(max_length=100, verbose_name="Nome")
     data_nascimento = models.DateField(verbose_name="Data de Nascimento")
-    classe = models.IntegerField(verbose_name="Classe")  # 1 to 6
+    classe = models.IntegerField(verbose_name="Classe")
     ciclo = models.IntegerField(choices=CICLO_CHOICES, verbose_name="Ciclo")
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='ativo', verbose_name="Estado")
     competencias = models.ManyToManyField('curriculo.Competencia', through='AlunoCompetencia', verbose_name="Competências")
 
+    @staticmethod
+    def nivel_ensino_para_classe(classe: int) -> str:
+        if classe is None:
+            return ""
+        return "primario" if classe <= 6 else "secundario"
+
+    @staticmethod
+    def ciclo_para_classe(classe: int) -> int:
+        if classe is None:
+            return 0
+        if classe <= 3 or 7 <= classe <= 9:
+            return 1
+        return 2
+
+    @property
+    def nivel_ensino(self) -> str:
+        return self.nivel_ensino_para_classe(self.classe)
+
     def clean(self):
-        if not 1 <= self.classe <= 6:
-            raise ValidationError({"classe": "A classe deve estar entre 1 e 6."})
-        ciclo_esperado = 1 if self.classe <= 3 else 2
-        if self.ciclo != ciclo_esperado:
-            raise ValidationError({"ciclo": "O ciclo deve corresponder à classe do aluno."})
+        if not 1 <= self.classe <= 12:
+            raise ValidationError({"classe": "A classe deve estar entre 1 e 12."})
+        self.ciclo = self.ciclo_para_classe(self.classe)
 
     def save(self, *args, **kwargs):
         self.full_clean()

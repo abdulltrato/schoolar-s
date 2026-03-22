@@ -3,6 +3,8 @@ from django.db import models
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 
+from aplicativos.escola.models import Classe
+
 
 class AreaCurricular(models.Model):
     nome = models.CharField(max_length=100, unique=True, verbose_name="Nome")
@@ -53,12 +55,15 @@ class Competencia(models.Model):
     area = models.CharField(max_length=50, choices=AREA_CHOICES, verbose_name="Área")
     ciclo = models.IntegerField(verbose_name="Ciclo")
     disciplina = models.ForeignKey(Disciplina, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Disciplina")
+    classe = models.ForeignKey(Classe, null=True, blank=True, on_delete=models.PROTECT, verbose_name="Classe")
 
     def clean(self):
         if self.ciclo not in {1, 2}:
             raise ValidationError({"ciclo": "O ciclo da competência deve ser 1 ou 2."})
         if self.disciplina and self.disciplina.ciclo != self.ciclo:
             raise ValidationError({"disciplina": "A disciplina deve pertencer ao mesmo ciclo da competência."})
+        if self.classe_id:
+            self.ciclo = self.classe.ciclo
 
     def save(self, *args, **kwargs):
         self.full_clean()
