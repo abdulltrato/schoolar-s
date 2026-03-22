@@ -7,13 +7,13 @@ import sys
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'schoolar_s.settings')
 django.setup()
 
-from academico.models import Aluno
-from curriculo.models import AreaCurricular, Disciplina, Competencia, CurriculoBase, CurriculoLocal
-from avaliacao.models import Avaliacao
-from progresso.models import Progressao
-from escola.models import Professor, Turma, Matricula
-from relatorios.models import Relatorio
-from eventos.models import Evento
+from aplicativos.academico.models import Aluno
+from aplicativos.curriculo.models import AreaCurricular, Disciplina, Competencia, CurriculoBase, CurriculoLocal
+from aplicativos.avaliacao.models import Avaliacao
+from aplicativos.progresso.models import Progressao
+from aplicativos.escola.models import Professor, Turma, Matricula
+from aplicativos.relatorios.models import Relatorio
+from aplicativos.eventos.models import Evento
 from django.contrib.auth.models import User
 
 def test_models():

@@ -267,14 +267,21 @@ Proteções:
 # 🧱 ESTRUTURA DO PROJETO
 
 ```
-dominio/educacao/
-├── academico/
-├── curriculo/
-├── avaliacao/
-├── progresso/
-├── escola/
-├── relatorios/
-├── eventos/
+schoolar-s/
+├── aplicativos/
+│   ├── academico/
+│   ├── curriculo/
+│   ├── avaliacao/
+│   ├── progresso/
+│   ├── escola/
+│   ├── relatorios/
+│   ├── eventos/
+│   └── tenants/
+├── aplicacao/
+├── servicos/
+├── nucleo/
+└── schoolar_s/
+    └── settings/
 ```
 
 ---
@@ -314,19 +321,11 @@ dominio/educacao/
 
 ### Principais Tecnologias
 
-- **Backend**: Django + DRF
-- **Frontend**: Next.js + TypeScript
-- **Banco de Dados**: PostgreSQL
-- **Cache**: Redis
-- **Infraestrutura**: Docker + Kubernetes
-- **Eventos**: Event Bus (interno / Kafka futuro)
-- **Observabilidade**: Prometheus + Grafana
-- **Segurança**: RBAC + Criptografia
-- **CI/CD**: GitHub Actions
-- **Testes**: Pytest + Jest
-- **Documentação**: Sphinx + Storybook
-- **Monitoramento**: Sentry
-- **Analytics**: Google Analytics + Mixpanel
+- **Backend atual**: Django + DRF
+- **Banco de dados atual**: SQLite para desenvolvimento
+- **Cache atual**: cache local em memória
+- **Testes atuais**: Django Test Runner
+- **Direção futura**: PostgreSQL, Redis, eventos assíncronos, frontend dedicado e observabilidade
 
 ### Tecnologias Futuras
 
@@ -375,15 +374,72 @@ dominio/educacao/
 git clone repo
 pip install -r requirements.txt
 python manage.py migrate
+python manage.py test
 python manage.py runserver
+```
+
+Configuração atual:
+
+* `DJANGO_SETTINGS_MODULE=schoolar_s.settings`
+* Estrutura modular em `aplicativos/`, `aplicacao/`, `nucleo/`, `servicos/` e `schoolar_s/settings/`
+* Endpoints operacionais de plataforma: `/health/` e `/ready/`
+* Banco relacional com suporte a PostgreSQL via variáveis `POSTGRES_*`
+
+Frontend:
+
+```shell script
+cd frontend
+npm install
+npm run dev
+```
+
+Variáveis do frontend:
+
+* `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000`
+* `API_BASE_URL=http://backend:8000`
+
+Containers:
+
+```shell script
+docker compose -f infra/docker-compose.yml up --build
+```
+
+Esse compose sobe:
+
+* `db` com PostgreSQL 16
+* `backend` Django em `http://localhost:8000`
+* `frontend` Next.js em `http://localhost:3000`
+
+Atalho para abrir o `psql` no banco do compose:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File infra/scripts/psql.ps1
+```
+
+Scripts rapidos:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File infra/scripts/docker-up.ps1
+powershell -ExecutionPolicy Bypass -File infra/scripts/backup.ps1
+powershell -ExecutionPolicy Bypass -File infra/scripts/reset.ps1
+```
+
+Kubernetes:
+
+```shell script
+kubectl apply -f infra/k8s/
 ```
 
 ---
 
 # 📈 STATUS
 
-* Fase: Inicial estruturado
-* Pronto para evolução em escala nacional
+* Fase: MVP backend em evolução
+* APIs básicas operacionais por domínio
+* Validações centrais e testes automatizados iniciais adicionados
+* Base robusta adicionada: request tracing, readiness, throttle, escopo por tenant via header e contrato padronizado de erros
+* Estrutura reorganizada em `aplicativos`, `aplicacao`, `nucleo`, `servicos` e `schoolar_s/settings`
+* Migrations sincronizadas com os modelos atuais
 
 ---
 

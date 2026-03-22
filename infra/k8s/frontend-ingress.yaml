@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: schoolar-frontend
+spec:
+  rules:
+    - host: schoolar.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: schoolar-frontend
+                port:
+                  number: 80

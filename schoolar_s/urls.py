@@ -17,16 +17,19 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
+from .views import healthcheck, readiness
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("health/", healthcheck, name="healthcheck"),
+    path("ready/", readiness, name="readiness"),
     path("api/v1/", include([
-        path("academico/", include("academico.urls")),
-        path("curriculo/", include("curriculo.urls")),
-        path("avaliacao/", include("avaliacao.urls")),
-        path("progresso/", include("progresso.urls")),
-        path("escola/", include("escola.urls")),
-        path("relatorios/", include("relatorios.urls")),
-        path("eventos/", include("eventos.urls")),
+        path("academico/", include("aplicativos.academico.urls")),
+        path("curriculo/", include("aplicativos.curriculo.urls")),
+        path("avaliacao/", include("aplicativos.avaliacao.urls")),
+        path("progresso/", include("aplicativos.progresso.urls")),
+        path("escola/", include("aplicativos.escola.urls")),
+        path("relatorios/", include("aplicativos.relatorios.urls")),
+        path("eventos/", include("aplicativos.eventos.urls")),
     ])),
 ]
