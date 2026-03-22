@@ -2,6 +2,7 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $composeFile = Join-Path (Split-Path $PSScriptRoot -Parent) "docker-compose.yml"
+. (Join-Path $PSScriptRoot "assert-docker.ps1")
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $backupDir = Join-Path $repoRoot "backups"
 $backupFile = Join-Path $backupDir "schoolar-$timestamp.sql"
