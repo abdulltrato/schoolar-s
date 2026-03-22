@@ -2,343 +2,315 @@
 
 ## 🧠 Visão Geral
 
-O **SUBSTRATO EDUCAÇÃO** é um módulo do ecossistema SUBSTRATO responsável por gerir, monitorar e evoluir o ensino básico com base em competências. O sistema traduz o modelo curricular nacional numa infraestrutura digital escalável, capaz de operar desde uma escola local até nível nacional.
+O **SUBSTRATO EDUCAÇÃO** é um módulo do ecossistema SUBSTRATO responsável por gerir, monitorar e evoluir o ensino básico com base em competências.
 
-## 📋 Sumário
+O sistema traduz o **Plano Curricular do Ensino Primário (PCEP)** numa infraestrutura digital escalável, preparada para operar desde uma escola local até nível nacional.
 
-- [Objetivo](#-objetivo)
-- [Princípios de Arquitetura](#-princípios-de-arquitetura)
-- [Escalabilidade](#-escalabilidade)
-- [Modelo de Domínio](#-modelo-de-domínio)
-- [Casos de Uso](#️-casos-de-uso)
-- [Arquitetura de Eventos](#-arquitetura-de-eventos)
-- [Multi-Tenant](#-multi-tenant)
-- [Offline-First](#-offline-first)
-- [Observabilidade](#-observabilidade)
-- [Segurança](#-segurança)
-- [Estrutura do Projeto](#-estrutura-do-projeto)
-- [Integrações](#-integrações)
-- [Roadmap](#-roadmap)
-- [Decisão Arquitetural](#-decisão-arquitetural)
-- [Stack Tecnológica](#️-stack-tecnológica)
-- [Instalação](#-instalação)
-- [Contribuição](#-contribuição)
-- [Licença](#-licença)
-- [Status do Projeto](#-status-do-projeto)
+---
 
 ## 🎯 Objetivo
 
-Digitalizar e operacionalizar o ensino básico (1ª a 12ª classe) baseado em:
+Digitalizar e operacionalizar o ensino básico com base em:
 
-- Competências
-- Avaliação contínua
-- Progressão por ciclos
-- Monitoria educacional
-- Relatórios para tomada de decisão
-- Integração com sistemas governamentais
-- Suporte offline para escolas sem conectividade
-- Escalabilidade para milhões de alunos
-- Reutilização da arquitetura e eventos do SUBSTRATO
-- Multi-tenant por escola, com isolamento de dados e operações
-- API-first para integração com outras plataformas educacionais e governamentais
-- Modular e desacoplado para facilitar manutenção e evolução
-- Offline-first para garantir operação em ambientes com conectividade limitada
-- Observabilidade completa para monitoramento e análise de dados educacionais
-- Segurança robusta para proteção de dados sensíveis
+* Ensino baseado em competências
+* Avaliação contínua
+* Progressão por ciclos
+* Currículo nacional + local
+* Monitoria educacional
+* Integração governamental
+* Operação offline-first
+* Escalabilidade massiva (milhões de alunos)
+
+---
 
 ## 🧱 Princípios de Arquitetura
 
-- Domain-Driven Design (DDD)
-- Event-Driven Architecture
-- Multi-Tenant (por escola)
-- API-first
-- Modular e desacoplado
-- Offline-first
-- Observabilidade completa
-- Segurança robusta
-- Estrutura de projeto organizada
-- Roadmap claro para evolução contínua
-- Decisão arquitetural alinhada com o ecossistema SUBSTRATO
-- Stack tecnológica moderna e escalável
+* Domain-Driven Design (DDD)
+* Event-Driven Architecture
+* Multi-Tenant (por escola)
+* API-first
+* Modular e desacoplado
+* Offline-first
+* Observabilidade completa
+* Segurança robusta
+
+---
 
 ## 🌍 Escalabilidade
 
 | Nível     | Escala            |
-| --------- |-------------------|
-| Escola    | 1000–20000 alunos |
-| Distrito  | 10–50 escolas     |
-| Província | 100–500 escolas   |
-| Nacional  | milhões de alunos |
+| --------- | ----------------- |
+| Escola    | 1k – 20k alunos   |
+| Distrito  | 10 – 50 escolas   |
+| Província | 100 – 500 escolas |
+| Nacional  | milhões           |
 
-## 🏫 Modelo de Domínio
+---
 
-### 👨‍🎓 Aluno
+# 🏫 MODELO EDUCACIONAL (BASE PCEP)
 
-- Identificação
-- Classe (1ª–12ª)
-- Ciclo:
-  - 1º Ciclo (Ensino Primário): 1ª, 2ª, 3ª
-  - 2º Ciclo (Ensino Primário): 4ª, 5ª, 6ª
-  - 3º Ciclo (Ensino Secundário): 7ª, 8ª, 9ª
-  - 4º Ciclo (Ensino Secundário): 10ª, 11ª, 12ª
-- Estado de progressão
-- Competências adquiridas
-- Avaliações
-- Eventos
-- Relacionamento com escola (tenant)
-- Relacionamento com professores e diretores
-- Relacionamento com currículo e competências
+## 🎓 Estrutura do Ensino
 
-### 🏫 Escola (Tenant)
+* 1º Ciclo → 1ª a 3ª classe
+* 2º Ciclo → 4ª a 6ª classe
 
-- Unidade isolada de dados
-- Pode operar offline
-- Ligada a distrito/província
-- Gerencia alunos, professores, diretores
-- Gerencia currículo, competências, avaliações
-- Gerencia progressão, relatórios, monitoria
+Progressão:
 
-### 📚 Currículo
+* Automática dentro do ciclo
+* Avaliação no fim do ciclo
+* Retenção apenas em casos excepcionais
 
-Organizado em três áreas principais:
+---
 
-- **Comunicação e Ciências Sociais**
-- **Ciências Naturais e Matemática**
-- **Atividades Práticas e Tecnológicas**
+## 🧠 Modelo de Competências (CORE)
 
-Além de competências transversais, como socioemocionais, digitais, cidadania, sustentabilidade, inovação, pensamento crítico, colaboração, liderança, empreendedorismo, ética, diversidade e inclusão, saúde e bem-estar, arte e cultura, ciência e tecnologia, desenvolvimento pessoal e relacionamento interpessoal.
+O sistema é orientado por competências organizadas em 7 áreas:
 
-### 🧠 Competências
+1. Linguagem e Comunicação
+2. Saber Científico e Tecnológico
+3. Raciocínio e Resolução de Problemas
+4. Desenvolvimento Pessoal e Autonomia
+5. Relacionamento Interpessoal
+6. Bem-estar, Saúde e Ambiente
+7. Sensibilidade Estética e Artística
 
-- Linguagem e comunicação
-- Raciocínio e resolução de problemas
-- Ciência e tecnologia
-- Desenvolvimento pessoal
-- Relacionamento interpessoal
-- Saúde e ambiente
-- Expressão artística
-- Sustentabilidade e cidadania
-- Inovação e criatividade
-- Pensamento crítico e resolução de problemas
-- Colaboração e comunicação
-- Liderança e empreendedorismo
-- Ética e diversidade
+👉 Competência é a unidade principal do sistema (não a nota).
 
-### 🧪 Avaliação
+---
 
-Tipos suportados:
+## 📚 Estrutura Curricular
 
-- Diagnóstica
-- Formativa
-- Sumativa
-- Autoavaliação
-- Avaliação por pares
-- Avaliação digital
-- Avaliação baseada em projetos
-- Avaliação baseada em competências
-- Avaliação baseada em portfólio
-- Avaliação baseada em desempenho
+### Áreas
 
-### 🔁 Progressão
+* Comunicação e Ciências Sociais
+* Ciências Naturais e Matemática
+* Atividades Práticas e Tecnológicas
 
-- Progressão automática dentro do ciclo
-- Avaliação no fim do ciclo
-- Possível retenção
-- Transição para ciclo seguinte
-- Monitoria para alunos em risco
-- Relatórios para professores e diretores
-- Relatórios para governo e stakeholders
-- Relatórios para alunos e famílias
+---
 
-## ⚙️ Casos de Uso
+## 🌍 Currículo Local (20%)
 
-### 📌 Registrar Aluno
+O sistema suporta personalização curricular:
 
-Cria um aluno dentro de uma escola (tenant).
+* Base nacional
+* Extensão local (escola/distrito/província)
 
-### 📌 Avaliar Aluno
+Implementação:
 
-Registra avaliação e gera evento: `aluno_avaliado`
+* `curriculo_base`
+* `curriculo_local`
 
-### 📌 Atualizar Competência
+---
 
-Valida progresso e gera: `competencia_adquirida`
+## 🌐 Modalidades de Ensino
 
-### 📌 Calcular Progressão
+* Monolingue (Português)
+* Bilingue (Língua local + Português)
 
-Decide transição de ciclo: `ciclo_concluido`
+Suporte:
 
-### 📌 Gerar Relatórios
+* Conteúdo por idioma
+* Avaliação por idioma
+* Transição linguística progressiva
 
-- Por aluno
-- Por escola
-- Nacional
+---
 
-## ⚡ Arquitetura de Eventos
+## 🧪 Sistema de Avaliação
 
-### 📌 Eventos principais
+Tipos:
 
-- `aluno_registrado`
-- `aluno_avaliado`
-- `competencia_adquirida`
-- `ciclo_concluido`
+* Diagnóstica
+* Formativa
+* Sumativa
 
-### 📌 Handlers
+Avalia:
 
-- Notificações
-- Dashboards
-- Auditoria
-- Estatísticas
-- Integrações
-- Monitoria
-- Relatórios
-- Segurança
-- Observabilidade
+* Conhecimentos
+* Habilidades
+* Atitudes
 
-## 🧬 Multi-Tenant
+---
 
-### Estratégia
+## 🎓 Perfil do Graduado
 
-- Escola = Tenant
-- Isolamento lógico por `tenant_id`
-- Escalável para shard por região
-- Gerenciamento de dados e operações por tenant
-- Segurança e privacidade por tenant
-- Monitoramento e relatórios por tenant
+O sistema mede desenvolvimento em:
 
-## 🌐 Offline-First
+* Pessoal
+* Sociocultural
+* Técnico-científico
 
-### Funcionamento
+Usado para:
 
-```mermaid
-graph TD
-    A[Escola (offline)] --> B[Armazena dados localmente]
-    B --> C[Sincronização eventual]
-    C --> D[Servidor central consolida]
-```
+* Analytics
+* Relatórios
+* IA futura
 
-## 📊 Observabilidade
+---
 
-### Métricas
+# 🧠 MODELO DE DOMÍNIO (DDD)
 
-- Taxa de aprovação
-- Taxa de retenção
-- Evolução por competência
-- Desempenho por região
-- Utilização do sistema
-- Engajamento dos usuários
+## 📦 Bounded Contexts
 
-### Logs
+* Academico
+* Curriculo
+* Avaliacao
+* Progresso
+* Escola
+* Relatorios
 
-- Auditoria completa
-- Rastreamento por evento
-- Rastreamento por tenant
-- Rastreamento por usuário
-- Rastreamento por operação
+---
 
-## 🔐 Segurança
+## 👨‍🎓 Aluno
 
-### RBAC
+* Classe
+* Ciclo
+* Competências
+* Avaliações
+* Estado
 
-- Professor
-- Diretor
-- Administrador
-- Governo
-- Stakeholders
-- Alunos e famílias
+---
 
-### Proteções
+## 🏫 Escola (Tenant)
 
-- Isolamento por tenant
-- Criptografia de dados
-- Auditoria
-- Monitoramento de segurança
+* Isolamento por `tenant_id`
+* Operação offline
+* Gestão completa
 
-## 🧱 Estrutura do Projeto
+---
 
-### 📁 Domínio
+## 📚 Currículo
+
+* Base + Local
+* Disciplinas
+* Competências
+
+---
+
+## 🧪 Avaliação
+
+* Associada a competências
+* Contínua
+* Multiformato
+
+---
+
+## 🔁 Progressão
+
+* Baseada em competências
+* Decisão formal no fim do ciclo
+
+---
+
+## 📊 Relatórios
+
+* Aluno
+* Escola
+* Nacional
+
+---
+
+# ⚡ ARQUITETURA DE EVENTOS
+
+Eventos principais:
+
+* aluno_registrado
+* avaliacao_registrada
+* competencia_atualizada
+* ciclo_concluido
+* relatorio_gerado
+
+---
+
+# 🌐 MULTI-TENANT
+
+* Escola = tenant
+* Isolamento lógico
+* Preparado para shard por região
+
+---
+
+# 📡 OFFLINE-FIRST
+
+Fluxo:
+
+Escola (offline) → armazenamento local → sincronização → servidor central
+
+---
+
+# 📊 OBSERVABILIDADE
+
+Métricas:
+
+* Taxa de aprovação
+* Retenção
+* Evolução por competência
+
+---
+
+# 🔐 SEGURANÇA
+
+RBAC:
+
+* Professor
+* Diretor
+* Admin
+* Governo
+
+Proteções:
+
+* Criptografia
+* Auditoria
+* Isolamento por tenant
+
+---
+
+# 🧱 ESTRUTURA DO PROJETO
 
 ```
 dominio/educacao/
-├── agregados/
-├── regras/
+├── academico/
+├── curriculo/
+├── avaliacao/
+├── progresso/
+├── escola/
+├── relatorios/
 ├── eventos/
-├── objetos_valor/
-└── excecoes.py
 ```
 
-### 📁 Aplicação
+---
 
-```
-aplicacao/educacao/
-├── registrar_aluno.py
-├── avaliar_aluno.py
-├── calcular_progressao.py
-├── registrar_competencia.py
-└── gerar_relatorio.py
-```
+# 🔌 INTEGRAÇÕES
 
-### 📁 Infraestrutura (Django)
+* Sistemas governamentais
+* Mobile apps
+* Dashboards
 
-```
-aplicativos/educacao/
-├── models.py
-├── admin.py
-├── migrations/
-└── modelos/
-```
+---
 
-### 📁 API
-
-```
-api/v1/educacao/
-├── serializers.py
-├── viewsets.py
-├── filters.py
-└── viewsets_impl/
-```
-
-## 🔌 Integrações
-
-- Sistemas governamentais
-- Dashboards nacionais
-- Aplicações mobile
-- Plataformas educacionais
-
-## 🚀 Roadmap
+# 🚀 ROADMAP
 
 ### Fase 1
 
-- Gestão de alunos
-- Estrutura curricular
-- Avaliação básica
-- Progressão automática
-- Relatórios básicos
-- Integrações essenciais
+* Gestão de alunos
+* Avaliação básica
+* Progressão
 
 ### Fase 2
 
-- Avaliação digital
-- Relatórios avançados
-- Monitoria
-- Integrações adicionais
+* Relatórios avançados
+* Monitoria
 
 ### Fase 3
 
-- Analytics avançado
-- Inteligência educacional
-- Integrações com IA
+* IA educacional
 
 ### Fase 4
 
-- Integração nacional completa
-- Evolução contínua baseada em feedback
+* Integração nacional
 
-## 🧠 Decisão Arquitetural
+---
 
-O Schoolar-S reutiliza a arquitetura, eventos e modelo multi-tenant do ecossistema SUBSTRATO.
-
-## ⚙️ Stack Tecnológica
+# ⚙️ STACK TECNOLÓGICA
 
 ### Principais Tecnologias
 
@@ -395,32 +367,27 @@ O Schoolar-S reutiliza a arquitetura, eventos e modelo multi-tenant do ecossiste
 - Gerenciamento de identidade: Identity Management
 - Gerenciamento de acesso: Access Management
 
-## 🚀 Instalação
+---
 
-1. Clone o repositório:
-   ```bash
-   git clone https://github.com/abdulltrato/schoolar-s.git
-   cd schoolar-s
-   ```
+# 🚀 INSTALAÇÃO
 
-2. Instale as dependências:
-   ```bash
-   pip install -r requirements.txt
-   ```
+```shell script
+git clone repo
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
 
-3. Configure o banco de dados e execute as migrações:
-   ```bash
-   python manage.py migrate
-   ```
+---
 
-4. Inicie o servidor:
-   ```bash
-   python manage.py runserver
-   ```
+# 📈 STATUS
 
-Para mais detalhes, consulte a documentação completa.
+* Fase: Inicial estruturado
+* Pronto para evolução em escala nacional
 
-## 🤝 Contribuição
+---
+
+# 🤝 Contribuição
 
 Contribuições são bem-vindas! Siga estes passos:
 
@@ -443,3 +410,9 @@ Este projeto está licenciado sob a Licença MIT. Veja o arquivo [LICENSE](LICEN
 - **Próximos Passos**: Implementação de avaliação básica e relatórios.
 
 Para feedback ou ideias, entre em contato via [issues](https://github.com/seu-usuario/schoolar-s/issues).
+
+---
+
+# 🧠 CONCLUSÃO
+
+Este sistema não é apenas software — é uma **infraestrutura digital educacional alinhada ao modelo oficial**, pronta para suportar crescimento, integração governamental e evolução com inteligência artificial.

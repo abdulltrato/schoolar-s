@@ -1,0 +1,44 @@
+from django.db import models
+from django.conf import settings
+
+
+class Aluno(models.Model):
+    CICLO_CHOICES = [
+        (1, '1º Ciclo'),
+        (2, '2º Ciclo'),
+    ]
+
+    ESTADO_CHOICES = [
+        ('ativo', 'Ativo'),
+        ('graduado', 'Graduado'),
+        ('retido', 'Retido'),
+        ('transferido', 'Transferido'),
+    ]
+
+    nome = models.CharField(max_length=100, verbose_name="Nome")
+    data_nascimento = models.DateField(verbose_name="Data de Nascimento")
+    classe = models.IntegerField(verbose_name="Classe")  # 1 to 6
+    ciclo = models.IntegerField(choices=CICLO_CHOICES, verbose_name="Ciclo")
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='ativo', verbose_name="Estado")
+    competencias = models.ManyToManyField('curriculo.Competencia', through='AlunoCompetencia', verbose_name="Competências")
+    # Avaliações will be related via foreign key in Avaliacao model
+
+    def __str__(self):
+        return self.nome
+
+    class Meta:
+        verbose_name = "Aluno"
+        verbose_name_plural = "Alunos"
+        ordering = ['nome']
+
+
+class AlunoCompetencia(models.Model):
+    aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE, verbose_name="Aluno")
+    competencia = models.ForeignKey('curriculo.Competencia', on_delete=models.CASCADE, verbose_name="Competência")
+    nivel = models.DecimalField(max_digits=3, decimal_places=1, default=0.0, verbose_name="Nível")  # e.g., 0.0 to 5.0
+    data_atualizacao = models.DateTimeField(auto_now=True, verbose_name="Data de Atualização")
+
+    class Meta:
+        unique_together = ('aluno', 'competencia')
+        verbose_name = "Competência do Aluno"
+        verbose_name_plural = "Competências dos Alunos"

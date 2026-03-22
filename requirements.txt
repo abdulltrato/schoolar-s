@@ -1,0 +1,10 @@
+Django==5.1
+djangorestframework==3.14
+# psycopg2-binary==2.9  # Commented out for Windows compatibility, use PostgreSQL in production
+redis==4.5
+django-tenants==3.7.0
+celery==5.3
+django-cors-headers==4.0
+django-jazzmin==2.6
+pytest==7.3
+pytest-django==4.5
