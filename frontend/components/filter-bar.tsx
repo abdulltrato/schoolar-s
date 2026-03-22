@@ -16,17 +16,17 @@ type FilterBarProps = {
 
 export function FilterBar({ fields }: FilterBarProps) {
   return (
-    <form className="rounded-[1.5rem] border border-ink/10 bg-white/80 p-5 shadow-card backdrop-blur">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <form className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-2.5 shadow-card backdrop-blur">
+      <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
         {fields.map((field) => (
           <label key={field.name} className="block">
-            <span className="text-xs font-semibold uppercase tracking-[0.22em] text-ink/55">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">
               {field.label}
             </span>
             <select
               name={field.name}
               defaultValue={field.value}
-              className="mt-2 w-full rounded-xl border border-ink/10 bg-sand px-3 py-3 text-sm text-ink outline-none transition focus:border-ink/35"
+              className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-1.5 text-xs text-ink outline-none transition focus:border-ink/35 sm:text-sm"
             >
               <option value="">Todos</option>
               {field.options.map((option) => (
@@ -38,16 +38,16 @@ export function FilterBar({ fields }: FilterBarProps) {
           </label>
         ))}
       </div>
-      <div className="mt-4 flex gap-3">
+      <div className="mt-2 flex gap-1.5">
         <button
           type="submit"
-          className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-sand"
+          className="rounded-full bg-ink px-2.5 py-1 text-[11px] font-semibold text-sand sm:text-xs"
         >
           Filtrar
         </button>
         <a
           href="?"
-          className="rounded-full border border-ink/10 bg-sand px-4 py-2 text-sm font-semibold text-ink"
+          className="rounded-full border border-ink/10 bg-sand px-2.5 py-1 text-[11px] font-semibold text-ink sm:text-xs"
         >
           Limpar
         </a>

@@ -41,8 +41,34 @@ export default async function Home() {
     <DashboardShell
       title="Painel executivo do ecossistema escolar"
       description="Visao geral da operacao escolar, estrutura curricular e avaliacao. Os detalhes agora vivem em modulos dedicados."
+      aside={(
+        <section className="rounded-[0.9rem] border border-ink/10 bg-ink p-2.5 text-sand shadow-card">
+          <SectionTitle
+            eyebrow="Modulos"
+            title="Navegacao por dominio"
+            description="A interface foi separada para reduzir ruido e permitir leitura por area funcional."
+            inverse
+          />
+          <nav aria-label="Atalhos de modulos" className="mt-2 grid gap-2">
+            {modules.map((module) => (
+              <Link
+                key={module.href}
+                href={module.href}
+                className="rounded-[0.8rem] border border-white/10 bg-white/5 px-2.5 py-2 transition hover:border-white/25 hover:bg-white/10"
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-sand sm:text-xs">
+                  {module.title}
+                </p>
+                <p className="mt-1 text-xs leading-4 text-sand/78 sm:text-sm">
+                  {module.description}
+                </p>
+              </Link>
+            ))}
+          </nav>
+        </section>
+      )}
     >
-      <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+      <section className="grid gap-2 md:grid-cols-3 xl:grid-cols-6">
         <MetricCard
           label="Escolas"
           value={String(snapshot.escolas.count)}
@@ -75,14 +101,14 @@ export default async function Home() {
         />
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
-        <div className="rounded-[2rem] border border-ink/10 bg-white/80 p-8 shadow-card backdrop-blur">
+      <section className="grid gap-2">
+        <div className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-2.5 shadow-card backdrop-blur">
           <SectionTitle
             eyebrow="Estado"
             title="Conectividade da plataforma"
             description="Leitura resumida dos recursos principais. Use os modulos para detalhar cada dominio."
           />
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-2 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
             <StatusCard
               title="Healthcheck"
               status={snapshot.health.status}
@@ -113,31 +139,6 @@ export default async function Home() {
               tone={toneForCollection(snapshot.resultadosPeriodo)}
               body={snapshot.resultadosPeriodo.message}
             />
-          </div>
-        </div>
-
-        <div className="rounded-[2rem] border border-ink/10 bg-ink p-8 text-sand shadow-card">
-          <SectionTitle
-            eyebrow="Modulos"
-            title="Navegacao por dominio"
-            description="A interface foi separada para reduzir ruido e permitir leitura por area funcional."
-            inverse
-          />
-          <div className="mt-6 grid gap-3">
-            {modules.map((module) => (
-              <Link
-                key={module.href}
-                href={module.href}
-                className="rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-4 transition hover:border-white/25 hover:bg-white/10"
-              >
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sand">
-                  {module.title}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-sand/78">
-                  {module.description}
-                </p>
-              </Link>
-            ))}
           </div>
         </div>
       </section>

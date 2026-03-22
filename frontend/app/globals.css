@@ -4,19 +4,27 @@
 
 :root {
   color-scheme: light;
+  --shell-gutter: 0.25rem;
+  --shell-top-offset: 0.25rem;
+  --shell-bottom-offset: 0.25rem;
+  --content-gap: 0.5rem;
+  --content-stack-gap: 0.75rem;
+  --section-scroll-offset: 8rem;
 }
 
 html {
-  background:
-    radial-gradient(circle at top left, rgba(217, 108, 6, 0.22), transparent 28%),
-    radial-gradient(circle at top right, rgba(60, 122, 87, 0.18), transparent 24%),
-    linear-gradient(180deg, #f7f3e9 0%, #fbf8f2 100%);
+  scroll-behavior: smooth;
 }
 
 body {
   color: #14213d;
   font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
   min-height: 100vh;
+  margin: 0;
+}
+
+main section[id] {
+  scroll-margin-top: var(--section-scroll-offset);
 }
 
 * {
@@ -26,4 +34,72 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+.app-shell {
+  width: 100%;
+  padding-inline: var(--shell-gutter);
+}
+
+.app-header {
+  position: fixed;
+  top: var(--shell-top-offset);
+  left: var(--shell-gutter);
+  right: var(--shell-gutter);
+  z-index: 40;
+}
+
+.app-main-stack {
+  position: relative;
+  z-index: 10;
+}
+
+.app-content-grid {
+  display: grid;
+  gap: var(--content-gap);
+}
+
+.app-content-stack {
+  display: grid;
+  gap: var(--content-stack-gap);
+}
+
+.app-footer {
+  position: fixed;
+  bottom: var(--shell-bottom-offset);
+  left: var(--shell-gutter);
+  right: var(--shell-gutter);
+  z-index: 40;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --shell-gutter: 0.5rem;
+    --shell-top-offset: 0.5rem;
+    --shell-bottom-offset: 0.5rem;
+    --content-gap: 0.625rem;
+    --content-stack-gap: 0.875rem;
+    --section-scroll-offset: 9rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --shell-gutter: 0.75rem;
+    --content-gap: 0.75rem;
+    --content-stack-gap: 1rem;
+    --section-scroll-offset: 10rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .app-content-grid {
+    grid-template-columns: minmax(0, 1fr) 14rem;
+    align-items: start;
+  }
+
+  .app-aside {
+    position: sticky;
+    align-self: start;
+  }
 }

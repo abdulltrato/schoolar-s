@@ -16,13 +16,13 @@ export function SectionTitle({
 
   return (
     <div>
-      <p className={`text-xs font-semibold uppercase tracking-[0.28em] ${tone}`}>
+      <p className={`text-[10px] font-semibold uppercase tracking-[0.1em] ${tone}`}>
         {eyebrow}
       </p>
-      <h2 className={`mt-3 font-display text-3xl font-semibold ${tone}`}>
+      <h2 className={`mt-1 font-display text-lg font-semibold ${tone} sm:text-xl`}>
         {title}
       </h2>
-      <p className={`mt-3 max-w-2xl text-sm leading-6 ${bodyTone}`}>
+      <p className={`mt-1 max-w-3xl text-xs leading-4 ${bodyTone} sm:text-sm`}>
         {description}
       </p>
     </div>
