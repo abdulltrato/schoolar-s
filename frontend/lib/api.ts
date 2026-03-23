@@ -1,3 +1,6 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+
 type HealthPayload = {
   status?: string;
 };
@@ -24,10 +27,13 @@ export type StudentCompetency = {
 
 export type Student = {
   id: number;
+  user: number | null;
   name: string;
+  tenant_id: string;
   birth_date: string;
   grade: number;
   cycle: number;
+  education_level: string;
   status: string;
   competencies: StudentCompetency[];
 };
@@ -60,6 +66,7 @@ export type School = {
 export type Teacher = {
   id: number;
   user: number;
+  tenant_id: string;
   school: number | null;
   school_name?: string;
   name: string;
@@ -69,6 +76,7 @@ export type Teacher = {
 export type Classroom = {
   id: number;
   name: string;
+  tenant_id: string;
   school: number | null;
   school_name?: string;
   grade: number;
@@ -91,6 +99,7 @@ export type GradeSubject = {
 export type TeachingAssignment = {
   id: number;
   teacher: number;
+  tenant_id?: string;
   teacher_name?: string;
   classroom: number;
   classroom_name?: string;
@@ -104,6 +113,7 @@ export type TeachingAssignment = {
 export type Enrollment = {
   id: number;
   student: number;
+  tenant_id?: string;
   student_name?: string;
   classroom: number;
   classroom_name?: string;
@@ -172,6 +182,7 @@ export type AssessmentComponent = {
 export type Assessment = {
   id: number;
   student: number;
+  tenant_id?: string;
   student_name?: string;
   teaching_assignment: number | null;
   period: number | null;
@@ -208,6 +219,189 @@ export type SubjectPeriodResult = {
   assessments_counted: number;
 };
 
+export type Guardian = {
+  id: number;
+  user: number | null;
+  tenant_id: string;
+  name: string;
+  phone: string;
+  email: string;
+  relationship: string;
+  active: boolean;
+};
+
+export type StudentGuardian = {
+  id: number;
+  student: number;
+  student_name?: string;
+  guardian: number;
+  guardian_name?: string;
+  primary_contact: boolean;
+  receives_notifications: boolean;
+};
+
+export type AttendanceRecord = {
+  id: number;
+  enrollment: number;
+  tenant_id: string;
+  student_name?: string;
+  classroom_name?: string;
+  lesson_date: string;
+  status: string;
+  notes: string;
+};
+
+export type Announcement = {
+  id: number;
+  school: number;
+  classroom: number | null;
+  author: number | null;
+  tenant_id: string;
+  school_name?: string;
+  classroom_name?: string;
+  author_name?: string;
+  title: string;
+  message: string;
+  audience: string;
+  published_at: string;
+  active: boolean;
+};
+
+export type Invoice = {
+  id: number;
+  student: number;
+  school: number;
+  tenant_id: string;
+  student_name?: string;
+  school_name?: string;
+  reference: string;
+  description: string;
+  amount: string;
+  due_date: string;
+  status: string;
+  issued_at: string;
+};
+
+export type Payment = {
+  id: number;
+  invoice: number;
+  tenant_id: string;
+  invoice_reference?: string;
+  amount: string;
+  payment_date: string;
+  method: string;
+  reference: string;
+  notes: string;
+};
+
+export type AuditEvent = {
+  id: number;
+  resource: string;
+  action: string;
+  object_id: number;
+  object_repr: string;
+  tenant_id: string;
+  request_id: string;
+  path: string;
+  method: string;
+  role: string;
+  username: string;
+  changed_fields: string[];
+  created_at: string;
+};
+
+export type AuditAlert = {
+  id: number;
+  alert_type: string;
+  severity: string;
+  tenant_id: string;
+  resource: string;
+  username: string;
+  summary: string;
+  details: Record<string, unknown>;
+  acknowledged: boolean;
+  created_at: string;
+};
+
+export type Course = {
+  id: number;
+  school: number;
+  tenant_id: string;
+  school_name?: string;
+  title: string;
+  description: string;
+  modality: string;
+  active: boolean;
+};
+
+export type CourseOffering = {
+  id: number;
+  course: number;
+  classroom: number | null;
+  teacher: number | null;
+  academic_year: number;
+  tenant_id: string;
+  course_title?: string;
+  classroom_name?: string;
+  teacher_name?: string;
+  academic_year_code?: string;
+  start_date: string;
+  end_date: string;
+  active: boolean;
+};
+
+export type Lesson = {
+  id: number;
+  offering: number;
+  tenant_id: string;
+  offering_title?: string;
+  title: string;
+  description: string;
+  scheduled_at: string;
+  duration_minutes: number;
+  meeting_url: string;
+  recording_url: string;
+  published: boolean;
+};
+
+export type LessonMaterial = {
+  id: number;
+  lesson: number;
+  lesson_title?: string;
+  title: string;
+  material_type: string;
+  url: string;
+  required: boolean;
+};
+
+export type Assignment = {
+  id: number;
+  offering: number;
+  tenant_id: string;
+  offering_title?: string;
+  title: string;
+  instructions: string;
+  opens_at: string;
+  due_at: string;
+  max_score: string;
+  published: boolean;
+};
+
+export type Submission = {
+  id: number;
+  assignment: number;
+  student: number;
+  tenant_id: string;
+  assignment_title?: string;
+  student_name?: string;
+  submitted_at: string | null;
+  text_response: string;
+  attachment_url: string;
+  score: string | null;
+  feedback: string;
+  status: string;
+};
+
 type EndpointSnapshot = {
   ok: boolean;
   status: string;
@@ -220,6 +414,8 @@ export type CollectionSnapshot<T> = {
   statusCode: number;
   count: number;
   items: T[];
+  next: string | null;
+  previous: string | null;
   message: string;
   requiresAuth: boolean;
 };
@@ -230,6 +426,26 @@ type PlatformMeta = {
   tenantId: string | null;
   health: EndpointSnapshot;
   readiness: EndpointSnapshot;
+};
+
+export type AuthUser = {
+  id: number;
+  username: string;
+  first_name?: string;
+  last_name?: string;
+  role: string | null;
+  tenant_id: string;
+  school_id: number | null;
+  active?: boolean;
+};
+
+type AuthPayload = {
+  ok?: boolean;
+  user?: AuthUser;
+  error?: {
+    code?: string;
+    message?: string;
+  };
 };
 
 export type HomeSnapshot = PlatformMeta & {
@@ -265,6 +481,64 @@ export type AssessmentSnapshot = PlatformMeta & {
   periodResults: CollectionSnapshot<SubjectPeriodResult>;
 };
 
+export type StudentPortalSnapshot = PlatformMeta & {
+  students: CollectionSnapshot<Student>;
+  enrollments: CollectionSnapshot<Enrollment>;
+  attendance: CollectionSnapshot<AttendanceRecord>;
+  assessments: CollectionSnapshot<Assessment>;
+  periodResults: CollectionSnapshot<SubjectPeriodResult>;
+  invoices: CollectionSnapshot<Invoice>;
+  announcements: CollectionSnapshot<Announcement>;
+  courses: CollectionSnapshot<Course>;
+  lessons: CollectionSnapshot<Lesson>;
+  assignments: CollectionSnapshot<Assignment>;
+  submissions: CollectionSnapshot<Submission>;
+};
+
+export type TeacherPortalSnapshot = PlatformMeta & {
+  teachers: CollectionSnapshot<Teacher>;
+  classrooms: CollectionSnapshot<Classroom>;
+  enrollments: CollectionSnapshot<Enrollment>;
+  teachingAssignments: CollectionSnapshot<TeachingAssignment>;
+  attendance: CollectionSnapshot<AttendanceRecord>;
+  assessments: CollectionSnapshot<Assessment>;
+  announcements: CollectionSnapshot<Announcement>;
+  offerings: CollectionSnapshot<CourseOffering>;
+  lessons: CollectionSnapshot<Lesson>;
+  assignments: CollectionSnapshot<Assignment>;
+  submissions: CollectionSnapshot<Submission>;
+};
+
+export type FinanceSnapshot = PlatformMeta & {
+  schools: CollectionSnapshot<School>;
+  students: CollectionSnapshot<Student>;
+  guardians: CollectionSnapshot<Guardian>;
+  invoices: CollectionSnapshot<Invoice>;
+  payments: CollectionSnapshot<Payment>;
+};
+
+export type CommunicationSnapshot = PlatformMeta & {
+  announcements: CollectionSnapshot<Announcement>;
+  guardians: CollectionSnapshot<Guardian>;
+  studentGuardians: CollectionSnapshot<StudentGuardian>;
+  classrooms: CollectionSnapshot<Classroom>;
+  teachers: CollectionSnapshot<Teacher>;
+};
+
+export type LearningSnapshot = PlatformMeta & {
+  courses: CollectionSnapshot<Course>;
+  offerings: CollectionSnapshot<CourseOffering>;
+  lessons: CollectionSnapshot<Lesson>;
+  materials: CollectionSnapshot<LessonMaterial>;
+  assignments: CollectionSnapshot<Assignment>;
+  submissions: CollectionSnapshot<Submission>;
+};
+
+export type AuditSnapshot = PlatformMeta & {
+  auditEvents: CollectionSnapshot<AuditEvent>;
+  auditAlerts: CollectionSnapshot<AuditAlert>;
+};
+
 function resolveApiBaseUrl() {
   return (
     process.env.API_BASE_URL ||
@@ -277,7 +551,28 @@ function resolveTenantId() {
   return process.env.API_TENANT_ID || process.env.NEXT_PUBLIC_TENANT_ID || null;
 }
 
-function resolveBasicAuthHeader() {
+async function resolveCookieAuthHeader() {
+  try {
+    const cookieStore = await cookies();
+    const sessionId = cookieStore.get("schoolar_sessionid")?.value;
+    const csrfToken = cookieStore.get("schoolar_csrftoken")?.value;
+    if (sessionId) {
+      return {
+        cookieHeader: [`sessionid=${sessionId}`, csrfToken ? `csrftoken=${csrfToken}` : ""]
+          .filter(Boolean)
+          .join("; "),
+        csrfToken: csrfToken || null,
+        authMode: "session" as const,
+      };
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+function resolveBasicAuthHeaderFromEnv() {
   const username = process.env.API_USERNAME;
   const password = process.env.API_PASSWORD;
 
@@ -288,16 +583,45 @@ function resolveBasicAuthHeader() {
   return `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
 }
 
-function buildHeaders() {
+async function resolveAuthContext() {
+  const cookieAuth = await resolveCookieAuthHeader();
+  if (cookieAuth) {
+    return cookieAuth;
+  }
+
+  const basicAuthHeader = resolveBasicAuthHeaderFromEnv();
+  if (basicAuthHeader) {
+    return {
+      authorizationHeader: basicAuthHeader,
+      csrfToken: null,
+      authMode: "basic" as const,
+    };
+  }
+
+  return {
+    csrfToken: null,
+    authMode: "none" as const,
+  };
+}
+
+async function buildHeaders(method: "GET" | "POST" | "PATCH" = "GET") {
   const headers = new Headers({
     Accept: "application/json",
   });
 
-  const authHeader = resolveBasicAuthHeader();
+  const authContext = await resolveAuthContext();
   const tenantId = resolveTenantId();
 
-  if (authHeader) {
-    headers.set("Authorization", authHeader);
+  if ("authorizationHeader" in authContext && authContext.authorizationHeader) {
+    headers.set("Authorization", authContext.authorizationHeader);
+  }
+
+  if ("cookieHeader" in authContext && authContext.cookieHeader) {
+    headers.set("Cookie", authContext.cookieHeader);
+  }
+
+  if (method !== "GET" && authContext.csrfToken) {
+    headers.set("X-CSRFToken", authContext.csrfToken);
   }
 
   if (tenantId) {
@@ -327,13 +651,65 @@ async function readJson<T>(path: string): Promise<{ ok: boolean; statusCode: num
   try {
     const response = await fetch(`${baseUrl}${path}`, {
       cache: "no-store",
-      headers: buildHeaders(),
+      headers: await buildHeaders("GET"),
     });
 
     const data = await parseJsonSafe<T>(response);
     return { ok: response.ok, statusCode: response.status, data };
   } catch {
     return { ok: false, statusCode: 0 };
+  }
+}
+
+type MutationResult<T> = {
+  ok: boolean;
+  statusCode: number;
+  data?: T;
+  error?: string;
+};
+
+async function clearMirroredSessionCookies() {
+  const cookieStore = await cookies();
+  cookieStore.delete("schoolar_sessionid");
+  cookieStore.delete("schoolar_csrftoken");
+}
+
+async function writeJson<T>(
+  path: string,
+  method: "POST" | "PATCH",
+  payload: Record<string, unknown>,
+): Promise<MutationResult<T>> {
+  const baseUrl = resolveApiBaseUrl();
+
+  try {
+    const response = await fetch(`${baseUrl}${path}`, {
+      method,
+      cache: "no-store",
+      headers: new Headers({
+        ...Object.fromEntries((await buildHeaders(method)).entries()),
+        "Content-Type": "application/json",
+      }),
+      body: JSON.stringify(payload),
+    });
+
+    const data = await parseJsonSafe<T & { error?: { message?: string; details?: unknown } }>(response);
+    const errorMessage =
+      data && typeof data === "object" && "error" in data && data.error?.message
+        ? data.error.message
+        : undefined;
+
+    return {
+      ok: response.ok,
+      statusCode: response.status,
+      data,
+      error: errorMessage,
+    };
+  } catch {
+    return {
+      ok: false,
+      statusCode: 0,
+      error: "Não foi possível ligar ao backend.",
+    };
   }
 }
 
@@ -359,14 +735,14 @@ async function readJsonWithRetry<T>(
 
 function formatReadinessMessage(payload?: ReadinessPayload) {
   if (!payload?.checks) {
-    return "No readiness details were returned.";
+    return "Nenhum detalhe de prontidão foi devolvido.";
   }
 
   const summary = Object.entries(payload.checks)
     .map(([key, value]) => `${key}: ${value}`)
     .join(" | ");
 
-  return `Reported checks: ${summary}.`;
+  return `Verificações reportadas: ${summary}.`;
 }
 
 function normalizeCollection<T>(payload?: PaginatedResponse<T> | T[]) {
@@ -374,6 +750,8 @@ function normalizeCollection<T>(payload?: PaginatedResponse<T> | T[]) {
     return {
       count: payload.length,
       items: payload,
+      next: null,
+      previous: null,
     };
   }
 
@@ -381,29 +759,33 @@ function normalizeCollection<T>(payload?: PaginatedResponse<T> | T[]) {
     return {
       count: payload.count ?? payload.results.length,
       items: payload.results,
+      next: payload.next ?? null,
+      previous: payload.previous ?? null,
     };
   }
 
   return {
     count: 0,
     items: [] as T[],
+    next: null,
+    previous: null,
   };
 }
 
 function getCollectionMessage(statusCode: number, count: number) {
   if (statusCode === 401 || statusCode === 403) {
-    return "Protected endpoint. Configure API_USERNAME/API_PASSWORD for authenticated access.";
+    return "Endpoint protegido. Configure API_USERNAME/API_PASSWORD para acesso autenticado.";
   }
 
   if (statusCode === 0) {
-    return "No connection to the backend.";
+    return "Sem ligação ao backend.";
   }
 
   if (count === 0) {
-    return "Endpoint is reachable, but no records are available.";
+    return "O endpoint está acessível, mas não há registos disponíveis.";
   }
 
-  return `${count} records loaded from the backend.`;
+  return `${count} registos carregados a partir do backend.`;
 }
 
 async function readCollection<T>(path: string): Promise<CollectionSnapshot<T>> {
@@ -421,6 +803,8 @@ async function readCollection<T>(path: string): Promise<CollectionSnapshot<T>> {
     statusCode: response.statusCode,
     count: normalized.count,
     items: normalized.items,
+    next: normalized.next,
+    previous: normalized.previous,
     message: getCollectionMessage(response.statusCode, normalized.count),
     requiresAuth: response.statusCode === 401 || response.statusCode === 403,
   };
@@ -436,14 +820,14 @@ async function getPlatformMeta(): Promise<PlatformMeta> {
 
   return {
     baseUrlLabel: baseUrl,
-    authConfigured: Boolean(resolveBasicAuthHeader()),
+    authConfigured: (await resolveAuthContext()).authMode !== "none",
     tenantId: resolveTenantId(),
     health: {
       ok: healthResponse.ok,
       status: healthResponse.data?.status?.toUpperCase() || "OFFLINE",
       message: healthResponse.ok
-        ? "The endpoint responded successfully and the application is reachable."
-        : `Could not reach the backend (${healthResponse.statusCode || "no connection"}).`,
+        ? "O endpoint respondeu com sucesso e a aplicação está acessível."
+        : `Não foi possível alcançar o backend (${healthResponse.statusCode || "sem ligação"}).`,
     },
     readiness: {
       ok: readinessResponse.ok && readinessResponse.data?.status === "ok",
@@ -451,9 +835,59 @@ async function getPlatformMeta(): Promise<PlatformMeta> {
       message:
         readinessResponse.ok && readinessResponse.data
           ? formatReadinessMessage(readinessResponse.data)
-          : `Readiness is unavailable (${readinessResponse.statusCode || "no connection"}).`,
+          : `A prontidão está indisponível (${readinessResponse.statusCode || "sem ligação"}).`,
     },
   };
+}
+
+export async function getAuthSession(): Promise<{ authenticated: boolean; user: AuthUser | null }> {
+  const response = await readJsonWithRetry<AuthPayload>("/api/v1/auth/me/");
+  if (!response.ok || !response.data?.user) {
+    return { authenticated: false, user: null };
+  }
+
+  return {
+    authenticated: true,
+    user: response.data.user,
+  };
+}
+
+export async function requireAuthSession(nextPath: string) {
+  const session = await getAuthSession();
+  if (!session.authenticated || !session.user) {
+    await clearMirroredSessionCookies();
+    redirect(`/login?next=${encodeURIComponent(nextPath)}`);
+  }
+  return session.user;
+}
+
+export async function handleMutationRedirect(
+  result: MutationResult<unknown>,
+  pagePath: string,
+  successStatus: string,
+  errorStatus: string,
+) {
+  await handleMutationRedirectTo(result, pagePath, successStatus, errorStatus);
+}
+
+function appendStatusQuery(pathOrUrl: string, status: string) {
+  const resolvedUrl = new URL(pathOrUrl, "http://codex.local");
+  resolvedUrl.searchParams.set("status", status);
+  return `${resolvedUrl.pathname}${resolvedUrl.search}`;
+}
+
+export async function handleMutationRedirectTo(
+  result: MutationResult<unknown>,
+  pageHref: string,
+  successStatus: string,
+  errorStatus: string,
+) {
+  if (result.statusCode === 401 || result.statusCode === 403) {
+    await clearMirroredSessionCookies();
+    redirect(`/login?error=session_expired&next=${encodeURIComponent(pageHref)}`);
+  }
+
+  redirect(appendStatusQuery(pageHref, result.ok ? successStatus : errorStatus));
 }
 
 export async function getHomeSnapshot(): Promise<HomeSnapshot> {
@@ -536,4 +970,271 @@ export async function getAssessmentSnapshot(): Promise<AssessmentSnapshot> {
     assessments,
     periodResults,
   };
+}
+
+export async function getStudentPortalSnapshot(): Promise<StudentPortalSnapshot> {
+  const meta = await getPlatformMeta();
+  const [students, enrollments, attendance, assessments, periodResults, invoices, announcements, courses, lessons, assignments, submissions] = await Promise.all([
+    readCollection<Student>("/api/v1/academic/students/"),
+    readCollection<Enrollment>("/api/v1/school/enrollments/"),
+    readCollection<AttendanceRecord>("/api/v1/school/attendance-records/"),
+    readCollection<Assessment>("/api/v1/assessment/assessments/"),
+    readCollection<SubjectPeriodResult>("/api/v1/assessment/subject-period-results/"),
+    readCollection<Invoice>("/api/v1/school/invoices/"),
+    readCollection<Announcement>("/api/v1/school/announcements/"),
+    readCollection<Course>("/api/v1/learning/courses/"),
+    readCollection<Lesson>("/api/v1/learning/lessons/"),
+    readCollection<Assignment>("/api/v1/learning/assignments/"),
+    readCollection<Submission>("/api/v1/learning/submissions/"),
+  ]);
+
+  return {
+    ...meta,
+    students,
+    enrollments,
+    attendance,
+    assessments,
+    periodResults,
+    invoices,
+    announcements,
+    courses,
+    lessons,
+    assignments,
+    submissions,
+  };
+}
+
+export async function getTeacherPortalSnapshot(): Promise<TeacherPortalSnapshot> {
+  const meta = await getPlatformMeta();
+  const [teachers, classrooms, enrollments, teachingAssignments, attendance, assessments, announcements, offerings, lessons, assignments, submissions] = await Promise.all([
+    readCollection<Teacher>("/api/v1/school/teachers/"),
+    readCollection<Classroom>("/api/v1/school/classrooms/"),
+    readCollection<Enrollment>("/api/v1/school/enrollments/"),
+    readCollection<TeachingAssignment>("/api/v1/school/teaching-assignments/"),
+    readCollection<AttendanceRecord>("/api/v1/school/attendance-records/"),
+    readCollection<Assessment>("/api/v1/assessment/assessments/"),
+    readCollection<Announcement>("/api/v1/school/announcements/"),
+    readCollection<CourseOffering>("/api/v1/learning/offerings/"),
+    readCollection<Lesson>("/api/v1/learning/lessons/"),
+    readCollection<Assignment>("/api/v1/learning/assignments/"),
+    readCollection<Submission>("/api/v1/learning/submissions/"),
+  ]);
+
+  return {
+    ...meta,
+    teachers,
+    classrooms,
+    enrollments,
+    teachingAssignments,
+    attendance,
+    assessments,
+    announcements,
+    offerings,
+    lessons,
+    assignments,
+    submissions,
+  };
+}
+
+export async function getFinanceSnapshot(): Promise<FinanceSnapshot> {
+  const meta = await getPlatformMeta();
+  const [schools, students, guardians, invoices, payments] = await Promise.all([
+    readCollection<School>("/api/v1/school/schools/"),
+    readCollection<Student>("/api/v1/academic/students/"),
+    readCollection<Guardian>("/api/v1/academic/guardians/"),
+    readCollection<Invoice>("/api/v1/school/invoices/"),
+    readCollection<Payment>("/api/v1/school/payments/"),
+  ]);
+
+  return {
+    ...meta,
+    schools,
+    students,
+    guardians,
+    invoices,
+    payments,
+  };
+}
+
+export async function getCommunicationSnapshot(): Promise<CommunicationSnapshot> {
+  const meta = await getPlatformMeta();
+  const [announcements, guardians, studentGuardians, classrooms, teachers] = await Promise.all([
+    readCollection<Announcement>("/api/v1/school/announcements/"),
+    readCollection<Guardian>("/api/v1/academic/guardians/"),
+    readCollection<StudentGuardian>("/api/v1/academic/student-guardians/"),
+    readCollection<Classroom>("/api/v1/school/classrooms/"),
+    readCollection<Teacher>("/api/v1/school/teachers/"),
+  ]);
+
+  return {
+    ...meta,
+    announcements,
+    guardians,
+    studentGuardians,
+    classrooms,
+    teachers,
+  };
+}
+
+export async function getLearningSnapshot(): Promise<LearningSnapshot> {
+  const meta = await getPlatformMeta();
+  const [courses, offerings, lessons, materials, assignments, submissions] = await Promise.all([
+    readCollection<Course>("/api/v1/learning/courses/"),
+    readCollection<CourseOffering>("/api/v1/learning/offerings/"),
+    readCollection<Lesson>("/api/v1/learning/lessons/"),
+    readCollection<LessonMaterial>("/api/v1/learning/lesson-materials/"),
+    readCollection<Assignment>("/api/v1/learning/assignments/"),
+    readCollection<Submission>("/api/v1/learning/submissions/"),
+  ]);
+
+  return {
+    ...meta,
+    courses,
+    offerings,
+    lessons,
+    materials,
+    assignments,
+    submissions,
+  };
+}
+
+export async function getAuditSnapshot(filters?: {
+  page?: number;
+  resource?: string;
+  action?: string;
+  severity?: string;
+  acknowledged?: string;
+  username?: string;
+  tenant_id?: string;
+  date_from?: string;
+  date_to?: string;
+}): Promise<AuditSnapshot> {
+  const meta = await getPlatformMeta();
+  const query = new URLSearchParams();
+  if (filters?.page) query.set("page", String(filters.page));
+  if (filters?.resource) query.set("resource", filters.resource);
+  if (filters?.action) query.set("action", filters.action);
+  if (filters?.severity) query.set("severity", filters.severity);
+  if (filters?.acknowledged) query.set("acknowledged", filters.acknowledged);
+  if (filters?.username) query.set("username", filters.username);
+  if (filters?.tenant_id) query.set("tenant_id", filters.tenant_id);
+  if (filters?.date_from) query.set("date_from", filters.date_from);
+  if (filters?.date_to) query.set("date_to", filters.date_to);
+  const auditEvents = await readCollection<AuditEvent>(`/api/v1/school/audit-events/${query.toString() ? `?${query}` : ""}`);
+  const auditAlerts = await readCollection<AuditAlert>(`/api/v1/school/audit-alerts/${query.toString() ? `?${query}` : ""}`);
+
+  return {
+    ...meta,
+    auditEvents,
+    auditAlerts,
+  };
+}
+
+export async function createAnnouncement(payload: {
+  school: number;
+  classroom?: number | null;
+  title: string;
+  message: string;
+  audience: string;
+  author?: number | null;
+}) {
+  return writeJson<Announcement>("/api/v1/school/announcements/", "POST", payload);
+}
+
+export async function updateAnnouncement(id: number, payload: Partial<Announcement>) {
+  return writeJson<Announcement>(`/api/v1/school/announcements/${id}/`, "PATCH", payload);
+}
+
+export async function createAttendanceRecord(payload: {
+  enrollment: number;
+  lesson_date: string;
+  status: string;
+  notes?: string;
+}) {
+  return writeJson<AttendanceRecord>("/api/v1/school/attendance-records/", "POST", payload);
+}
+
+export async function createLesson(payload: {
+  offering: number;
+  title: string;
+  description?: string;
+  scheduled_at: string;
+  duration_minutes: number;
+  meeting_url?: string;
+  recording_url?: string;
+  published?: boolean;
+}) {
+  return writeJson<Lesson>("/api/v1/learning/lessons/", "POST", payload);
+}
+
+export async function updateLesson(id: number, payload: Partial<Lesson>) {
+  return writeJson<Lesson>(`/api/v1/learning/lessons/${id}/`, "PATCH", payload);
+}
+
+export async function createAssignment(payload: {
+  offering: number;
+  title: string;
+  instructions?: string;
+  opens_at: string;
+  due_at: string;
+  max_score: number;
+  published?: boolean;
+}) {
+  return writeJson<Assignment>("/api/v1/learning/assignments/", "POST", payload);
+}
+
+export async function updateAssignment(id: number, payload: Partial<Assignment>) {
+  return writeJson<Assignment>(`/api/v1/learning/assignments/${id}/`, "PATCH", payload);
+}
+
+export async function createLessonMaterial(payload: {
+  lesson: number;
+  title: string;
+  material_type: string;
+  url: string;
+  required?: boolean;
+}) {
+  return writeJson<LessonMaterial>("/api/v1/learning/lesson-materials/", "POST", payload);
+}
+
+export async function createInvoice(payload: {
+  student: number;
+  school: number;
+  reference: string;
+  description: string;
+  amount: number;
+  due_date: string;
+  status?: string;
+}) {
+  return writeJson<Invoice>("/api/v1/school/invoices/", "POST", payload);
+}
+
+export async function updateInvoice(id: number, payload: Partial<Invoice>) {
+  return writeJson<Invoice>(`/api/v1/school/invoices/${id}/`, "PATCH", payload);
+}
+
+export async function createPayment(payload: {
+  invoice: number;
+  amount: number;
+  payment_date: string;
+  method: string;
+  reference?: string;
+  notes?: string;
+}) {
+  return writeJson<Payment>("/api/v1/school/payments/", "POST", payload);
+}
+
+export async function createSubmission(payload: {
+  assignment: number;
+  student: number;
+  submitted_at?: string | null;
+  text_response?: string;
+  attachment_url?: string;
+  status?: string;
+}) {
+  return writeJson<Submission>("/api/v1/learning/submissions/", "POST", payload);
+}
+
+export async function acknowledgeAuditAlert(id: number) {
+  return writeJson<AuditAlert>(`/api/v1/school/audit-alerts/${id}/acknowledge/`, "POST", {});
 }

@@ -33,6 +33,10 @@ class Subject(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def competencia_set(self):
+        return self.competency_set
+
     class Meta:
         verbose_name = "Disciplina"
         verbose_name_plural = "Disciplinas"
@@ -49,6 +53,15 @@ class Competency(models.Model):
         ("wellbeing_health_environment", "Bem-estar, saúde e ambiente"),
         ("aesthetic_artistic_sensitivity", "Sensibilidade estética e artística"),
     ]
+    LEGACY_AREA_MAP = {
+        "linguagem_comunicacao": "language_communication",
+        "saber_cientifico_tecnologico": "scientific_technological_knowledge",
+        "raciocinio_resolucao_problemas": "reasoning_problem_solving",
+        "desenvolvimento_pessoal_autonomia": "personal_development_autonomy",
+        "relacionamento_interpessoal": "interpersonal_relationship",
+        "bem_estar_saude_ambiente": "wellbeing_health_environment",
+        "sensibilidade_estetica_artistica": "aesthetic_artistic_sensitivity",
+    }
 
     name = models.CharField(max_length=200, verbose_name="Nome")
     description = models.TextField(blank=True, verbose_name="Descrição")
@@ -57,7 +70,14 @@ class Competency(models.Model):
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Disciplina")
     grade = models.ForeignKey(Grade, null=True, blank=True, on_delete=models.PROTECT, verbose_name="Classe")
 
+    def __init__(self, *args, **kwargs):
+        area = kwargs.get("area")
+        if area is not None:
+            kwargs["area"] = self.LEGACY_AREA_MAP.get(area, area)
+        super().__init__(*args, **kwargs)
+
     def clean(self):
+        self.area = self.LEGACY_AREA_MAP.get(self.area, self.area)
         if self.cycle not in {1, 2}:
             raise ValidationError({"cycle": "The competency cycle must be 1 or 2."})
         if self.subject and self.subject.cycle != self.cycle:
@@ -66,6 +86,7 @@ class Competency(models.Model):
             self.cycle = self.grade.cycle
 
     def save(self, *args, **kwargs):
+        self.area = self.LEGACY_AREA_MAP.get(self.area, self.area)
         self.full_clean()
         return super().save(*args, **kwargs)
 
@@ -100,7 +121,7 @@ class BaseCurriculum(models.Model):
 
 
 class LocalCurriculum(models.Model):
-    tenant_id = models.CharField(max_length=50, verbose_name="ID do tenant")
+    tenant_id = models.CharField(max_length=50, verbose_name="Identificador do tenant")
     cycle = models.IntegerField(verbose_name="Ciclo")
     additional_competencies = models.ManyToManyField(Competency, blank=True, verbose_name="Competências adicionais")
 

@@ -8,6 +8,7 @@ import {
   type ManagementAssignment,
   type School,
   getManagementSnapshot,
+  requireAuthSession,
 } from "@/lib/api";
 import {
   countClassroomsBySchool,
@@ -25,6 +26,7 @@ type PageProps = {
 };
 
 export default async function ManagementPage({ searchParams }: PageProps) {
+  await requireAuthSession("/management");
   const snapshot = await getManagementSnapshot();
   const params = (await searchParams) || {};
   const filters = {
@@ -38,36 +40,36 @@ export default async function ManagementPage({ searchParams }: PageProps) {
 
   return (
     <DashboardShell
-      title="School Management"
-      description="Institutional view of schools, classrooms, enrollments, and management roles."
+      title="Gestão escolar"
+      description="Visão institucional de escolas, turmas, matrículas e cargos de gestão."
       aside={(
         <>
           <section className="rounded-[1.25rem] border border-ink/10 bg-white/80 p-4 shadow-card backdrop-blur">
             <SectionTitle
-              eyebrow="Summary"
-              title="Current Scope"
-              description="Quick references for the operational slice of this page."
+              eyebrow="Resumo"
+              title="Âmbito atual"
+              description="Referências rápidas para o recorte operacional desta página."
             />
             <dl className="mt-4 space-y-3 text-sm leading-5 text-ink/72">
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Schools</dt>
-                <dd>{snapshot.schools.count} registered units.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Escolas</dt>
+                <dd>{snapshot.schools.count} unidades registadas.</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Classrooms</dt>
-                <dd>{classrooms.length} classrooms in the current slice.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Turmas</dt>
+                <dd>{classrooms.length} turmas no recorte atual.</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Enrollments</dt>
-                <dd>{enrollments.length} students matched by the active filters.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Matrículas</dt>
+                <dd>{enrollments.length} alunos filtrados pelos critérios ativos.</dd>
               </div>
             </dl>
           </section>
-          <nav aria-label="Management secondary navigation" className="rounded-[1.25rem] border border-ink/10 bg-sand p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Sections</p>
+          <nav aria-label="Navegação secundária da gestão" className="rounded-[1.25rem] border border-ink/10 bg-sand p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Secções</p>
             <ul className="mt-3 space-y-2 text-sm text-ink/75">
-              <li><a href="#schools">Schools and roles</a></li>
-              <li><a href="#classrooms">Classrooms and enrollments</a></li>
+              <li><a href="#schools">Escolas e cargos</a></li>
+              <li><a href="#classrooms">Turmas e matrículas</a></li>
             </ul>
           </nav>
         </>
@@ -77,7 +79,7 @@ export default async function ManagementPage({ searchParams }: PageProps) {
         fields={[
           {
             name: "school",
-            label: "School",
+            label: "Escola",
             value: filters.school,
             options: snapshot.schools.items.map((item) => ({
               value: String(item.id),
@@ -86,7 +88,7 @@ export default async function ManagementPage({ searchParams }: PageProps) {
           },
           {
             name: "year",
-            label: "Academic Year",
+            label: "Ano letivo",
             value: filters.year,
             options: snapshot.academicYears.items.map((item) => ({
               value: item.code,
@@ -95,7 +97,7 @@ export default async function ManagementPage({ searchParams }: PageProps) {
           },
           {
             name: "role",
-            label: "Role",
+            label: "Cargo",
             value: filters.role,
             options: Array.from(new Set(snapshot.managementAssignments.items.map((item) => item.role))).map((item) => ({
               value: item,
@@ -107,8 +109,8 @@ export default async function ManagementPage({ searchParams }: PageProps) {
 
       <section id="schools" className="grid gap-4 lg:grid-cols-2">
         <RecordList
-          title="Schools"
-          subtitle="Institutional base of the platform."
+          title="Escolas"
+          subtitle="Base institucional da plataforma."
           snapshot={snapshot.schools}
           rows={snapshot.schools.items.slice(0, 6)}
           renderRow={(school: School) => {
@@ -119,21 +121,21 @@ export default async function ManagementPage({ searchParams }: PageProps) {
                 <div className="flex items-center justify-between gap-3">
                   <p className="font-semibold text-ink">{school.name}</p>
                   <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                    {school.active ? "active" : "inactive"}
+                    {school.active ? "ativa" : "inativa"}
                   </span>
                 </div>
                 <p className="mt-1.5 text-sm leading-5 text-ink/70">
-                  {school.code} | {school.district || "district not set"} | {school.province || "province not set"}
+                  {school.code} | {school.district || "distrito não definido"} | {school.province || "província não definida"}
                 </p>
-                <p className="mt-1 text-sm leading-5 text-ink/55">{classroomCount} classrooms linked to this school.</p>
+                <p className="mt-1 text-sm leading-5 text-ink/55">{classroomCount} turmas ligadas a esta escola.</p>
               </div>
             );
           }}
         />
 
         <RecordList
-          title="Management Roles"
-          subtitle="Leadership and coordination by academic year and scope."
+          title="Cargos de gestão"
+          subtitle="Liderança e coordenação por ano letivo e âmbito."
           snapshot={snapshot.managementAssignments}
           rows={assignments.slice(0, 8)}
           renderRow={(assignment: ManagementAssignment) => (
@@ -145,7 +147,7 @@ export default async function ManagementPage({ searchParams }: PageProps) {
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">
-                {formatRole(assignment.role)} in {assignment.school_name}
+                {formatRole(assignment.role)} em {assignment.school_name}
               </p>
               <p className="mt-1 text-sm leading-5 text-ink/55">
                 {describeAssignmentScope(assignment)}
@@ -157,8 +159,8 @@ export default async function ManagementPage({ searchParams }: PageProps) {
 
       <section id="classrooms" className="grid gap-4 lg:grid-cols-2">
         <RecordList
-          title="Classrooms"
-          subtitle="Classrooms linked to school, grade, academic year, and lead teacher."
+          title="Turmas"
+          subtitle="Turmas ligadas à escola, classe, ano letivo e diretor de turma."
           snapshot={snapshot.classrooms}
           rows={classrooms.slice(0, 8)}
           renderRow={(classroom: Classroom) => {
@@ -169,14 +171,14 @@ export default async function ManagementPage({ searchParams }: PageProps) {
                 <div className="flex items-center justify-between gap-3">
                   <p className="font-semibold text-ink">{classroom.name}</p>
                   <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                    {enrollmentCount} enrollments
+                    {enrollmentCount} matrículas
                   </span>
                 </div>
                 <p className="mt-1.5 text-sm leading-5 text-ink/70">
                   {classroom.school_name} | {classroom.academic_year} | {classroom.grade_name}
                 </p>
                 <p className="mt-1 text-sm leading-5 text-ink/55">
-                  Lead teacher: {classroom.lead_teacher_name || "not assigned"}
+                  Diretor de turma: {classroom.lead_teacher_name || "não atribuído"}
                 </p>
               </div>
             );
@@ -184,8 +186,8 @@ export default async function ManagementPage({ searchParams }: PageProps) {
         />
 
         <RecordList
-          title="Enrollments"
-          subtitle="Student distribution across school classrooms."
+          title="Matrículas"
+          subtitle="Distribuição de alunos pelas turmas da escola."
           snapshot={snapshot.enrollments}
           rows={enrollments.slice(0, 8)}
           renderRow={(enrollment: Enrollment) => (
@@ -199,7 +201,7 @@ export default async function ManagementPage({ searchParams }: PageProps) {
               <p className="mt-1.5 text-sm leading-5 text-ink/70">
                 {enrollment.school_name} | {enrollment.classroom_name}
               </p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">Grade {enrollment.grade_number}</p>
+              <p className="mt-1 text-sm leading-5 text-ink/55">Classe {enrollment.grade_number}</p>
             </div>
           )}
         />

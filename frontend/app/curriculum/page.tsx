@@ -6,6 +6,7 @@ import {
   type GradeSubject,
   type SubjectCurriculumPlan,
   getCurriculumSnapshot,
+  requireAuthSession,
 } from "@/lib/api";
 
 type PageProps = {
@@ -19,6 +20,7 @@ function readParam(
 }
 
 export default async function CurriculumPage({ searchParams }: PageProps) {
+  await requireAuthSession("/curriculum");
   const snapshot = await getCurriculumSnapshot();
   const params = (await searchParams) || {};
   const year = readParam(params.year);

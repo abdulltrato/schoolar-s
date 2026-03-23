@@ -50,6 +50,12 @@ class BaseCurriculumSerializer(serializers.ModelSerializer):
         model = BaseCurriculum
         fields = "__all__"
 
+    def to_internal_value(self, data):
+        normalized = data.copy()
+        if "competencia_ids" in normalized and "competency_ids" not in normalized:
+            normalized["competency_ids"] = normalized["competencia_ids"]
+        return super().to_internal_value(normalized)
+
 
 class LocalCurriculumSerializer(serializers.ModelSerializer):
     additional_competencies = CompetencySerializer(many=True, read_only=True)
@@ -64,6 +70,12 @@ class LocalCurriculumSerializer(serializers.ModelSerializer):
     class Meta:
         model = LocalCurriculum
         fields = "__all__"
+
+    def to_internal_value(self, data):
+        normalized = data.copy()
+        if "competencia_ids" in normalized and "competency_ids" not in normalized:
+            normalized["competency_ids"] = normalized["competencia_ids"]
+        return super().to_internal_value(normalized)
 
 
 class SubjectCurriculumPlanSerializer(serializers.ModelSerializer):
@@ -82,3 +94,9 @@ class SubjectCurriculumPlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubjectCurriculumPlan
         fields = "__all__"
+
+    def to_internal_value(self, data):
+        normalized = data.copy()
+        if "competencia_ids" in normalized and "competency_ids" not in normalized:
+            normalized["competency_ids"] = normalized["competencia_ids"]
+        return super().to_internal_value(normalized)

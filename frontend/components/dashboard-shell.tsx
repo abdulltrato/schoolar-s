@@ -11,10 +11,16 @@ type DashboardShellProps = {
 };
 
 const navigation = [
-  { href: "/", label: "Overview" },
-  { href: "/management", label: "Management" },
-  { href: "/curriculum", label: "Curriculum" },
-  { href: "/assessment", label: "Assessment" },
+  { href: "/", label: "Visão geral" },
+  { href: "/management", label: "Gestão" },
+  { href: "/curriculum", label: "Currículo" },
+  { href: "/assessment", label: "Avaliação" },
+  { href: "/learning", label: "Ensino" },
+  { href: "/student", label: "Aluno" },
+  { href: "/teacher", label: "Professor" },
+  { href: "/finance", label: "Financeiro" },
+  { href: "/communication", label: "Comunicação" },
+  { href: "/audit", label: "Auditoria" },
 ];
 
 export function DashboardShell({
@@ -92,7 +98,7 @@ export function DashboardShell({
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-ink focus:px-3 focus:py-2 focus:text-sm focus:text-sand"
       >
-        Skip to content
+        Ir para o conteúdo
       </a>
       <div className="app-shell">
         <header
@@ -115,7 +121,7 @@ export function DashboardShell({
               type="button"
               aria-expanded={isMenuOpen}
               aria-controls="menu-principal"
-              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+              aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
               onClick={() => setIsMenuOpen((value) => !value)}
               className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-ink/10 bg-sand text-ink lg:hidden"
             >
@@ -131,7 +137,7 @@ export function DashboardShell({
                 />
               </span>
             </button>
-            <nav aria-label="Main navigation" className="hidden flex-wrap gap-1.5 lg:flex">
+            <nav aria-label="Navegação principal" className="hidden flex-wrap gap-1.5 lg:flex">
               {navigation.map((item) => (
                 <Link
                   key={item.href}
@@ -145,7 +151,7 @@ export function DashboardShell({
           </div>
           <nav
             id="menu-principal"
-            aria-label="Mobile main navigation"
+            aria-label="Navegação principal móvel"
             className={`${isMenuOpen ? "mt-2 grid" : "hidden"} gap-1.5 border-t border-ink/10 pt-2 lg:hidden`}
           >
             {navigation.map((item) => (
@@ -164,7 +170,7 @@ export function DashboardShell({
         <main id="main-content" className="app-main-stack" style={mainStyle}>
           {aside ? (
             <div className="app-content-grid">
-              <section aria-label="Page content" className="app-content-stack">
+              <section aria-label="Conteúdo da página" className="app-content-stack">
                 {children}
               </section>
               <aside className="app-aside app-content-stack" style={asideStyle}>
@@ -172,7 +178,7 @@ export function DashboardShell({
               </aside>
             </div>
           ) : (
-            <section aria-label="Page content" className="app-content-stack">
+            <section aria-label="Conteúdo da página" className="app-content-stack">
               {children}
             </section>
           )}
@@ -182,7 +188,7 @@ export function DashboardShell({
           ref={footerRef}
           className="app-footer rounded-[0.8rem] border border-ink/10 bg-white/95 px-3 py-1.5 text-[11px] leading-4 text-ink/65 backdrop-blur"
         >
-          Schoolar-S dashboard. Domain-based navigation with an interface optimized for school operations.
+          Painel Schoolar-S. Navegação por domínio com interface otimizada para operações escolares.
         </footer>
       </div>
     </div>

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Student, StudentCompetency
+from .models import Guardian, Student, StudentCompetency, StudentGuardian
 
 
 class StudentCompetencySerializer(serializers.ModelSerializer):
@@ -20,4 +20,19 @@ class StudentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Student
-        fields = ["id", "name", "birth_date", "grade", "cycle", "education_level", "status", "competencies"]
+        fields = ["id", "user", "name", "tenant_id", "birth_date", "grade", "cycle", "education_level", "status", "competencies"]
+
+
+class GuardianSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Guardian
+        fields = "__all__"
+
+
+class StudentGuardianSerializer(serializers.ModelSerializer):
+    student_name = serializers.CharField(source="student.name", read_only=True)
+    guardian_name = serializers.CharField(source="guardian.name", read_only=True)
+
+    class Meta:
+        model = StudentGuardian
+        fields = "__all__"

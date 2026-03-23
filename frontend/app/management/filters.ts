@@ -81,7 +81,7 @@ export function countEnrollmentsByClassroom(enrollments: Enrollment[], classroom
 export function describeAssignmentScope(assignment: ManagementAssignment) {
   return (
     assignment.classroom_name ||
-    (assignment.grade_number ? `Grade ${assignment.grade_number}` : null) ||
-    (assignment.cycle ? `Cycle ${assignment.cycle}` : "School-wide scope")
+    (assignment.grade_number ? `Classe ${assignment.grade_number}` : null) ||
+    (assignment.cycle ? `Ciclo ${assignment.cycle}` : "Âmbito escolar")
   );
 }

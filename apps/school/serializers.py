@@ -2,20 +2,39 @@ from rest_framework import serializers
 
 from .models import (
     AcademicYear,
+    AuditAlert,
+    AuditEvent,
+    Announcement,
+    AttendanceRecord,
     Classroom,
     Enrollment,
     Grade,
     GradeSubject,
+    Invoice,
     ManagementAssignment,
+    Payment,
     School,
     Teacher,
     TeachingAssignment,
+    UserProfile,
 )
 
 
 class AcademicYearSerializer(serializers.ModelSerializer):
     class Meta:
         model = AcademicYear
+        fields = "__all__"
+
+
+class AuditEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AuditEvent
+        fields = "__all__"
+
+
+class AuditAlertSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AuditAlert
         fields = "__all__"
 
 
@@ -97,4 +116,49 @@ class ManagementAssignmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ManagementAssignment
+        fields = "__all__"
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source="user.username", read_only=True)
+    school_name = serializers.CharField(source="school.name", read_only=True)
+
+    class Meta:
+        model = UserProfile
+        fields = "__all__"
+
+
+class AttendanceRecordSerializer(serializers.ModelSerializer):
+    student_name = serializers.CharField(source="enrollment.student.name", read_only=True)
+    classroom_name = serializers.CharField(source="enrollment.classroom.name", read_only=True)
+
+    class Meta:
+        model = AttendanceRecord
+        fields = "__all__"
+
+
+class AnnouncementSerializer(serializers.ModelSerializer):
+    school_name = serializers.CharField(source="school.name", read_only=True)
+    classroom_name = serializers.CharField(source="classroom.name", read_only=True)
+    author_name = serializers.CharField(source="author.username", read_only=True)
+
+    class Meta:
+        model = Announcement
+        fields = "__all__"
+
+
+class InvoiceSerializer(serializers.ModelSerializer):
+    student_name = serializers.CharField(source="student.name", read_only=True)
+    school_name = serializers.CharField(source="school.name", read_only=True)
+
+    class Meta:
+        model = Invoice
+        fields = "__all__"
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    invoice_reference = serializers.CharField(source="invoice.reference", read_only=True)
+
+    class Meta:
+        model = Payment
         fields = "__all__"

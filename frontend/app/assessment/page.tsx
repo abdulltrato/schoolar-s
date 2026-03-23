@@ -8,6 +8,7 @@ import {
   type AssessmentPeriod,
   type SubjectPeriodResult,
   getAssessmentSnapshot,
+  requireAuthSession,
 } from "@/lib/api";
 
 function formatDate(value: string) {
@@ -45,6 +46,7 @@ function readParam(
 }
 
 export default async function AssessmentPage({ searchParams }: PageProps) {
+  await requireAuthSession("/assessment");
   const snapshot = await getAssessmentSnapshot();
   const params = (await searchParams) || {};
   const year = readParam(params.year);

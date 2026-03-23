@@ -47,6 +47,7 @@ TENANT_APPS = [
     "apps.academic",
     "apps.curriculum",
     "apps.assessment",
+    "apps.learning",
     "apps.progress",
     "apps.school",
     "apps.reports",
@@ -106,6 +107,24 @@ def env_bool(name: str, default: bool) -> bool:
 
 
 USE_POSTGRES = env_bool("USE_POSTGRES", False)
+REQUIRE_USER_PROFILE = env_bool("REQUIRE_USER_PROFILE", True)
+SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", not DEBUG)
+SESSION_COOKIE_HTTPONLY = env_bool("SESSION_COOKIE_HTTPONLY", True)
+SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Lax")
+SESSION_COOKIE_AGE = int(os.getenv("SESSION_COOKIE_AGE", str(60 * 60 * 8)))
+SESSION_SAVE_EVERY_REQUEST = env_bool("SESSION_SAVE_EVERY_REQUEST", True)
+CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", not DEBUG)
+CSRF_COOKIE_HTTPONLY = env_bool("CSRF_COOKIE_HTTPONLY", False)
+CSRF_COOKIE_SAMESITE = os.getenv("CSRF_COOKIE_SAMESITE", "Lax")
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        "DJANGO_CSRF_TRUSTED_ORIGINS",
+        "http://localhost:3000,http://127.0.0.1:3000",
+    ).split(",")
+    if origin.strip()
+]
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 if USE_POSTGRES:
     DATABASES = {
@@ -164,6 +183,7 @@ MIGRATION_MODULES = {
     "assessment": None,
     "curriculum": None,
     "events": None,
+    "learning": None,
     "progress": None,
     "reports": None,
     "school": None,
@@ -226,6 +246,11 @@ LOGGING = {
             "propagate": False,
         },
         "schoolar.api": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+        "schoolar.audit": {
             "handlers": ["console"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
             "propagate": False,

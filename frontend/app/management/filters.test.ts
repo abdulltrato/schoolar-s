@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ManagementSnapshot } from "../../lib/api.ts";
+import type { ManagementSnapshot } from "../../lib/api";
 
 import {
   countClassroomsBySchool,
@@ -12,7 +12,7 @@ import {
   filterManagementAssignments,
   formatRole,
   readParam,
-} from "./filters.ts";
+} from "./filters";
 
 function createCollection<T>(items: T[]) {
   return {
@@ -21,7 +21,9 @@ function createCollection<T>(items: T[]) {
     statusCode: 200,
     count: items.length,
     items,
-    message: `${items.length} records loaded from the backend.`,
+    next: null,
+    previous: null,
+    message: `${items.length} registos carregados a partir do backend.`,
     requiresAuth: false,
   };
 }
@@ -61,7 +63,7 @@ function createSnapshot(): ManagementSnapshot {
       {
         id: 1,
         code: "ESC-01",
-        name: "School Central",
+        name: "Escola Central",
         district: "A",
         province: "Maputo",
         active: true,
@@ -69,7 +71,7 @@ function createSnapshot(): ManagementSnapshot {
       {
         id: 2,
         code: "ESC-02",
-        name: "School North",
+        name: "Escola Norte",
         district: "B",
         province: "Gaza",
         active: true,
@@ -79,10 +81,11 @@ function createSnapshot(): ManagementSnapshot {
       {
         id: 10,
         name: "7A",
+        tenant_id: "school-central",
         school: 1,
-        school_name: "School Central",
+        school_name: "Escola Central",
         grade: 7,
-        grade_name: "Grade 7",
+        grade_name: "Classe 7",
         cycle: 2,
         academic_year: "2025",
         lead_teacher: 90,
@@ -91,10 +94,11 @@ function createSnapshot(): ManagementSnapshot {
       {
         id: 11,
         name: "8B",
+        tenant_id: "school-north",
         school: 2,
-        school_name: "School North",
+        school_name: "Escola Norte",
         grade: 8,
-        grade_name: "Grade 8",
+        grade_name: "Classe 8",
         cycle: 2,
         academic_year: "2026",
         lead_teacher: 91,
@@ -109,7 +113,7 @@ function createSnapshot(): ManagementSnapshot {
         classroom: 10,
         classroom_name: "7A",
         enrollment_date: "2025-01-03",
-        school_name: "School Central",
+        school_name: "Escola Central",
         academic_year_code: "2025",
         grade_number: 7,
       },
@@ -120,7 +124,7 @@ function createSnapshot(): ManagementSnapshot {
         classroom: 11,
         classroom_name: "8B",
         enrollment_date: "2026-01-03",
-        school_name: "School North",
+        school_name: "Escola Norte",
         academic_year_code: "2026",
         grade_number: 8,
       },
@@ -131,7 +135,7 @@ function createSnapshot(): ManagementSnapshot {
         teacher: 90,
         teacher_name: "Ana",
         school: 1,
-        school_name: "School Central",
+        school_name: "Escola Central",
         academic_year: 1,
         academic_year_code: "2025",
         role: "homeroom_director",
@@ -147,7 +151,7 @@ function createSnapshot(): ManagementSnapshot {
         teacher: 91,
         teacher_name: "Beto",
         school: 2,
-        school_name: "School North",
+        school_name: "Escola Norte",
         academic_year: 2,
         academic_year_code: "2026",
         role: "cycle_director",
@@ -216,5 +220,5 @@ test("describeAssignmentScope prioritizes classroom, then grade, then cycle", ()
   const snapshot = createSnapshot();
 
   assert.equal(describeAssignmentScope(snapshot.managementAssignments.items[0]), "7A");
-  assert.equal(describeAssignmentScope(snapshot.managementAssignments.items[1]), "Cycle 2");
+  assert.equal(describeAssignmentScope(snapshot.managementAssignments.items[1]), "Ciclo 2");
 });

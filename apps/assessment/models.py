@@ -43,6 +43,23 @@ class AssessmentComponent(models.Model):
         ("summative", "Sumativa"),
         ("other", "Outra"),
     ]
+    LEGACY_TYPE_MAP = {
+        "teste": "test",
+        "exame": "exam",
+        "diagnostica": "diagnostic",
+        "formativa": "formative",
+        "sumativa": "summative",
+        "outra": "other",
+    }
+
+    def __init__(self, *args, **kwargs):
+        legacy_type = kwargs.pop("tipo", None)
+        if legacy_type is not None and "type" not in kwargs:
+            kwargs["type"] = legacy_type
+        normalized_type = kwargs.get("type")
+        if normalized_type is not None:
+            kwargs["type"] = self.LEGACY_TYPE_MAP.get(normalized_type, normalized_type)
+        super().__init__(*args, **kwargs)
 
     period = models.ForeignKey(AssessmentPeriod, on_delete=models.CASCADE, verbose_name="Período")
     grade_subject = models.ForeignKey("school.GradeSubject", on_delete=models.CASCADE, verbose_name="Disciplina da classe")
@@ -53,6 +70,7 @@ class AssessmentComponent(models.Model):
     mandatory = models.BooleanField(default=True, verbose_name="Obrigatória")
 
     def clean(self):
+        self.type = self.LEGACY_TYPE_MAP.get(self.type, self.type)
         if self.period.academic_year_id != self.grade_subject.academic_year_id:
             raise ValidationError({"grade_subject": "The grade subject must belong to the same academic year as the period."})
         if self.weight <= 0 or self.weight > 100:
@@ -61,6 +79,7 @@ class AssessmentComponent(models.Model):
             raise ValidationError({"max_score": "Maximum score must be positive."})
 
     def save(self, *args, **kwargs):
+        self.type = self.LEGACY_TYPE_MAP.get(self.type, self.type)
         self.full_clean()
         return super().save(*args, **kwargs)
 
@@ -77,7 +96,20 @@ class AssessmentComponent(models.Model):
 class Assessment(models.Model):
     TYPE_CHOICES = AssessmentComponent.TYPE_CHOICES
 
+    def __init__(self, *args, **kwargs):
+        legacy_type = kwargs.pop("tipo", None)
+        legacy_date = kwargs.pop("data", None)
+        if legacy_type is not None and "type" not in kwargs:
+            kwargs["type"] = legacy_type
+        if legacy_date is not None and "date" not in kwargs:
+            kwargs["date"] = legacy_date
+        normalized_type = kwargs.get("type")
+        if normalized_type is not None:
+            kwargs["type"] = AssessmentComponent.LEGACY_TYPE_MAP.get(normalized_type, normalized_type)
+        super().__init__(*args, **kwargs)
+
     student = models.ForeignKey("academic.Student", on_delete=models.CASCADE, verbose_name="Aluno")
+    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     teaching_assignment = models.ForeignKey(
         "school.TeachingAssignment",
         on_delete=models.CASCADE,
@@ -115,11 +147,22 @@ class Assessment(models.Model):
     attitudes = models.BooleanField(default=False, verbose_name="Atitudes")
 
     def clean(self):
+        self.type = AssessmentComponent.LEGACY_TYPE_MAP.get(self.type, self.type)
         if not self.teaching_assignment_id:
             raise ValidationError({"teaching_assignment": "A teaching assignment is required."})
 
         classroom = self.teaching_assignment.classroom
         subject = self.teaching_assignment.grade_subject.subject
+        student_tenant = (self.student.tenant_id or "").strip() if self.student_id else ""
+        classroom_tenant = (classroom.tenant_id or "").strip()
+
+        if self.tenant_id and student_tenant and self.tenant_id != student_tenant:
+            raise ValidationError({"tenant_id": "Assessment tenant must match the student tenant."})
+        if self.tenant_id and classroom_tenant and self.tenant_id != classroom_tenant:
+            raise ValidationError({"tenant_id": "Assessment tenant must match the classroom tenant."})
+        if student_tenant and classroom_tenant and student_tenant != classroom_tenant:
+            raise ValidationError({"tenant_id": "Assessment student and classroom must belong to the same tenant."})
+        self.tenant_id = self.tenant_id or student_tenant or classroom_tenant
 
         if self.student_id:
             if self.student.cycle != classroom.cycle:
@@ -163,6 +206,7 @@ class Assessment(models.Model):
                 SubjectPeriodResult.recalculate(**key)
 
     def save(self, *args, **kwargs):
+        self.type = AssessmentComponent.LEGACY_TYPE_MAP.get(self.type, self.type)
         previous_key = None
         if self.pk:
             previous = type(self).objects.filter(pk=self.pk).select_related("student", "teaching_assignment", "period").first()
@@ -238,6 +282,14 @@ class SubjectPeriodResult(models.Model):
             },
         )
         return result
+
+    @classmethod
+    def recalcular(cls, *, student, teaching_assignment, period):
+        return cls.recalculate(
+            student=student,
+            teaching_assignment=teaching_assignment,
+            period=period,
+        )
 
     def clean(self):
         if self.period.academic_year_id != self.teaching_assignment.classroom.academic_year_id:

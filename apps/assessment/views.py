@@ -15,6 +15,11 @@ class AssessmentPeriodViewSet(RobustModelViewSet):
     search_fields = ("name", "academic_year__code")
     ordering_fields = ("id", "academic_year__code", "order", "name")
     ordering = ("academic_year__code", "order")
+    allowed_roles = {
+        "*": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher"},
+        "list": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher", "student", "guardian"},
+        "retrieve": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher", "student", "guardian"},
+    }
 
 
 class AssessmentComponentViewSet(RobustModelViewSet):
@@ -29,6 +34,7 @@ class AssessmentComponentViewSet(RobustModelViewSet):
     search_fields = ("name", "type", "period__name", "grade_subject__subject__name")
     ordering_fields = ("id", "period__order", "grade_subject__subject__name", "name", "weight")
     ordering = ("period__academic_year__code", "period__order", "grade_subject__subject__name")
+    allowed_roles = AssessmentPeriodViewSet.allowed_roles
 
 
 class AssessmentViewSet(RobustModelViewSet):
@@ -48,6 +54,7 @@ class AssessmentViewSet(RobustModelViewSet):
     serializer_class = AssessmentSerializer
     search_fields = (
         "student__name",
+        "tenant_id",
         "competency__name",
         "type",
         "period__name",
@@ -55,8 +62,14 @@ class AssessmentViewSet(RobustModelViewSet):
         "teaching_assignment__grade_subject__subject__name",
         "teaching_assignment__classroom__name",
     )
-    ordering_fields = ("id", "date", "type", "student__name", "teaching_assignment__classroom__name", "period__order")
+    ordering_fields = ("id", "tenant_id", "date", "type", "student__name", "teaching_assignment__classroom__name", "period__order")
     ordering = ("-date",)
+    audit_resource = "assessment"
+    allowed_roles = {
+        "*": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher"},
+        "list": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher", "student", "guardian"},
+        "retrieve": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher", "student", "guardian"},
+    }
 
 
 class SubjectPeriodResultViewSet(RobustModelViewSet):
@@ -74,3 +87,8 @@ class SubjectPeriodResultViewSet(RobustModelViewSet):
     search_fields = ("student__name", "period__name", "teaching_assignment__grade_subject__subject__name")
     ordering_fields = ("id", "final_average", "period__order", "student__name")
     ordering = ("period__academic_year__code", "period__order", "student__name")
+    allowed_roles = {
+        "*": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher"},
+        "list": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher", "student", "guardian"},
+        "retrieve": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher", "student", "guardian"},
+    }
