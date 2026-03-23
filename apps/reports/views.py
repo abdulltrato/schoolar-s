@@ -19,6 +19,14 @@ class ReportViewSet(RobustModelViewSet):
     audit_resource = "report"
     http_method_names = ["get", "post", "head", "options"]
 
+    def create(self, request, *args, **kwargs):
+        return Response(
+            {
+                "detail": "A emissão manual de relatórios está desativada. Use o endpoint de geração assinado.",
+            },
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
+        )
+
     @action(detail=False, methods=["get"])
     def catalog(self, request):
         return Response({"results": ReportGenerationService.get_catalog()})

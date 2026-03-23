@@ -295,6 +295,20 @@ class ReportGenerationApiTests(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("classroom", response.data["error"]["details"])
 
+    def test_create_endpoint_rejects_manual_issue(self):
+        response = self.client.post(
+            "/api/v1/reports/reports/",
+            {
+                "title": "Falso",
+                "type": "school",
+                "period": "2026-2027",
+                "content": {"fake": True},
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 405)
+
     def test_verify_endpoint_accepts_authentic_document(self):
         response = self.client.post(
             "/api/v1/reports/reports/generate/",
