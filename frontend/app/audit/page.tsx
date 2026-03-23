@@ -35,6 +35,10 @@ function formatDateTime(value: string) {
   }).format(new Date(value));
 }
 
+const panelClass = "relative overflow-hidden rounded-[1.1rem] border border-white/70 bg-white/95 p-4 shadow-[0_18px_50px_rgba(20,33,61,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_55px_rgba(20,33,61,0.1)]";
+const badgeClass = "rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70";
+const controlClass = "w-full rounded-[1rem] border border-ink/10 bg-sand px-3 py-1.5 text-sm text-ink shadow-[inset_0_1px_0_rgba(0,0,0,0.05)] outline-none transition focus:border-ink/30 focus:ring-4 focus:ring-mist";
+
 function topCounts(values: string[], limit = 3) {
   const counts = new Map<string, number>();
   for (const value of values.filter(Boolean)) {
@@ -159,36 +163,65 @@ export default async function AuditPage({ searchParams }: PageProps) {
       description="Rastreio operacional de mudanças sensíveis em recursos, atores, tenants e rotas."
       aside={(
         <>
-          <section className="rounded-[1.25rem] border border-ink/10 bg-white/80 p-4 shadow-card backdrop-blur">
+          <section className="overflow-hidden rounded-[1.35rem] border border-white/40 bg-[linear-gradient(180deg,rgba(32,52,85,0.98),rgba(20,33,61,0.94))] p-5 shadow-card text-sand">
             <SectionTitle
               eyebrow="Auditoria"
               title="Superfície de controlo"
               description="Investigue operações sensíveis sem recorrer ao Django admin."
             />
-            <dl className="mt-4 space-y-3 text-sm leading-5 text-ink/72">
+            <dl className="mt-5 space-y-4 text-sm leading-6">
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Eventos</dt>
-                <dd>{snapshot.auditEvents.count} registos de auditoria persistidos.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sand/70">Eventos</dt>
+                <dd className="text-lg font-semibold">{snapshot.auditEvents.count} registos</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Recursos</dt>
-                <dd>{new Set(snapshot.auditEvents.items.map((event) => event.resource)).size} tipos de recurso auditados.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sand/70">Recursos</dt>
+                <dd className="text-lg font-semibold">{new Set(snapshot.auditEvents.items.map((event) => event.resource)).size} tipos</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Atores</dt>
-                <dd>{new Set(snapshot.auditEvents.items.map((event) => event.username).filter(Boolean)).size} utilizadores com mutações visíveis.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sand/70">Atores</dt>
+                <dd className="text-lg font-semibold">{new Set(snapshot.auditEvents.items.map((event) => event.username).filter(Boolean)).size} utilizadores</dd>
               </div>
             </dl>
           </section>
-          <nav aria-label="Navegação secundária da auditoria" className="rounded-[1.25rem] border border-ink/10 bg-sand p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Secções</p>
-            <ul className="mt-3 space-y-2 text-sm text-ink/75">
-              <li><a href="#audit-events">Eventos de auditoria</a></li>
+          <nav aria-label="Navegação secundária da auditoria" className="overflow-hidden rounded-[1.35rem] border border-white/40 bg-white/85 p-4 shadow-[0_20px_50px_rgba(20,33,61,0.08)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/60">Secções</p>
+            <ul className="mt-3 space-y-2 text-sm text-ink">
+              <li>
+                <a className="block rounded-[1rem] border border-ink/10 bg-ink/5 px-3 py-2 transition hover:border-ink/30 hover:bg-ink/10" href="#audit-events">
+                  Eventos de auditoria
+                </a>
+              </li>
             </ul>
           </nav>
         </>
       )}
     >
+      <section className="overflow-hidden rounded-[1.5rem] border border-white/65 bg-[linear-gradient(135deg,rgba(20,33,61,0.95),rgba(32,52,85,0.95))] p-5 text-sand shadow-card shadow-[0_30px_80px_rgba(20,33,61,0.18)]">
+        <div className="grid gap-5 lg:grid-cols-[1.3fr_0.7fr]">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-fern/80">Auditoria</p>
+            <h2 className="mt-3 font-display text-3xl font-bold leading-tight">Trilha operacional com sinais de risco destacados.</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-sand/80">
+              Monitore eventos sensíveis, alertas e recursos dominantes com contornos visuais alinhados ao restante do cockpit executivo.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[1.1rem] border border-white/30 bg-white/10 px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sand/70">Alertas ativos</p>
+              <p className="mt-2 font-display text-2xl font-semibold">{alertItems.filter((item) => !item.acknowledged).length}</p>
+            </div>
+            <div className="rounded-[1.1rem] border border-white/30 bg-white/10 px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sand/70">Eventos 24h</p>
+              <p className="mt-2 font-display text-2xl font-semibold">{recent24hCount}</p>
+            </div>
+            <div className="rounded-[1.1rem] border border-white/30 bg-white/10 px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sand/70">Risco</p>
+              <p className="mt-2 font-display text-2xl font-semibold">{riskLevel}</p>
+            </div>
+          </div>
+        </div>
+      </section>
       {status ? (
         <section className={`rounded-[0.9rem] border px-3 py-2 text-sm ${status.endsWith("error") ? "border-ember/20 bg-ember/10 text-ember" : "border-fern/20 bg-fern/10 text-fern"}`}>
           {status === "alert-acknowledged" && "Alerta reconhecido com sucesso."}
@@ -278,11 +311,11 @@ export default async function AuditPage({ searchParams }: PageProps) {
         />
       </section>
 
-      <form className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-2.5 shadow-card backdrop-blur">
+      <form className={`${panelClass} mt-4`}>
         <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
           <label className="block">
             <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Recurso</span>
-            <select name="resource" defaultValue={resource} className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-1.5 text-xs text-ink sm:text-sm">
+            <select name="resource" defaultValue={resource} className={controlClass}>
               <option value="">Todos</option>
               {Array.from(new Set([...snapshot.auditEvents.items.map((event) => event.resource), ...snapshot.auditAlerts.items.map((alert) => alert.resource)].filter(Boolean))).map((item) => (
                 <option key={item} value={item}>{item}</option>
@@ -291,7 +324,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
           </label>
           <label className="block">
             <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Ação</span>
-            <select name="action" defaultValue={action} className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-1.5 text-xs text-ink sm:text-sm">
+            <select name="action" defaultValue={action} className={controlClass}>
               <option value="">Todos</option>
               {Array.from(new Set(snapshot.auditEvents.items.map((event) => event.action))).map((item) => (
                 <option key={item} value={item}>{formatAuditAction(item)}</option>
@@ -300,7 +333,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
           </label>
           <label className="block">
             <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Severidade</span>
-            <select name="severity" defaultValue={severity} className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-1.5 text-xs text-ink sm:text-sm">
+            <select name="severity" defaultValue={severity} className={controlClass}>
               <option value="">Todas</option>
               <option value="watch">{formatAuditSeverity("watch")}</option>
               <option value="elevated">{formatAuditSeverity("elevated")}</option>
@@ -308,7 +341,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
           </label>
           <label className="block">
             <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Estado do alerta</span>
-            <select name="acknowledged" defaultValue={acknowledged} className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-1.5 text-xs text-ink sm:text-sm">
+            <select name="acknowledged" defaultValue={acknowledged} className={controlClass}>
               <option value="">Todos</option>
               <option value="false">Aberto</option>
               <option value="true">Reconhecido</option>
@@ -316,7 +349,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
           </label>
           <label className="block">
             <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Utilizador</span>
-            <select name="username" defaultValue={username} className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-1.5 text-xs text-ink sm:text-sm">
+            <select name="username" defaultValue={username} className={controlClass}>
               <option value="">Todos</option>
               {Array.from(new Set([...snapshot.auditEvents.items.map((event) => event.username), ...snapshot.auditAlerts.items.map((alert) => alert.username)].filter(Boolean))).map((item) => (
                 <option key={item} value={item}>{item}</option>
@@ -325,7 +358,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
           </label>
           <label className="block">
             <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Tenant</span>
-            <select name="tenant_id" defaultValue={tenantId} className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-1.5 text-xs text-ink sm:text-sm">
+            <select name="tenant_id" defaultValue={tenantId} className={controlClass}>
               <option value="">Todos</option>
               {Array.from(new Set([...snapshot.auditEvents.items.map((event) => event.tenant_id), ...snapshot.auditAlerts.items.map((alert) => alert.tenant_id)].filter(Boolean))).map((item) => (
                 <option key={item} value={item}>{item}</option>
@@ -334,11 +367,11 @@ export default async function AuditPage({ searchParams }: PageProps) {
           </label>
           <label className="block">
             <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Data de início</span>
-            <input name="date_from" type="date" defaultValue={dateFrom} className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-1.5 text-xs text-ink sm:text-sm" />
+            <input name="date_from" type="date" defaultValue={dateFrom} className={controlClass} />
           </label>
           <label className="block">
             <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Data de fim</span>
-            <input name="date_to" type="date" defaultValue={dateTo} className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-1.5 text-xs text-ink sm:text-sm" />
+            <input name="date_to" type="date" defaultValue={dateTo} className={controlClass} />
           </label>
         </div>
         <div className="mt-2 flex gap-1.5">
@@ -364,25 +397,29 @@ export default async function AuditPage({ searchParams }: PageProps) {
           snapshot={snapshot.auditAlerts}
           rows={snapshot.auditAlerts.items.slice(0, 8)}
           renderRow={(alert: AuditAlert) => (
-            <div key={alert.id} className={`rounded-[0.95rem] border px-3 py-3 ${alert.severity === "elevated" ? "border-ember/20 bg-ember/5" : "border-ink/10 bg-white"}`}>
+            <div key={alert.id} className={panelClass}>
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{alert.alert_type}</p>
-                <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${alert.severity === "elevated" ? "bg-ember/10 text-ember" : "bg-sand text-ink/75"}`}>
+                <span className={`${badgeClass} ${alert.severity === "elevated" ? "bg-ember/10 text-ember" : ""}`}>
                   {formatAuditSeverity(alert.severity)}
                 </span>
               </div>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">{alert.summary}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">
-                {alert.username || "system"} {alert.resource ? `| ${alert.resource}` : ""} {alert.tenant_id ? `| ${alert.tenant_id}` : ""}
+              <p className="mt-2 text-sm leading-6 text-ink/70">{alert.summary}</p>
+              <p className="mt-1 text-sm leading-6 text-ink/55">
+                {alert.username || "system"}{alert.resource ? ` · ${alert.resource}` : ""}{alert.tenant_id ? ` · ${alert.tenant_id}` : ""}
               </p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">
-                {formatDateTime(alert.created_at)} | {alert.acknowledged ? "reconhecido" : "aberto"} | alertas elevados visíveis: {elevatedAlertCount}
+              <p className="mt-1 text-sm leading-6 text-ink/55">
+                {formatDateTime(alert.created_at)} · {alert.acknowledged ? "reconhecido" : "aberto"} · alertas elevados visíveis: {elevatedAlertCount}
               </p>
               {!alert.acknowledged ? (
-                <form action={acknowledgeAuditAlertAction} className="mt-2">
+                <form action={acknowledgeAuditAlertAction} className="mt-3">
                   <input type="hidden" name="id" value={alert.id} />
                   <input type="hidden" name="page_href" value={currentHref} />
-                  <SubmitButton idleLabel="Reconhecer alerta" pendingLabel="A reconhecer..." />
+                  <SubmitButton
+                    idleLabel="Reconhecer alerta"
+                    pendingLabel="A reconhecer..."
+                    className="w-full px-4 py-3 bg-sand text-ink border border-ink/10 hover:bg-white"
+                  />
                 </form>
               ) : null}
             </div>
@@ -395,24 +432,28 @@ export default async function AuditPage({ searchParams }: PageProps) {
             subtitle="Recursos com maior número de mutações no recorte atual."
             snapshot={rankedSnapshot}
             rows={topResources}
-            renderRow={(entry: RankedEntry) => (
-              <div key={entry.label} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
+          renderRow={(entry: RankedEntry) => (
+            <div key={entry.label} className={panelClass}>
+              <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{entry.label}</p>
-                <p className="mt-1 text-sm leading-5 text-ink/55">{entry.count} eventos</p>
+                <span className={badgeClass}>{entry.count} eventos</span>
               </div>
-            )}
-          />
+            </div>
+          )}
+        />
           <RecordList
             title="Principais atores"
             subtitle="Utilizadores com maior volume de mutações no recorte atual."
             snapshot={rankedSnapshot}
             rows={topActors}
-            renderRow={(entry: RankedEntry) => (
-              <div key={entry.label} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
+          renderRow={(entry: RankedEntry) => (
+            <div key={entry.label} className={panelClass}>
+              <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{entry.label}</p>
-                <p className="mt-1 text-sm leading-5 text-ink/55">{entry.count} eventos</p>
+                <span className={badgeClass}>{entry.count} eventos</span>
               </div>
-            )}
+            </div>
+          )}
           />
         </section>
 
@@ -422,26 +463,24 @@ export default async function AuditPage({ searchParams }: PageProps) {
           snapshot={snapshot.auditEvents}
           rows={snapshot.auditEvents.items}
           renderRow={(event: AuditEvent) => (
-            <div key={event.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
+            <div key={event.id} className={panelClass}>
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">
                   {event.resource} #{event.object_id}
                 </p>
-                <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  {formatAuditAction(event.action)}
-                </span>
+                <span className={badgeClass}>{formatAuditAction(event.action)}</span>
               </div>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">
-                {event.username || "utilizador desconhecido"} {event.role ? `| ${event.role}` : ""} {event.tenant_id ? `| ${event.tenant_id}` : ""}
+              <p className="mt-2 text-sm leading-6 text-ink/70">
+                {event.username || "utilizador desconhecido"}{event.role ? ` · ${event.role}` : ""}{event.tenant_id ? ` · ${event.tenant_id}` : ""}
               </p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">
-                {event.method} {event.path}
+              <p className="mt-1 text-sm leading-6 text-ink/55">
+                {event.method} · {event.path}
               </p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">
-                {formatDateTime(event.created_at)} | alterações: {event.changed_fields.length > 0 ? event.changed_fields.join(", ") : "nenhum campo capturado"}
+              <p className="mt-1 text-sm leading-6 text-ink/55">
+                {formatDateTime(event.created_at)} · alterações: {event.changed_fields.length > 0 ? event.changed_fields.join(", ") : "nenhum campo capturado"}
               </p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">
-                {event.object_repr || "Sem etiqueta do objeto"} | pedido {event.request_id || "-"}
+              <p className="mt-1 text-sm leading-6 text-ink/55">
+                {event.object_repr || "Sem etiqueta do objeto"} · pedido {event.request_id || "-"}
               </p>
             </div>
           )}

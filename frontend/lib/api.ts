@@ -918,8 +918,7 @@ export async function getAuthSession(): Promise<{ authenticated: boolean; user: 
 export async function requireAuthSession(nextPath: string) {
   const session = await getAuthSession();
   if (!session.authenticated || !session.user) {
-    await clearMirroredSessionCookies();
-    redirect(`/login?next=${encodeURIComponent(nextPath)}`);
+    redirect(`/login?error=session_expired&next=${encodeURIComponent(nextPath)}`);
   }
   return session.user;
 }

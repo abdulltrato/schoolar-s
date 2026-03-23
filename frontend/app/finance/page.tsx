@@ -31,6 +31,10 @@ function readParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] || "" : value || "";
 }
 
+const panelClass = "relative overflow-hidden rounded-[1.1rem] border border-white/70 bg-white/95 p-4 shadow-[0_18px_50px_rgba(20,33,61,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_55px_rgba(20,33,61,0.1)]";
+const badgeClass = "rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70";
+const controlClass = "w-full rounded-[1rem] border border-ink/10 bg-sand px-3 py-2 text-sm text-ink shadow-[inset_0_1px_0_rgba(0,0,0,0.05)] outline-none transition placeholder:text-ink/40 focus:border-ink/30 focus:ring-4 focus:ring-mist";
+
 async function createInvoiceAction(formData: FormData) {
   "use server";
 
@@ -134,8 +138,39 @@ export default async function FinancePage({ searchParams }: PageProps) {
         </>
       )}
     >
+      <section className="overflow-hidden rounded-[1.5rem] border border-white/65 bg-[linear-gradient(135deg,rgba(20,33,61,0.95),rgba(32,52,85,0.95))] p-5 text-sand shadow-card shadow-[0_30px_80px_rgba(20,33,61,0.18)]">
+        <div className="grid gap-5 lg:grid-cols-[1.3fr_0.7fr]">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-fern/80">Finanças</p>
+            <h2 className="mt-3 font-display text-3xl font-bold leading-tight">Pulso financeiro e operação de cobrança.</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-sand/80">
+              Controle as faturas emitidas, pagamentos realizados e contato com responsáveis com o mesmo cuidado visual que o restante do painel.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[1.1rem] border border-white/30 bg-white/10 px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sand/70">Faturas</p>
+              <p className="mt-2 font-display text-2xl font-semibold">{snapshot.invoices.count}</p>
+            </div>
+            <div className="rounded-[1.1rem] border border-white/30 bg-white/10 px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sand/70">Pagamentos</p>
+              <p className="mt-2 font-display text-2xl font-semibold">{snapshot.payments.count}</p>
+            </div>
+            <div className="rounded-[1.1rem] border border-white/30 bg-white/10 px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sand/70">Encarregados</p>
+              <p className="mt-2 font-display text-2xl font-semibold">{snapshot.guardians.count}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <div className="mt-6 overflow-hidden rounded-[1.25rem] border border-white/60 bg-white/95 p-4 shadow-[0_18px_55px_rgba(20,33,61,0.08)]">
+        <p className="text-sm text-ink/70">
+          Recorte atual — estado: {invoiceStatus || "todas"} · método: {paymentMethod || "todos"}.
+        </p>
+      </div>
+
       {status ? (
-        <section className={`rounded-[0.9rem] border px-3 py-2 text-sm ${status.endsWith("error") ? "border-ember/20 bg-ember/10 text-ember" : "border-fern/20 bg-fern/10 text-fern"}`}>
+        <section className={`mt-4 rounded-[1.1rem] border px-4 py-3 text-sm ${status.endsWith("error") ? "border-ember/20 bg-ember/10 text-ember" : "border-fern/20 bg-fern/10 text-fern"}`}>
           {status === "invoice-created" && "Fatura criada com sucesso."}
           {status === "payment-created" && "Pagamento registado com sucesso."}
           {status === "invoice-updated" && "Fatura atualizada com sucesso."}
@@ -146,7 +181,8 @@ export default async function FinancePage({ searchParams }: PageProps) {
         </section>
       ) : null}
 
-      <FilterBar
+      <div className="mt-6 overflow-hidden rounded-[1.25rem] border border-white/60 bg-white/95 p-4 shadow-[0_18px_55px_rgba(20,33,61,0.08)]">
+        <FilterBar
         fields={[
           {
             name: "invoice_status",
@@ -167,63 +203,64 @@ export default async function FinancePage({ searchParams }: PageProps) {
             })),
           },
         ]}
-      />
+        />
+      </div>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <article className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-3 shadow-card backdrop-blur">
+        <article className={panelClass}>
           <SectionTitle
             eyebrow="Criar"
             title="Emitir fatura"
             description="Registe um novo encargo financeiro para um aluno."
           />
-          <form action={createInvoiceAction} className="mt-3 grid gap-2">
-            <select name="student" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
+          <form action={createInvoiceAction} className="mt-3 grid gap-3">
+            <select name="student" required className={controlClass}>
               {snapshot.students.items.map((student) => (
                 <option key={student.id} value={student.id}>{student.name}</option>
               ))}
             </select>
-            <select name="school" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
+            <select name="school" required className={controlClass}>
               {snapshot.schools.items.map((school) => (
                 <option key={school.id} value={school.id}>{school.name}</option>
               ))}
             </select>
-            <input name="reference" required placeholder="Referência" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <input name="description" required placeholder="Descrição" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <input name="amount" type="number" step="0.01" min="0" required placeholder="Montante" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <input name="due_date" type="date" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <select name="status" defaultValue="issued" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
+            <input name="reference" required placeholder="Referência" className={controlClass} />
+            <input name="description" required placeholder="Descrição" className={controlClass} />
+            <input name="amount" type="number" step="0.01" min="0" required placeholder="Montante" className={controlClass} />
+            <input name="due_date" type="date" required className={controlClass} />
+            <select name="status" defaultValue="issued" className={controlClass}>
               <option value="draft">Rascunho</option>
               <option value="issued">Emitida</option>
               <option value="paid">Paga</option>
               <option value="overdue">Em atraso</option>
             </select>
-            <SubmitButton idleLabel="Emitir fatura" pendingLabel="A emitir fatura..." />
+            <SubmitButton idleLabel="Emitir fatura" pendingLabel="A emitir fatura..." className="w-full px-4 py-3" />
           </form>
         </article>
 
-        <article className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-3 shadow-card backdrop-blur">
+        <article className={panelClass}>
           <SectionTitle
             eyebrow="Criar"
             title="Registar pagamento"
             description="Registe um pagamento para uma fatura existente."
           />
-          <form action={createPaymentAction} className="mt-3 grid gap-2">
-            <select name="invoice" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
+          <form action={createPaymentAction} className="mt-3 grid gap-3">
+            <select name="invoice" required className={controlClass}>
               {snapshot.invoices.items.map((invoice) => (
                 <option key={invoice.id} value={invoice.id}>{invoice.reference} | {invoice.student_name}</option>
               ))}
             </select>
-            <input name="amount" type="number" step="0.01" min="0" required placeholder="Montante pago" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <input name="payment_date" type="date" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <select name="method" defaultValue="cash" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
+            <input name="amount" type="number" step="0.01" min="0" required placeholder="Montante pago" className={controlClass} />
+            <input name="payment_date" type="date" required className={controlClass} />
+            <select name="method" defaultValue="cash" className={controlClass}>
               <option value="cash">Numerário</option>
               <option value="bank_transfer">Transferência bancária</option>
               <option value="mobile_money">Carteira móvel</option>
               <option value="card">Cartão</option>
             </select>
-            <input name="reference" placeholder="Referência do pagamento" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <input name="notes" placeholder="Observações" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <SubmitButton idleLabel="Registar pagamento" pendingLabel="A registar pagamento..." />
+            <input name="reference" placeholder="Referência do pagamento" className={controlClass} />
+            <input name="notes" placeholder="Observações" className={controlClass} />
+            <SubmitButton idleLabel="Registar pagamento" pendingLabel="A registar pagamento..." className="w-full px-4 py-3" />
           </form>
         </article>
       </section>
@@ -235,10 +272,12 @@ export default async function FinancePage({ searchParams }: PageProps) {
           snapshot={snapshot.students}
           rows={snapshot.students.items.slice(0, 8)}
           renderRow={(student: Student) => (
-            <div key={student.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
-              <p className="font-semibold text-ink">{student.name}</p>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">Classe {student.grade} | {student.education_level}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">Estado: {formatStudentStatus(student.status)}</p>
+            <div key={student.id} className={panelClass}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-semibold text-ink">{student.name}</p>
+                <span className={badgeClass}>{formatStudentStatus(student.status)}</span>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-ink/70">Classe {student.grade} | {student.education_level}</p>
             </div>
           )}
         />
@@ -248,27 +287,25 @@ export default async function FinancePage({ searchParams }: PageProps) {
           snapshot={snapshot.invoices}
           rows={filteredInvoices.slice(0, 8)}
           renderRow={(invoice: Invoice) => (
-            <div key={invoice.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
+            <div key={invoice.id} className={panelClass}>
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{invoice.reference}</p>
-                <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  {formatInvoiceStatus(invoice.status)}
-                </span>
+                <span className={badgeClass}>{formatInvoiceStatus(invoice.status)}</span>
               </div>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">{invoice.student_name}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">
-                {invoice.amount} | Vencimento {formatDate(invoice.due_date)}
+              <p className="mt-2 text-sm leading-6 text-ink/70">{invoice.student_name}</p>
+              <p className="mt-1 text-sm leading-6 text-ink/55">
+                {invoice.amount} · Vencimento {formatDate(invoice.due_date)}
               </p>
-              <form action={updateInvoiceStatusAction} className="mt-2 flex gap-2">
+              <form action={updateInvoiceStatusAction} className="mt-3 flex flex-wrap gap-2">
                 <input type="hidden" name="id" value={invoice.id} />
-                <select name="status" defaultValue={invoice.status} className="rounded-md border border-ink/10 bg-sand px-2 py-1 text-xs text-ink">
+                <select name="status" defaultValue={invoice.status} className="rounded-[1rem] border border-ink/10 bg-sand px-3 py-1.5 text-xs text-ink">
                   <option value="draft">Rascunho</option>
                   <option value="issued">Emitida</option>
                   <option value="paid">Paga</option>
                   <option value="overdue">Em atraso</option>
                   <option value="cancelled">Cancelada</option>
                 </select>
-                <button type="submit" className="rounded-full border border-ink/10 bg-sand px-2.5 py-1 text-[11px] font-semibold text-ink">
+                <button type="submit" className="rounded-full border border-ink/10 bg-sand px-3 py-1.5 text-[11px] font-semibold text-ink transition hover:border-ink/30 hover:bg-white">
                   Atualizar
                 </button>
               </form>
@@ -284,15 +321,15 @@ export default async function FinancePage({ searchParams }: PageProps) {
           snapshot={snapshot.payments}
           rows={filteredPayments.slice(0, 8)}
           renderRow={(payment: Payment) => (
-            <div key={payment.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
+            <div key={payment.id} className={panelClass}>
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{payment.invoice_reference}</p>
                 <span className="rounded-full bg-fern/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-fern">
                   {payment.amount}
                 </span>
               </div>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">{formatPaymentMethod(payment.method)}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">{formatDate(payment.payment_date)} | {payment.reference || "Sem referência de pagamento"}</p>
+              <p className="mt-2 text-sm leading-6 text-ink/70">{formatPaymentMethod(payment.method)}</p>
+              <p className="mt-1 text-sm leading-6 text-ink/55">{formatDate(payment.payment_date)} · {payment.reference || "Sem referência de pagamento"}</p>
             </div>
           )}
         />
@@ -302,10 +339,12 @@ export default async function FinancePage({ searchParams }: PageProps) {
           snapshot={snapshot.guardians}
           rows={snapshot.guardians.items.slice(0, 8)}
           renderRow={(guardian: Guardian) => (
-            <div key={guardian.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
-              <p className="font-semibold text-ink">{guardian.name}</p>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">{guardian.relationship || "Parentesco não definido"}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">{guardian.phone || guardian.email || "Sem contacto financeiro"}</p>
+            <div key={guardian.id} className={panelClass}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-semibold text-ink">{guardian.name}</p>
+                <span className={badgeClass}>{guardian.relationship || "Parentesco não definido"}</span>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-ink/70">{guardian.phone || guardian.email || "Sem contacto financeiro"}</p>
             </div>
           )}
         />

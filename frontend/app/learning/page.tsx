@@ -38,6 +38,9 @@ function readParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] || "" : value || "";
 }
 
+const panelClass = "relative overflow-hidden rounded-[1.1rem] border border-white/70 bg-white/95 p-4 shadow-[0_18px_50px_rgba(20,33,61,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_55px_rgba(20,33,61,0.1)]";
+const badgeClass = "rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70";
+const controlClass = "w-full rounded-[1rem] border border-ink/10 bg-sand px-3 py-2 text-sm text-ink shadow-[inset_0_1px_0_rgba(0,0,0,0.05)] outline-none transition placeholder:text-ink/40 focus:border-ink/30 focus:ring-4 focus:ring-mist";
 async function createLessonAction(formData: FormData) {
   "use server";
 
@@ -184,6 +187,44 @@ export default async function LearningPage({ searchParams }: PageProps) {
         </>
       )}
     >
+      <section className="overflow-hidden rounded-[1.5rem] border border-white/65 bg-[linear-gradient(135deg,rgba(20,33,61,0.95),rgba(32,52,85,0.95))] p-5 text-sand shadow-card shadow-[0_30px_80px_rgba(20,33,61,0.18)]">
+        <div className="grid gap-5 lg:grid-cols-[1.3fr_0.7fr]">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-fern/80">Ensino</p>
+            <h2 className="mt-3 font-display text-3xl font-bold leading-tight">Superfície digital para cursos, aulas e tarefas.</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-sand/80">
+              Coordene modalidaes, professores e execução por turmas enquanto mantém a operação alinhada com os filtros ativos.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[1.1rem] border border-white/30 bg-white/10 px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sand/70">Cursos</p>
+              <p className="mt-2 font-display text-2xl font-semibold">{snapshot.courses.count}</p>
+            </div>
+            <div className="rounded-[1.1rem] border border-white/30 bg-white/10 px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sand/70">Aulas</p>
+              <p className="mt-2 font-display text-2xl font-semibold">{snapshot.lessons.count}</p>
+            </div>
+            <div className="rounded-[1.1rem] border border-white/30 bg-white/10 px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sand/70">Tarefas</p>
+              <p className="mt-2 font-display text-2xl font-semibold">{snapshot.assignments.count}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <div className="mt-6 overflow-hidden rounded-[1.25rem] border border-white/60 bg-white/95 p-4 shadow-[0_18px_55px_rgba(20,33,61,0.08)]">
+        <div className="grid gap-3 sm:grid-cols-3 text-sm text-ink/70">
+          <p className="rounded-[1rem] border border-ink/10 bg-ink/5 px-3 py-2">
+            Modalidade: {modality || "todas"}
+          </p>
+          <p className="rounded-[1rem] border border-ink/10 bg-ink/5 px-3 py-2">
+            Professor: {teacher || "todos"}
+          </p>
+          <p className="rounded-[1rem] border border-ink/10 bg-ink/5 px-3 py-2">
+            Publicado: {published || "todos"}
+          </p>
+        </div>
+      </div>
       {status ? (
         <section className={`rounded-[0.9rem] border px-3 py-2 text-sm ${status.endsWith("error") ? "border-ember/20 bg-ember/10 text-ember" : "border-fern/20 bg-fern/10 text-fern"}`}>
           {status === "lesson-created" && "Aula criada com sucesso."}
@@ -200,10 +241,11 @@ export default async function LearningPage({ searchParams }: PageProps) {
         </section>
       ) : null}
 
-      <FilterBar
-        fields={[
-          {
-            name: "modality",
+      <div className="mt-6 overflow-hidden rounded-[1.25rem] border border-white/60 bg-white/95 p-4 shadow-[0_18px_55px_rgba(20,33,61,0.08)]">
+        <FilterBar
+          fields={[
+            {
+              name: "modality",
             label: "Modalidade",
             value: modality,
             options: Array.from(new Set(snapshot.courses.items.map((item) => item.modality))).map((item) => ({
@@ -228,83 +270,84 @@ export default async function LearningPage({ searchParams }: PageProps) {
               { value: "true", label: "Publicado" },
               { value: "false", label: "Rascunho" },
             ],
-          },
-        ]}
-      />
+            },
+          ]}
+        />
+      </div>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <article className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-3 shadow-card backdrop-blur">
+        <article className={panelClass}>
           <SectionTitle
             eyebrow="Criar"
             title="Agendar aula"
             description="Abra um novo evento letivo a partir da área de operações de ensino."
           />
-          <form action={createLessonAction} className="mt-3 grid gap-2">
-            <select name="offering" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
+          <form action={createLessonAction} className="mt-3 grid gap-3">
+            <select name="offering" required className={controlClass}>
               {snapshot.offerings.items.map((offering) => (
                 <option key={offering.id} value={offering.id}>{offering.course_title} | {offering.classroom_name || "Turma não definida"}</option>
               ))}
             </select>
-            <input name="title" required placeholder="Título da aula" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <textarea name="description" rows={3} placeholder="Descrição da aula" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <input name="scheduled_at" type="datetime-local" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <input name="duration_minutes" type="number" min="1" defaultValue="45" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <input name="meeting_url" type="url" placeholder="URL da aula" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
+            <input name="title" required placeholder="Título da aula" className={controlClass} />
+            <textarea name="description" rows={3} placeholder="Descrição da aula" className={controlClass} />
+            <input name="scheduled_at" type="datetime-local" required className={controlClass} />
+            <input name="duration_minutes" type="number" min="1" defaultValue="45" className={controlClass} />
+            <input name="meeting_url" type="url" placeholder="URL da aula" className={controlClass} />
             <label className="flex items-center gap-2 text-sm text-ink/75">
               <input name="published" type="checkbox" />
               Publicar imediatamente
             </label>
-            <SubmitButton idleLabel="Criar aula" pendingLabel="A criar aula..." />
+            <SubmitButton idleLabel="Criar aula" pendingLabel="A criar aula..." className="w-full px-4 py-3" />
           </form>
         </article>
 
-        <article className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-3 shadow-card backdrop-blur">
+        <article className={panelClass}>
           <SectionTitle
             eyebrow="Criar"
             title="Abrir tarefa"
             description="Publique uma nova tarefa com janela de abertura e vencimento."
           />
-          <form action={createAssignmentAction} className="mt-3 grid gap-2">
-            <select name="offering" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
+          <form action={createAssignmentAction} className="mt-3 grid gap-3">
+            <select name="offering" required className={controlClass}>
               {snapshot.offerings.items.map((offering) => (
                 <option key={offering.id} value={offering.id}>{offering.course_title} | {offering.classroom_name || "Turma não definida"}</option>
               ))}
             </select>
-            <input name="title" required placeholder="Título da tarefa" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <textarea name="instructions" rows={3} placeholder="Instruções" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <input name="opens_at" type="datetime-local" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <input name="due_at" type="datetime-local" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <input name="max_score" type="number" min="1" defaultValue="20" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
+            <input name="title" required placeholder="Título da tarefa" className={controlClass} />
+            <textarea name="instructions" rows={3} placeholder="Instruções" className={controlClass} />
+            <input name="opens_at" type="datetime-local" required className={controlClass} />
+            <input name="due_at" type="datetime-local" required className={controlClass} />
+            <input name="max_score" type="number" min="1" defaultValue="20" className={controlClass} />
             <label className="flex items-center gap-2 text-sm text-ink/75">
               <input name="published" type="checkbox" />
               Publicar imediatamente
             </label>
-            <SubmitButton idleLabel="Criar tarefa" pendingLabel="A criar tarefa..." />
+            <SubmitButton idleLabel="Criar tarefa" pendingLabel="A criar tarefa..." className="w-full px-4 py-3" />
           </form>
         </article>
       </section>
 
-      <section className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-3 shadow-card backdrop-blur">
+      <section className={panelClass}>
         <SectionTitle
           eyebrow="Criar"
           title="Adicionar material"
           description="Anexe link, documento, vídeo ou outro recurso a uma aula existente."
         />
-        <form action={createLessonMaterialAction} className="mt-3 grid gap-2 md:grid-cols-2">
-          <select name="lesson" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
+        <form action={createLessonMaterialAction} className="mt-3 grid gap-3 md:grid-cols-2">
+          <select name="lesson" required className={controlClass}>
             {snapshot.lessons.items.map((lesson) => (
               <option key={lesson.id} value={lesson.id}>{lesson.title}</option>
             ))}
           </select>
-          <input name="title" required placeholder="Título do material" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-          <select name="material_type" defaultValue="document" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
+          <input name="title" required placeholder="Título do material" className={controlClass} />
+          <select name="material_type" defaultValue="document" className={controlClass}>
             <option value="link">Link</option>
             <option value="document">Documento</option>
             <option value="video">Vídeo</option>
             <option value="audio">Áudio</option>
             <option value="other">Outro</option>
           </select>
-          <input name="url" type="url" required placeholder="URL do recurso" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
+          <input name="url" type="url" required placeholder="URL do recurso" className={controlClass} />
           <label className="flex items-center gap-2 text-sm text-ink/75 md:col-span-2">
             <input name="required" type="checkbox" />
             Marcar como material obrigatório
@@ -322,15 +365,13 @@ export default async function LearningPage({ searchParams }: PageProps) {
           snapshot={snapshot.courses}
           rows={filteredCourses.slice(0, 6)}
           renderRow={(course: Course) => (
-            <div key={course.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
+            <div key={course.id} className={panelClass}>
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{course.title}</p>
-                <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  {formatCourseModality(course.modality)}
-                </span>
+                <span className={badgeClass}>{formatCourseModality(course.modality)}</span>
               </div>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">{course.school_name || "Escola não identificada"}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">
+              <p className="mt-2 text-sm leading-6 text-ink/70">{course.school_name || "Escola não identificada"}</p>
+              <p className="mt-1 text-sm leading-6 text-ink/55">
                 {course.description || "Ainda não existe descrição preenchida para este curso."}
               </p>
             </div>
@@ -342,17 +383,15 @@ export default async function LearningPage({ searchParams }: PageProps) {
           snapshot={snapshot.offerings}
           rows={filteredOfferings.slice(0, 6)}
           renderRow={(offering: CourseOffering) => (
-            <div key={offering.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
+            <div key={offering.id} className={panelClass}>
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{offering.course_title}</p>
-                <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  {offering.academic_year_code}
-                </span>
+                <span className={badgeClass}>{offering.academic_year_code}</span>
               </div>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">
-                {offering.teacher_name || "Professor não atribuído"} | {offering.classroom_name || "Turma não definida"}
+              <p className="mt-2 text-sm leading-6 text-ink/70">
+                {offering.teacher_name || "Professor não atribuído"} · {offering.classroom_name || "Turma não definida"}
               </p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">
+              <p className="mt-1 text-sm leading-6 text-ink/55">
                 {offering.start_date} a {offering.end_date}
               </p>
             </div>
@@ -367,23 +406,24 @@ export default async function LearningPage({ searchParams }: PageProps) {
           snapshot={snapshot.lessons}
           rows={filteredLessons.slice(0, 8)}
           renderRow={(lesson: Lesson) => (
-            <div key={lesson.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
+            <div key={lesson.id} className={panelClass}>
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{lesson.title}</p>
-                <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  {formatPublishedState(lesson.published)}
-                </span>
+                <span className={badgeClass}>{formatPublishedState(lesson.published)}</span>
               </div>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">
+              <p className="mt-2 text-sm leading-6 text-ink/70">
                 {lesson.offering_title || "Oferta não identificada"}
               </p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">
+              <p className="mt-1 text-sm leading-6 text-ink/55">
                 {formatDateTime(lesson.scheduled_at)} | {lesson.duration_minutes} min
               </p>
               <form action={toggleLessonPublicationAction} className="mt-2">
                 <input type="hidden" name="id" value={lesson.id} />
                 <input type="hidden" name="published" value={lesson.published ? "true" : "false"} />
-                <button type="submit" className="rounded-full border border-ink/10 bg-sand px-2.5 py-1 text-[11px] font-semibold text-ink">
+                <button
+                  type="submit"
+                  className="rounded-full border border-ink/10 bg-sand px-3 py-1.5 text-[11px] font-semibold text-ink transition hover:border-ink/30 hover:bg-white"
+                >
                   {lesson.published ? "Retirar publicação" : "Publicar"}
                 </button>
               </form>
@@ -396,15 +436,13 @@ export default async function LearningPage({ searchParams }: PageProps) {
           snapshot={snapshot.materials}
           rows={snapshot.materials.items.slice(0, 8)}
           renderRow={(material: LessonMaterial) => (
-            <div key={material.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
+            <div key={material.id} className={panelClass}>
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{material.title}</p>
-                <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  {formatMaterialType(material.material_type)}
-                </span>
+                <span className={badgeClass}>{formatMaterialType(material.material_type)}</span>
               </div>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">{material.lesson_title || "Aula não identificada"}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">
+              <p className="mt-2 text-sm leading-6 text-ink/70">{material.lesson_title || "Aula não identificada"}</p>
+              <p className="mt-1 text-sm leading-6 text-ink/55">
                 {material.required ? "Material obrigatório" : "Material opcional"}
               </p>
             </div>
@@ -419,21 +457,24 @@ export default async function LearningPage({ searchParams }: PageProps) {
           snapshot={snapshot.assignments}
           rows={filteredAssignments.slice(0, 8)}
           renderRow={(assignment: Assignment) => (
-            <div key={assignment.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
+            <div key={assignment.id} className={panelClass}>
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{assignment.title}</p>
                 <span className="rounded-full bg-ember/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ember">
                   {assignment.max_score} pts
                 </span>
               </div>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">{assignment.offering_title || "Oferta não identificada"}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">
+              <p className="mt-2 text-sm leading-6 text-ink/70">{assignment.offering_title || "Oferta não identificada"}</p>
+              <p className="mt-1 text-sm leading-6 text-ink/55">
                 Abre {formatDateTime(assignment.opens_at)} | Vence {formatDateTime(assignment.due_at)}
               </p>
               <form action={toggleAssignmentPublicationAction} className="mt-2">
                 <input type="hidden" name="id" value={assignment.id} />
                 <input type="hidden" name="published" value={assignment.published ? "true" : "false"} />
-                <button type="submit" className="rounded-full border border-ink/10 bg-sand px-2.5 py-1 text-[11px] font-semibold text-ink">
+                <button
+                  type="submit"
+                  className="rounded-full border border-ink/10 bg-sand px-3 py-1.5 text-[11px] font-semibold text-ink transition hover:border-ink/30 hover:bg-white"
+                >
                   {assignment.published ? "Retirar publicação" : "Publicar"}
                 </button>
               </form>
@@ -446,16 +487,16 @@ export default async function LearningPage({ searchParams }: PageProps) {
           snapshot={snapshot.submissions}
           rows={snapshot.submissions.items.slice(0, 8)}
           renderRow={(submission: Submission) => (
-            <div key={submission.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
+            <div key={submission.id} className={panelClass}>
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{submission.student_name || "Aluno não identificado"}</p>
                 <span className="rounded-full bg-fern/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-fern">
                   {formatSubmissionStatus(submission.status)}
                 </span>
               </div>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">{submission.assignment_title || "Tarefa não identificada"}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">
-                Nota: {submission.score ?? "por corrigir"} | Submetido: {submission.submitted_at ? formatDateTime(submission.submitted_at) : "pendente"}
+              <p className="mt-2 text-sm leading-6 text-ink/70">{submission.assignment_title || "Tarefa não identificada"}</p>
+              <p className="mt-1 text-sm leading-6 text-ink/55">
+                Nota: {submission.score ?? "por corrigir"} · Submetido: {submission.submitted_at ? formatDateTime(submission.submitted_at) : "pendente"}
               </p>
             </div>
           )}

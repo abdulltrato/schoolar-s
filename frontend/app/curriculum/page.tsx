@@ -125,27 +125,28 @@ export default async function CurriculumPage({ searchParams }: PageProps) {
       </div>
       <div className="mt-6 overflow-hidden rounded-[1.25rem] border border-white/60 bg-white/95 p-4 shadow-[0_18px_50px_rgba(20,33,61,0.06)]">
         <FilterBar
-        fields={[
-          {
-            name: "year",
-            label: "Ano letivo",
-            value: year,
-            options: snapshot.academicYears.items.map((item) => ({
-              value: item.code,
-              label: item.code,
-            })),
-          },
-          {
-            name: "grade",
-            label: "Classe",
-            value: grade,
-            options: snapshot.grades.items.map((item) => ({
-              value: String(item.number),
-              label: item.name,
-            })),
-          },
-        ]}
-      />
+          fields={[
+            {
+              name: "year",
+              label: "Ano letivo",
+              value: year,
+              options: snapshot.academicYears.items.map((item) => ({
+                value: item.code,
+                label: item.code,
+              })),
+            },
+            {
+              name: "grade",
+              label: "Classe",
+              value: grade,
+              options: snapshot.grades.items.map((item) => ({
+                value: String(item.number),
+                label: item.name,
+              })),
+            },
+          ]}
+        />
+      </div>
 
       <section id="offerings" className="grid gap-4 lg:grid-cols-2">
         <RecordList
@@ -154,14 +155,14 @@ export default async function CurriculumPage({ searchParams }: PageProps) {
           snapshot={snapshot.gradeSubjects}
           rows={offerings.slice(0, 8)}
           renderRow={(subject: GradeSubject) => (
-          <div key={subject.id} className={panelClass}>
-            <div className="flex items-center justify-between gap-3">
-              <p className="font-semibold text-ink">{subject.subject_name}</p>
-              <span className={badgeClass}>{subject.academic_year}</span>
+            <div key={subject.id} className={panelClass}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-semibold text-ink">{subject.subject_name}</p>
+                <span className={badgeClass}>{subject.academic_year}</span>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-ink/70">Classe {subject.grade}</p>
+              <p className="mt-1 text-sm leading-6 text-ink/55">Carga horária semanal: {subject.weekly_workload}</p>
             </div>
-            <p className="mt-2 text-sm leading-6 text-ink/70">Classe {subject.grade}</p>
-            <p className="mt-1 text-sm leading-6 text-ink/55">Carga horária semanal: {subject.weekly_workload}</p>
-          </div>
           )}
         />
 
@@ -171,18 +172,18 @@ export default async function CurriculumPage({ searchParams }: PageProps) {
           snapshot={snapshot.subjectPlans}
           rows={plans.slice(0, 8)}
           renderRow={(plan: SubjectCurriculumPlan) => (
-          <div key={plan.id} className={panelClass}>
-            <div className="flex items-center justify-between gap-3">
-              <p className="font-semibold text-ink">{plan.subject_name}</p>
-              <span className={badgeClass}>{plan.academic_year_code}</span>
+            <div key={plan.id} className={panelClass}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-semibold text-ink">{plan.subject_name}</p>
+                <span className={badgeClass}>{plan.academic_year_code}</span>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-ink/70">
+                Classe {plan.grade_number} · {plan.planned_competencies.length} competências
+              </p>
+              <p className="mt-1 text-sm leading-6 text-ink/55">
+                {plan.assessment_criteria || plan.methodology || plan.objectives || "Ainda não foram preenchidos detalhes narrativos."}
+              </p>
             </div>
-            <p className="mt-2 text-sm leading-6 text-ink/70">
-              Classe {plan.grade_number} · {plan.planned_competencies.length} competências
-            </p>
-            <p className="mt-1 text-sm leading-6 text-ink/55">
-              {plan.assessment_criteria || plan.methodology || plan.objectives || "Ainda não foram preenchidos detalhes narrativos."}
-            </p>
-          </div>
           )}
         />
       </section>
