@@ -5,6 +5,7 @@ import { FilterBar } from "@/components/filter-bar";
 import { RecordList } from "@/components/record-list";
 import { SectionTitle } from "@/components/section-title";
 import { SubmitButton } from "@/components/submit-button";
+import { formatCourseModality, formatMaterialType, formatPublishedState, formatSubmissionStatus } from "@/lib/labels";
 import {
   type Assignment,
   type Course,
@@ -207,7 +208,7 @@ export default async function LearningPage({ searchParams }: PageProps) {
             value: modality,
             options: Array.from(new Set(snapshot.courses.items.map((item) => item.modality))).map((item) => ({
               value: item,
-              label: item,
+              label: formatCourseModality(item),
             })),
           },
           {
@@ -284,11 +285,11 @@ export default async function LearningPage({ searchParams }: PageProps) {
       </section>
 
       <section className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-3 shadow-card backdrop-blur">
-          <SectionTitle
-            eyebrow="Criar"
-            title="Adicionar material"
-            description="Anexe link, documento, vídeo ou outro recurso a uma aula existente."
-          />
+        <SectionTitle
+          eyebrow="Criar"
+          title="Adicionar material"
+          description="Anexe link, documento, vídeo ou outro recurso a uma aula existente."
+        />
         <form action={createLessonMaterialAction} className="mt-3 grid gap-2 md:grid-cols-2">
           <select name="lesson" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
             {snapshot.lessons.items.map((lesson) => (
@@ -325,7 +326,7 @@ export default async function LearningPage({ searchParams }: PageProps) {
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{course.title}</p>
                 <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  {course.modality}
+                  {formatCourseModality(course.modality)}
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">{course.school_name || "Escola não identificada"}</p>
@@ -370,7 +371,7 @@ export default async function LearningPage({ searchParams }: PageProps) {
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{lesson.title}</p>
                 <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  {lesson.published ? "publicado" : "rascunho"}
+                  {formatPublishedState(lesson.published)}
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">
@@ -399,7 +400,7 @@ export default async function LearningPage({ searchParams }: PageProps) {
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{material.title}</p>
                 <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  {material.material_type}
+                  {formatMaterialType(material.material_type)}
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">{material.lesson_title || "Aula não identificada"}</p>
@@ -449,7 +450,7 @@ export default async function LearningPage({ searchParams }: PageProps) {
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{submission.student_name || "Aluno não identificado"}</p>
                 <span className="rounded-full bg-fern/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-fern">
-                  {submission.status}
+                  {formatSubmissionStatus(submission.status)}
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">{submission.assignment_title || "Tarefa não identificada"}</p>

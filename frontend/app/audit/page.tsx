@@ -5,6 +5,7 @@ import { RecordList } from "@/components/record-list";
 import { SectionTitle } from "@/components/section-title";
 import { StatusCard } from "@/components/status-card";
 import { SubmitButton } from "@/components/submit-button";
+import { formatAuditAction, formatAuditSeverity } from "@/lib/labels";
 import {
   acknowledgeAuditAlert,
   getAuditSnapshot,
@@ -293,7 +294,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
             <select name="action" defaultValue={action} className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-1.5 text-xs text-ink sm:text-sm">
               <option value="">Todos</option>
               {Array.from(new Set(snapshot.auditEvents.items.map((event) => event.action))).map((item) => (
-                <option key={item} value={item}>{item}</option>
+                <option key={item} value={item}>{formatAuditAction(item)}</option>
               ))}
             </select>
           </label>
@@ -301,8 +302,8 @@ export default async function AuditPage({ searchParams }: PageProps) {
             <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Severidade</span>
             <select name="severity" defaultValue={severity} className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-1.5 text-xs text-ink sm:text-sm">
               <option value="">Todas</option>
-              <option value="watch">Observação</option>
-              <option value="elevated">Elevado</option>
+              <option value="watch">{formatAuditSeverity("watch")}</option>
+              <option value="elevated">{formatAuditSeverity("elevated")}</option>
             </select>
           </label>
           <label className="block">
@@ -367,7 +368,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{alert.alert_type}</p>
                 <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${alert.severity === "elevated" ? "bg-ember/10 text-ember" : "bg-sand text-ink/75"}`}>
-                  {alert.severity}
+                  {formatAuditSeverity(alert.severity)}
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">{alert.summary}</p>
@@ -427,7 +428,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
                   {event.resource} #{event.object_id}
                 </p>
                 <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  {event.action}
+                  {formatAuditAction(event.action)}
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">

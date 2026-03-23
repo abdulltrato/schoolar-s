@@ -5,6 +5,7 @@ import { FilterBar } from "@/components/filter-bar";
 import { RecordList } from "@/components/record-list";
 import { SectionTitle } from "@/components/section-title";
 import { SubmitButton } from "@/components/submit-button";
+import { formatAnnouncementAudience, formatAttendanceStatus, formatSubmissionStatus } from "@/lib/labels";
 import {
   type Announcement,
   type Assignment,
@@ -146,7 +147,7 @@ export default async function TeacherPage({ searchParams }: PageProps) {
             value: attendanceStatus,
             options: Array.from(new Set(snapshot.attendance.items.map((item) => item.status))).map((item) => ({
               value: item,
-              label: item,
+              label: formatAttendanceStatus(item),
             })),
           },
           {
@@ -155,7 +156,7 @@ export default async function TeacherPage({ searchParams }: PageProps) {
             value: submissionStatus,
             options: Array.from(new Set(snapshot.submissions.items.map((item) => item.status))).map((item) => ({
               value: item,
-              label: item,
+              label: formatSubmissionStatus(item),
             })),
           },
         ]}
@@ -262,7 +263,7 @@ export default async function TeacherPage({ searchParams }: PageProps) {
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{record.student_name}</p>
                 <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  {record.status}
+                  {formatAttendanceStatus(record.status)}
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">{record.classroom_name}</p>
@@ -296,7 +297,7 @@ export default async function TeacherPage({ searchParams }: PageProps) {
               <p className="font-semibold text-ink">{submission.student_name}</p>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">{submission.assignment_title}</p>
               <p className="mt-1 text-sm leading-5 text-ink/55">
-                {submission.status} | Nota {submission.score ?? "por atribuir"}
+                {formatSubmissionStatus(submission.status)} | Nota {submission.score ?? "por atribuir"}
               </p>
             </div>
           )}
@@ -310,7 +311,7 @@ export default async function TeacherPage({ searchParams }: PageProps) {
             <div key={announcement.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
               <p className="font-semibold text-ink">{announcement.title}</p>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">{announcement.message}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">{announcement.audience}</p>
+              <p className="mt-1 text-sm leading-5 text-ink/55">{formatAnnouncementAudience(announcement.audience)}</p>
             </div>
           )}
         />

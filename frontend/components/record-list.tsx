@@ -36,7 +36,7 @@ export function RecordList<T>({
           rows.map(renderRow)
         ) : (
           <div className="rounded-[0.8rem] border border-dashed border-ink/15 px-2.5 py-3 text-xs leading-4 text-ink/55 sm:text-sm">
-            Nada para mostrar nesta secao.
+            Nada para mostrar nesta secção.
           </div>
         )}
       </div>

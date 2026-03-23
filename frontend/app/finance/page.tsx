@@ -5,6 +5,7 @@ import { FilterBar } from "@/components/filter-bar";
 import { RecordList } from "@/components/record-list";
 import { SectionTitle } from "@/components/section-title";
 import { SubmitButton } from "@/components/submit-button";
+import { formatInvoiceStatus, formatPaymentMethod, formatStudentStatus } from "@/lib/labels";
 import {
   createInvoice,
   createPayment,
@@ -153,7 +154,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
             value: invoiceStatus,
             options: Array.from(new Set(snapshot.invoices.items.map((item) => item.status))).map((item) => ({
               value: item,
-              label: item,
+              label: formatInvoiceStatus(item),
             })),
           },
           {
@@ -162,7 +163,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
             value: paymentMethod,
             options: Array.from(new Set(snapshot.payments.items.map((item) => item.method))).map((item) => ({
               value: item,
-              label: item,
+              label: formatPaymentMethod(item),
             })),
           },
         ]}
@@ -201,11 +202,11 @@ export default async function FinancePage({ searchParams }: PageProps) {
         </article>
 
         <article className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-3 shadow-card backdrop-blur">
-            <SectionTitle
-              eyebrow="Criar"
-              title="Registar pagamento"
-              description="Registe um pagamento para uma fatura existente."
-            />
+          <SectionTitle
+            eyebrow="Criar"
+            title="Registar pagamento"
+            description="Registe um pagamento para uma fatura existente."
+          />
           <form action={createPaymentAction} className="mt-3 grid gap-2">
             <select name="invoice" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
               {snapshot.invoices.items.map((invoice) => (
@@ -236,8 +237,8 @@ export default async function FinancePage({ searchParams }: PageProps) {
           renderRow={(student: Student) => (
             <div key={student.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
               <p className="font-semibold text-ink">{student.name}</p>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">Grade {student.grade} | {student.education_level}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">Estado: {student.status}</p>
+              <p className="mt-1.5 text-sm leading-5 text-ink/70">Classe {student.grade} | {student.education_level}</p>
+              <p className="mt-1 text-sm leading-5 text-ink/55">Estado: {formatStudentStatus(student.status)}</p>
             </div>
           )}
         />
@@ -251,11 +252,11 @@ export default async function FinancePage({ searchParams }: PageProps) {
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{invoice.reference}</p>
                 <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  {invoice.status}
+                  {formatInvoiceStatus(invoice.status)}
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">{invoice.student_name}</p>
-                <p className="mt-1 text-sm leading-5 text-ink/55">
+              <p className="mt-1 text-sm leading-5 text-ink/55">
                 {invoice.amount} | Vencimento {formatDate(invoice.due_date)}
               </p>
               <form action={updateInvoiceStatusAction} className="mt-2 flex gap-2">
@@ -290,12 +291,12 @@ export default async function FinancePage({ searchParams }: PageProps) {
                   {payment.amount}
                 </span>
               </div>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">{payment.method}</p>
+              <p className="mt-1.5 text-sm leading-5 text-ink/70">{formatPaymentMethod(payment.method)}</p>
               <p className="mt-1 text-sm leading-5 text-ink/55">{formatDate(payment.payment_date)} | {payment.reference || "Sem referência de pagamento"}</p>
             </div>
           )}
         />
-          <RecordList
+        <RecordList
           title="Encarregados"
           subtitle="Contactos prioritários para faturação e acompanhamento."
           snapshot={snapshot.guardians}

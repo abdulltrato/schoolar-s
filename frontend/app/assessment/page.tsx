@@ -2,6 +2,7 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { FilterBar } from "@/components/filter-bar";
 import { RecordList } from "@/components/record-list";
 import { SectionTitle } from "@/components/section-title";
+import { formatAssessmentType } from "@/lib/labels";
 import {
   type Assessment,
   type AssessmentComponent,
@@ -193,9 +194,9 @@ export default async function AssessmentPage({ searchParams }: PageProps) {
           }}
         />
 
-          <RecordList
-            title="Componentes avaliativas"
-            subtitle="Instrumentos usados para calcular médias por disciplina."
+        <RecordList
+          title="Componentes avaliativas"
+          subtitle="Instrumentos usados para calcular médias por disciplina."
           snapshot={snapshot.components}
           rows={components.slice(0, 8)}
           renderRow={(component: AssessmentComponent) => (
@@ -203,15 +204,15 @@ export default async function AssessmentPage({ searchParams }: PageProps) {
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{component.name}</p>
                 <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  {component.type}
+                  {formatAssessmentType(component.type)}
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">
                 {component.subject_name} | {component.period_name}
               </p>
-                <p className="mt-1 text-sm leading-5 text-ink/55">
-                  Peso {component.weight} | Nota máxima {component.max_score}
-                </p>
+              <p className="mt-1 text-sm leading-5 text-ink/55">
+                Peso {component.weight} | Nota máxima {component.max_score}
+              </p>
             </div>
           )}
         />
@@ -228,7 +229,7 @@ export default async function AssessmentPage({ searchParams }: PageProps) {
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{assessment.student_name}</p>
                 <span className="rounded-full bg-ember/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ember">
-                  {assessment.type}
+                  {formatAssessmentType(assessment.type)}
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">

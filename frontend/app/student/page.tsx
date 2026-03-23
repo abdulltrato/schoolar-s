@@ -5,6 +5,7 @@ import { FilterBar } from "@/components/filter-bar";
 import { RecordList } from "@/components/record-list";
 import { SectionTitle } from "@/components/section-title";
 import { SubmitButton } from "@/components/submit-button";
+import { formatAnnouncementAudience, formatAttendanceStatus, formatInvoiceStatus, formatSubmissionStatus } from "@/lib/labels";
 import {
   type Announcement,
   type Assignment,
@@ -147,7 +148,7 @@ export default async function StudentPage({ searchParams }: PageProps) {
             value: attendanceStatus,
             options: Array.from(new Set(snapshot.attendance.items.map((item) => item.status))).map((item) => ({
               value: item,
-              label: item,
+              label: formatAttendanceStatus(item),
             })),
           },
           {
@@ -156,7 +157,7 @@ export default async function StudentPage({ searchParams }: PageProps) {
             value: invoiceStatus,
             options: Array.from(new Set(snapshot.invoices.items.map((item) => item.status))).map((item) => ({
               value: item,
-              label: item,
+              label: formatInvoiceStatus(item),
             })),
           },
         ]}
@@ -209,7 +210,7 @@ export default async function StudentPage({ searchParams }: PageProps) {
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{record.classroom_name}</p>
                 <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  {record.status}
+                  {formatAttendanceStatus(record.status)}
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">{formatDate(record.lesson_date)}</p>
@@ -287,7 +288,7 @@ export default async function StudentPage({ searchParams }: PageProps) {
                 {submission.submitted_at ? formatDateTime(submission.submitted_at) : "Ainda não submetido"}
               </p>
               <p className="mt-1 text-sm leading-5 text-ink/55">
-                Estado: {submission.status} | Nota: {submission.score ?? "por atribuir"}
+                Estado: {formatSubmissionStatus(submission.status)} | Nota: {submission.score ?? "por atribuir"}
               </p>
             </div>
           )}
@@ -305,7 +306,7 @@ export default async function StudentPage({ searchParams }: PageProps) {
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{invoice.reference}</p>
                 <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  {invoice.status}
+                  {formatInvoiceStatus(invoice.status)}
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">{invoice.description}</p>
@@ -325,7 +326,7 @@ export default async function StudentPage({ searchParams }: PageProps) {
               <p className="font-semibold text-ink">{announcement.title}</p>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">{announcement.message}</p>
               <p className="mt-1 text-sm leading-5 text-ink/55">
-                {announcement.audience} | {formatDateTime(announcement.published_at)}
+                {formatAnnouncementAudience(announcement.audience)} | {formatDateTime(announcement.published_at)}
               </p>
             </div>
           )}

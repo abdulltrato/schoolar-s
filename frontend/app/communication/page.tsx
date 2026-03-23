@@ -4,6 +4,7 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { RecordList } from "@/components/record-list";
 import { SectionTitle } from "@/components/section-title";
 import { SubmitButton } from "@/components/submit-button";
+import { formatAnnouncementAudience } from "@/lib/labels";
 import {
   type Announcement,
   type Classroom,
@@ -65,7 +66,7 @@ export default async function CommunicationPage({ searchParams }: PageProps) {
 
   return (
     <DashboardShell
-      title="Hub de comunicação"
+      title="Centro de comunicação"
       description="Camada de difusão e relações para turmas, professores, responsáveis e comunicados escolares."
       aside={(
         <>
@@ -121,10 +122,10 @@ export default async function CommunicationPage({ searchParams }: PageProps) {
             <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Escola</span>
             <select name="school" required className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
               {snapshot.classrooms.items
-                .map((classroom) => classroom.school)
-                .filter((value): value is number => value !== null)
-                .filter((value, index, items) => items.indexOf(value) === index)
-                .map((schoolId) => {
+              .map((classroom) => classroom.school)
+              .filter((value): value is number => value !== null)
+              .filter((value, index, items) => items.indexOf(value) === index)
+              .map((schoolId) => {
                 const classroom = snapshot.classrooms.items.find((item) => item.school === schoolId);
                 return <option key={schoolId} value={schoolId}>{classroom?.school_name || `Escola ${schoolId}`}</option>;
               })}
@@ -174,7 +175,7 @@ export default async function CommunicationPage({ searchParams }: PageProps) {
               <p className="font-semibold text-ink">{announcement.title}</p>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">{announcement.message}</p>
               <p className="mt-1 text-sm leading-5 text-ink/55">
-                {announcement.audience} | {announcement.classroom_name || announcement.school_name || "Âmbito não definido"} | {formatDateTime(announcement.published_at)}
+                {formatAnnouncementAudience(announcement.audience)} | {announcement.classroom_name || announcement.school_name || "Âmbito não definido"} | {formatDateTime(announcement.published_at)}
               </p>
               <form action={toggleAnnouncementAction} className="mt-2">
                 <input type="hidden" name="id" value={announcement.id} />

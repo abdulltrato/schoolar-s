@@ -108,7 +108,7 @@ export function DashboardShell({
           <div className="flex items-start justify-between gap-2 lg:items-center">
             <div className="min-w-0 max-w-4xl flex-1">
               <p className="mb-1 inline-flex rounded-full border border-ember/20 bg-ember/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-ember">
-                Substrato Education
+                Substrato Educação
               </p>
               <h1 className="font-display text-lg font-bold leading-tight sm:text-xl lg:text-2xl">
                 {title}
