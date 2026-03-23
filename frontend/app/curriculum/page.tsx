@@ -13,6 +13,8 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
+const panelClass = "relative overflow-hidden rounded-[1.1rem] border border-white/70 bg-white/95 p-4 shadow-[0_18px_50px_rgba(20,33,61,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_55px_rgba(20,33,61,0.1)]";
+const badgeClass = "rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70";
 function readParam(
   value: string | string[] | undefined,
 ) {
@@ -52,38 +54,77 @@ export default async function CurriculumPage({ searchParams }: PageProps) {
       description="Oferta de disciplinas por classe e ano letivo, com planos formais por disciplina."
       aside={(
         <>
-          <section className="rounded-[1.25rem] border border-ink/10 bg-white/80 p-4 shadow-card backdrop-blur">
+          <section className="overflow-hidden rounded-[1.35rem] border border-white/40 bg-[linear-gradient(180deg,rgba(32,52,85,0.98),rgba(20,33,61,0.94))] p-5 shadow-card text-sand">
             <SectionTitle
               eyebrow="Resumo"
               title="Abrangência curricular"
               description="Indicadores compactos do recorte curricular ativo."
             />
-            <dl className="mt-4 space-y-3 text-sm leading-5 text-ink/72">
+            <dl className="mt-5 space-y-4 text-sm leading-6">
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Disciplinas</dt>
-                <dd>{offerings.length} disciplinas com o filtro atual.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sand/75">Disciplinas</dt>
+                <dd className="text-lg font-semibold">{offerings.length} visíveis</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Planos</dt>
-                <dd>{plans.length} planos curriculares visíveis.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sand/75">Planos</dt>
+                <dd className="text-lg font-semibold">{plans.length} carregados</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Classes</dt>
-                <dd>{snapshot.grades.count} níveis registados.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sand/75">Classes</dt>
+                <dd className="text-lg font-semibold">{snapshot.grades.count} níveis</dd>
               </div>
             </dl>
           </section>
-          <nav aria-label="Navegação secundária do currículo" className="rounded-[1.25rem] border border-ink/10 bg-sand p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Secções</p>
-            <ul className="mt-3 space-y-2 text-sm text-ink/75">
-              <li><a href="#offerings">Oferta de disciplinas</a></li>
-              <li><a href="#plans">Planos curriculares</a></li>
+          <nav aria-label="Navegação secundária do currículo" className="overflow-hidden rounded-[1.35rem] border border-white/40 bg-white/85 p-4 shadow-[0_20px_50px_rgba(20,33,61,0.08)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/60">Secções</p>
+            <ul className="mt-3 space-y-2 text-sm">
+              <li>
+                <a className="block rounded-[1rem] border border-ink/10 bg-ink/5 px-3 py-2 transition hover:border-ink/30 hover:bg-ink/10" href="#offerings">
+                  Oferta de disciplinas
+                </a>
+              </li>
+              <li>
+                <a className="block rounded-[1rem] border border-ink/10 bg-ink/5 px-3 py-2 transition hover:border-ink/30 hover:bg-ink/10" href="#plans">
+                  Planos curriculares
+                </a>
+              </li>
             </ul>
           </nav>
         </>
       )}
     >
-      <FilterBar
+      <section className="overflow-hidden rounded-[1.5rem] border border-white/65 bg-[linear-gradient(135deg,rgba(20,33,61,0.95),rgba(32,52,85,0.95))] p-5 text-sand shadow-card shadow-[0_30px_80px_rgba(20,33,61,0.18)]">
+        <div className="grid gap-5 lg:grid-cols-[1.3fr_0.7fr]">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-fern/80">Currículo</p>
+            <h2 className="mt-3 font-display text-3xl font-bold leading-tight">Oferta de disciplinas guiada por planos e ciclos letivos.</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-sand/80">
+              Ajuste o recorte para ano letivo ou classe e veja os planos associados a cada disciplina com metas e metodologias.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[1.1rem] border border-white/30 bg-white/10 px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sand/70">Disciplinas</p>
+              <p className="mt-2 font-display text-2xl font-semibold">{snapshot.gradeSubjects.items.length}</p>
+            </div>
+            <div className="rounded-[1.1rem] border border-white/30 bg-white/10 px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sand/70">Planos</p>
+              <p className="mt-2 font-display text-2xl font-semibold">{snapshot.subjectPlans.items.length}</p>
+            </div>
+            <div className="rounded-[1.1rem] border border-white/30 bg-white/10 px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sand/70">Níveis</p>
+              <p className="mt-2 font-display text-2xl font-semibold">{snapshot.grades.count}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <div className="mt-6 overflow-hidden rounded-[1.25rem] border border-white/60 bg-white/95 p-4 shadow-[0_18px_55px_rgba(20,33,61,0.08)]">
+        <p className="text-sm text-ink/70">
+          Recorte atual — ano: {year || "todos"} · classe: {grade || "todas"}.
+        </p>
+      </div>
+      <div className="mt-6 overflow-hidden rounded-[1.25rem] border border-white/60 bg-white/95 p-4 shadow-[0_18px_50px_rgba(20,33,61,0.06)]">
+        <FilterBar
         fields={[
           {
             name: "year",
@@ -113,18 +154,14 @@ export default async function CurriculumPage({ searchParams }: PageProps) {
           snapshot={snapshot.gradeSubjects}
           rows={offerings.slice(0, 8)}
           renderRow={(subject: GradeSubject) => (
-            <div key={subject.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-semibold text-ink">{subject.subject_name}</p>
-                <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  {subject.academic_year}
-                </span>
-              </div>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">Classe {subject.grade}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">
-                Carga horária semanal: {subject.weekly_workload}
-              </p>
+          <div key={subject.id} className={panelClass}>
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-semibold text-ink">{subject.subject_name}</p>
+              <span className={badgeClass}>{subject.academic_year}</span>
             </div>
+            <p className="mt-2 text-sm leading-6 text-ink/70">Classe {subject.grade}</p>
+            <p className="mt-1 text-sm leading-6 text-ink/55">Carga horária semanal: {subject.weekly_workload}</p>
+          </div>
           )}
         />
 
@@ -134,20 +171,18 @@ export default async function CurriculumPage({ searchParams }: PageProps) {
           snapshot={snapshot.subjectPlans}
           rows={plans.slice(0, 8)}
           renderRow={(plan: SubjectCurriculumPlan) => (
-            <div key={plan.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-semibold text-ink">{plan.subject_name}</p>
-                <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  {plan.academic_year_code}
-                </span>
-              </div>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">
-                Classe {plan.grade_number} | {plan.planned_competencies.length} competências
-              </p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">
-                {plan.assessment_criteria || plan.methodology || plan.objectives || "Ainda não foram preenchidos detalhes narrativos."}
-              </p>
+          <div key={plan.id} className={panelClass}>
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-semibold text-ink">{plan.subject_name}</p>
+              <span className={badgeClass}>{plan.academic_year_code}</span>
             </div>
+            <p className="mt-2 text-sm leading-6 text-ink/70">
+              Classe {plan.grade_number} · {plan.planned_competencies.length} competências
+            </p>
+            <p className="mt-1 text-sm leading-6 text-ink/55">
+              {plan.assessment_criteria || plan.methodology || plan.objectives || "Ainda não foram preenchidos detalhes narrativos."}
+            </p>
+          </div>
           )}
         />
       </section>

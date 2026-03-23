@@ -12,16 +12,17 @@ const toneClasses = {
 
 export function StatusCard({ title, status, body, tone }: StatusCardProps) {
   return (
-    <article className="rounded-[0.8rem] border border-ink/10 bg-sand p-2.5">
+    <article className="relative overflow-hidden rounded-[1.15rem] border border-white/70 bg-white/88 p-4 shadow-card">
+      <div aria-hidden className="absolute right-[-1.5rem] top-[-1.5rem] h-16 w-16 rounded-full bg-mist/50 blur-2xl" />
       <div className="flex items-center justify-between gap-2">
-        <h3 className="font-display text-sm font-semibold text-ink sm:text-base">{title}</h3>
+        <h3 className="font-display text-base font-semibold text-ink">{title}</h3>
         <span
-          className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] ${toneClasses[tone]}`}
+          className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${toneClasses[tone]}`}
         >
           {status}
         </span>
       </div>
-      <p className="mt-2 text-xs leading-4 text-ink/72 sm:text-sm">{body}</p>
+      <p className="mt-3 text-sm leading-6 text-ink/70">{body}</p>
     </article>
   );
 }

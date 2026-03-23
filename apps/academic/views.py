@@ -1,19 +1,46 @@
 from core.viewsets import RobustModelViewSet
 
 from .models import Guardian, Student, StudentGuardian
-from .serializers import GuardianSerializer, StudentGuardianSerializer, StudentSerializer
+from .serializers import (
+    GuardianSerializer,
+    StudentGuardianSerializer,
+    StudentSerializer,
+)
 
 
 class StudentViewSet(RobustModelViewSet):
-    queryset = Student.objects.prefetch_related("studentcompetency_set__competency").all()
+    queryset = Student.objects.prefetch_related(
+        "studentcompetency_set__competency"
+    ).all()
     serializer_class = StudentSerializer
     search_fields = ("name", "estado", "tenant_id")
     ordering_fields = ("id", "name", "tenant_id", "grade", "cycle", "birth_date")
     ordering = ("name",)
     allowed_roles = {
-        "*": {"national_admin", "provincial_admin", "district_admin", "school_director"},
-        "list": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher", "student", "guardian"},
-        "retrieve": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher", "student", "guardian"},
+        "*": {
+            "national_admin",
+            "provincial_admin",
+            "district_admin",
+            "school_director",
+        },
+        "list": {
+            "national_admin",
+            "provincial_admin",
+            "district_admin",
+            "school_director",
+            "teacher",
+            "student",
+            "guardian",
+        },
+        "retrieve": {
+            "national_admin",
+            "provincial_admin",
+            "district_admin",
+            "school_director",
+            "teacher",
+            "student",
+            "guardian",
+        },
     }
 
 
@@ -24,9 +51,28 @@ class GuardianViewSet(RobustModelViewSet):
     ordering_fields = ("id", "name", "tenant_id", "relationship", "active")
     ordering = ("name",)
     allowed_roles = {
-        "*": {"national_admin", "provincial_admin", "district_admin", "school_director"},
-        "list": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher", "guardian"},
-        "retrieve": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher", "guardian"},
+        "*": {
+            "national_admin",
+            "provincial_admin",
+            "district_admin",
+            "school_director",
+        },
+        "list": {
+            "national_admin",
+            "provincial_admin",
+            "district_admin",
+            "school_director",
+            "teacher",
+            "guardian",
+        },
+        "retrieve": {
+            "national_admin",
+            "provincial_admin",
+            "district_admin",
+            "school_director",
+            "teacher",
+            "guardian",
+        },
     }
 
 
@@ -37,7 +83,26 @@ class StudentGuardianViewSet(RobustModelViewSet):
     ordering_fields = ("id", "student__name", "guardian__name", "primary_contact")
     ordering = ("student__name", "guardian__name")
     allowed_roles = {
-        "*": {"national_admin", "provincial_admin", "district_admin", "school_director"},
-        "list": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher", "guardian"},
-        "retrieve": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher", "guardian"},
+        "*": {
+            "national_admin",
+            "provincial_admin",
+            "district_admin",
+            "school_director",
+        },
+        "list": {
+            "national_admin",
+            "provincial_admin",
+            "district_admin",
+            "school_director",
+            "teacher",
+            "guardian",
+        },
+        "retrieve": {
+            "national_admin",
+            "provincial_admin",
+            "district_admin",
+            "school_director",
+            "teacher",
+            "guardian",
+        },
     }

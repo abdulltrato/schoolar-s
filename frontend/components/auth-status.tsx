@@ -8,7 +8,7 @@ export async function AuthStatus() {
 
   if (!session.authenticated || !session.user) {
     return (
-      <div className="fixed right-3 top-3 z-50 flex items-center gap-2 rounded-full border border-ink/10 bg-white/95 px-3 py-1.5 text-xs text-ink shadow-card backdrop-blur">
+      <div className="fixed right-3 top-3 z-50 flex items-center gap-2 rounded-full border border-white/60 bg-[linear-gradient(135deg,rgba(255,255,255,0.95),rgba(247,243,233,0.92))] px-3 py-1.5 text-xs text-ink shadow-card backdrop-blur">
         <span className="text-ink/65">Sem sessão iniciada</span>
         <Link href="/login" className="rounded-full bg-ink px-2.5 py-1 font-semibold text-sand">
           Entrar
@@ -18,7 +18,7 @@ export async function AuthStatus() {
   }
 
   return (
-    <div className="fixed right-3 top-3 z-50 flex items-center gap-2 rounded-full border border-ink/10 bg-white/95 px-3 py-1.5 text-xs text-ink shadow-card backdrop-blur">
+    <div className="fixed right-3 top-3 z-50 flex items-center gap-2 rounded-full border border-white/60 bg-[linear-gradient(135deg,rgba(255,255,255,0.95),rgba(247,243,233,0.92))] px-3 py-1.5 text-xs text-ink shadow-card backdrop-blur">
       <span className="text-ink/75">
         {session.user.username} {session.user.role ? `| ${session.user.role}` : ""}
       </span>
