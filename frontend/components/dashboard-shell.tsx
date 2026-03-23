@@ -15,6 +15,7 @@ const navigation = [
   { href: "/management", label: "Gestão" },
   { href: "/curriculum", label: "Currículo" },
   { href: "/assessment", label: "Avaliação" },
+  { href: "/reports", label: "Relatórios" },
   { href: "/learning", label: "Ensino" },
   { href: "/student", label: "Aluno" },
   { href: "/teacher", label: "Professor" },

@@ -37,6 +37,11 @@ export default async function Home() {
       description: "Períodos, componentes, registos e resultados ponderados.",
     },
     {
+      href: "/reports",
+      title: "Relatórios",
+      description: "Declarações, certificados, diplomas, pautas, estatísticas e listas operacionais.",
+    },
+    {
       href: "/learning",
       title: "Ensino",
       description: "Cursos, aulas, materiais, tarefas e submissões.",

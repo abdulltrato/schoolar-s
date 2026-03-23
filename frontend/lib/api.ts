@@ -539,6 +539,65 @@ export type AuditSnapshot = PlatformMeta & {
   auditAlerts: CollectionSnapshot<AuditAlert>;
 };
 
+export type ReportRecord = {
+  id: number;
+  title: string;
+  type: string;
+  generated_at: string;
+  period: string;
+  content: Record<string, unknown>;
+  student: number | null;
+  verification_code: string;
+  verification_hash: string;
+  verification_version: number;
+  verification_url: string;
+  verification_status: string;
+};
+
+export type ReportCatalogItem = {
+  key: string;
+  label: string;
+  scope: string;
+  requires: string[];
+};
+
+export type GeneratedReportPayload = {
+  title?: string;
+  report_kind: string;
+  generated_at: string;
+  generated_by?: string | null;
+  scope: string;
+  metadata?: Record<string, unknown>;
+  student_snapshot?: Record<string, unknown>;
+  summary?: Record<string, unknown>;
+  rows?: Array<Record<string, unknown>>;
+};
+
+export type ReportsSnapshot = PlatformMeta & {
+  reports: CollectionSnapshot<ReportRecord>;
+  catalog: CollectionSnapshot<ReportCatalogItem>;
+  students: CollectionSnapshot<Student>;
+  academicYears: CollectionSnapshot<AcademicYear>;
+  grades: CollectionSnapshot<Grade>;
+  classrooms: CollectionSnapshot<Classroom>;
+  teachers: CollectionSnapshot<Teacher>;
+  managementAssignments: CollectionSnapshot<ManagementAssignment>;
+};
+
+export type ReportVerification = {
+  valid: boolean;
+  reason: string;
+  verification_code: string;
+  verification_hash: string;
+  report_id: number;
+  title: string;
+  type: string;
+  period: string;
+  generated_at: string;
+  student_name?: string | null;
+  verification_version: number;
+};
+
 function resolveApiBaseUrl() {
   return (
     process.env.API_BASE_URL ||
@@ -731,6 +790,10 @@ async function readJsonWithRetry<T>(
   }
 
   return lastResponse;
+}
+
+async function readRecord<T>(path: string): Promise<{ ok: boolean; statusCode: number; data?: T }> {
+  return readJsonWithRetry<T>(path);
 }
 
 function formatReadinessMessage(payload?: ReadinessPayload) {
@@ -1130,6 +1193,62 @@ export async function getAuditSnapshot(filters?: {
   };
 }
 
+export async function getReportsSnapshot(): Promise<ReportsSnapshot> {
+  const meta = await getPlatformMeta();
+  const [reports, catalogResponse, students, academicYears, grades, classrooms, teachers, managementAssignments] = await Promise.all([
+    readCollection<ReportRecord>("/api/v1/reports/reports/"),
+    readJsonWithRetry<{ results: ReportCatalogItem[] }>("/api/v1/reports/reports/catalog/"),
+    readCollection<Student>("/api/v1/academic/students/"),
+    readCollection<AcademicYear>("/api/v1/school/academic-years/"),
+    readCollection<Grade>("/api/v1/school/grades/"),
+    readCollection<Classroom>("/api/v1/school/classrooms/"),
+    readCollection<Teacher>("/api/v1/school/teachers/"),
+    readCollection<ManagementAssignment>("/api/v1/school/management-assignments/"),
+  ]);
+
+  const catalogItems = catalogResponse.data?.results || [];
+
+  return {
+    ...meta,
+    reports,
+    catalog: {
+      ok: catalogResponse.ok,
+      status:
+        catalogResponse.statusCode === 401 || catalogResponse.statusCode === 403
+          ? "AUTH"
+          : catalogResponse.ok
+            ? "ONLINE"
+            : "OFFLINE",
+      statusCode: catalogResponse.statusCode,
+      count: catalogItems.length,
+      items: catalogItems,
+      next: null,
+      previous: null,
+      message: getCollectionMessage(catalogResponse.statusCode, catalogItems.length),
+      requiresAuth: catalogResponse.statusCode === 401 || catalogResponse.statusCode === 403,
+    },
+    students,
+    academicYears,
+    grades,
+    classrooms,
+    teachers,
+    managementAssignments,
+  };
+}
+
+export async function getReportDetail(id: number) {
+  return readRecord<ReportRecord>(`/api/v1/reports/reports/${id}/`);
+}
+
+export async function getReportVerification(code: string, hash?: string) {
+  const query = new URLSearchParams();
+  query.set("code", code);
+  if (hash) {
+    query.set("hash", hash);
+  }
+  return readRecord<ReportVerification>(`/api/v1/reports/reports/verify/?${query.toString()}`);
+}
+
 export async function createAnnouncement(payload: {
   school: number;
   classroom?: number | null;
@@ -1237,4 +1356,18 @@ export async function createSubmission(payload: {
 
 export async function acknowledgeAuditAlert(id: number) {
   return writeJson<AuditAlert>(`/api/v1/school/audit-alerts/${id}/acknowledge/`, "POST", {});
+}
+
+export async function generateReport(payload: {
+  report_kind: string;
+  student?: number;
+  academic_year?: number;
+  grade?: number;
+  classroom?: number;
+  period_scope?: string;
+  period_order?: number;
+  persist?: boolean;
+  title?: string;
+}) {
+  return writeJson<ReportRecord | GeneratedReportPayload>("/api/v1/reports/reports/generate/", "POST", payload);
 }

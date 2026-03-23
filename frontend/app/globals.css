@@ -103,3 +103,37 @@ a {
     align-self: start;
   }
 }
+
+@media print {
+  :root {
+    --shell-gutter: 0;
+    --shell-top-offset: 0;
+    --shell-bottom-offset: 0;
+  }
+
+  body {
+    background: white;
+  }
+
+  .app-header,
+  .app-footer,
+  .app-aside,
+  .print-hidden {
+    display: none !important;
+  }
+
+  .app-main-stack {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .app-content-grid {
+    display: block;
+  }
+
+  .document-sheet {
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+}
