@@ -65,6 +65,7 @@ class RelatorioModelTests(TestCase):
         )
 
         self.assertTrue(report.verification_code.startswith("RPT-"))
+        self.assertTrue(report.serial_number.startswith("ALN-"))
         self.assertEqual(len(report.verification_hash), 64)
         self.assertTrue(report.verify_integrity())
 
@@ -349,3 +350,29 @@ class ReportGenerationApiTests(APITestCase):
 
         self.assertEqual(verify_response.status_code, 409)
         self.assertFalse(verify_response.data["valid"])
+
+    def test_export_html_and_pdf_endpoints_work(self):
+        response = self.client.post(
+            "/api/v1/reports/reports/generate/",
+            {
+                "report_kind": "student_certificate",
+                "student": self.student.id,
+                "academic_year": self.academic_year.id,
+                "persist": True,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        report_id = response.data["id"]
+
+        html_response = self.client.get(f"/api/v1/reports/reports/{report_id}/export/?format=html")
+        pdf_response = self.client.get(f"/api/v1/reports/reports/{report_id}/export/?format=pdf")
+
+        self.assertEqual(html_response.status_code, 200)
+        self.assertIn("text/html", html_response["Content-Type"])
+        self.assertIn(response.data["serial_number"], html_response.content.decode("utf-8"))
+
+        self.assertEqual(pdf_response.status_code, 200)
+        self.assertIn("application/pdf", pdf_response["Content-Type"])
+        self.assertTrue(pdf_response.content.startswith(b"%PDF-1.4"))

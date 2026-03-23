@@ -201,6 +201,22 @@ export default async function ReportDetailPage({ params }: PageProps) {
             />
             <div className="mt-3 flex flex-wrap gap-2">
               <PrintReportButton />
+              <a
+                href={`/api/v1/reports/reports/${report.id}/export/?format=html`}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full border border-ink/10 bg-white px-3 py-1.5 text-xs font-semibold text-ink transition hover:border-ink/30"
+              >
+                Abrir HTML formal
+              </a>
+              <a
+                href={`/api/v1/reports/reports/${report.id}/export/?format=pdf`}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full border border-ink/10 bg-white px-3 py-1.5 text-xs font-semibold text-ink transition hover:border-ink/30"
+              >
+                Exportar PDF
+              </a>
               <Link
                 href="/reports"
                 className="rounded-full border border-ink/10 bg-white px-3 py-1.5 text-xs font-semibold text-ink transition hover:border-ink/30"

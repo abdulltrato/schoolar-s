@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -7,7 +8,7 @@ from core.viewsets import RobustModelViewSet
 
 from .models import Report
 from .serializers import ReportGenerationSerializer, ReportSerializer
-from .services import ReportGenerationService
+from .services import ReportGenerationService, render_report_html, render_report_pdf
 
 
 class ReportViewSet(RobustModelViewSet):
@@ -104,3 +105,19 @@ class ReportViewSet(RobustModelViewSet):
             },
             status=status.HTTP_200_OK if valid else status.HTTP_409_CONFLICT,
         )
+
+    @action(detail=True, methods=["get"])
+    def export(self, request, pk=None):
+        report = self.get_object()
+        export_format = (request.query_params.get("format") or "html").strip().lower()
+        safe_serial = (report.serial_number or f"report-{report.pk}").replace("/", "-")
+
+        if export_format == "pdf":
+            response = HttpResponse(render_report_pdf(report), content_type="application/pdf")
+            response["Content-Disposition"] = f'attachment; filename="{safe_serial}.pdf"'
+            return response
+
+        html_content = render_report_html(report)
+        response = HttpResponse(html_content, content_type="text/html; charset=utf-8")
+        response["Content-Disposition"] = f'inline; filename="{safe_serial}.html"'
+        return response

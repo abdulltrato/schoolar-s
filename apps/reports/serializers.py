@@ -17,7 +17,7 @@ class ReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Report
         fields = "__all__"
-        read_only_fields = ("verification_code", "verification_hash", "verification_version", "verification_url", "verification_status")
+        read_only_fields = ("serial_number", "verification_code", "verification_hash", "verification_version", "verification_url", "verification_status")
 
     def get_verification_url(self, obj):
         request = self.context.get("request")
