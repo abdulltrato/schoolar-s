@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from core.serializers import TenantAcademicYearField
+
 from .models import (
     AcademicYear,
     AuditAlert,
@@ -62,10 +64,11 @@ class TeacherSerializer(serializers.ModelSerializer):
 
 class ClassroomSerializer(serializers.ModelSerializer):
     grade = serializers.SlugRelatedField(slug_field="number", queryset=Grade.objects.all())
-    academic_year = serializers.SlugRelatedField(slug_field="code", queryset=AcademicYear.objects.all())
+    academic_year = TenantAcademicYearField(queryset=AcademicYear.objects.all())
     grade_name = serializers.CharField(source="grade.name", read_only=True)
     school_name = serializers.CharField(source="school.name", read_only=True)
     lead_teacher_name = serializers.CharField(source="lead_teacher.name", read_only=True)
+    academic_year_code = serializers.CharField(source="academic_year.code", read_only=True)
 
     class Meta:
         model = Classroom
@@ -73,9 +76,10 @@ class ClassroomSerializer(serializers.ModelSerializer):
 
 
 class GradeSubjectSerializer(serializers.ModelSerializer):
-    academic_year = serializers.SlugRelatedField(slug_field="code", queryset=AcademicYear.objects.all())
+    academic_year = TenantAcademicYearField(queryset=AcademicYear.objects.all())
     grade = serializers.SlugRelatedField(slug_field="number", queryset=Grade.objects.all())
     subject_name = serializers.CharField(source="subject.name", read_only=True)
+    academic_year_code = serializers.CharField(source="academic_year.code", read_only=True)
 
     class Meta:
         model = GradeSubject
@@ -108,6 +112,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 
 
 class ManagementAssignmentSerializer(serializers.ModelSerializer):
+    academic_year = TenantAcademicYearField(queryset=AcademicYear.objects.all())
     teacher_name = serializers.CharField(source="teacher.name", read_only=True)
     school_name = serializers.CharField(source="school.name", read_only=True)
     academic_year_code = serializers.CharField(source="academic_year.code", read_only=True)

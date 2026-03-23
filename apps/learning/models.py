@@ -1,3 +1,4 @@
+from django.apps import apps
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -22,6 +23,10 @@ class Course(models.Model):
             school_tenant = (self.school.tenant_id or "").strip()
         if self.tenant_id and school_tenant and self.tenant_id != school_tenant:
             raise ValidationError({"tenant_id": "Course tenant must match the school tenant."})
+        if school_tenant and not self.tenant_id:
+            self.tenant_id = school_tenant
+        if not (self.tenant_id or "").strip():
+            raise ValidationError({"tenant_id": "tenant_id is required."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -50,14 +55,32 @@ class CourseOffering(models.Model):
         course_tenant = (self.course.tenant_id or "").strip() if self.course_id else ""
         classroom_tenant = (self.classroom.tenant_id or "").strip() if self.classroom_id else ""
         teacher_tenant = (self.teacher.tenant_id or "").strip() if self.teacher_id else ""
+        academic_year_tenant = (self.academic_year.tenant_id or "").strip() if self.academic_year_id else ""
         for related_tenant in [classroom_tenant, teacher_tenant]:
             if course_tenant and related_tenant and course_tenant != related_tenant:
                 raise ValidationError({"tenant_id": "Course offering relations must belong to the same tenant."})
+        if academic_year_tenant and course_tenant and academic_year_tenant != course_tenant:
+            raise ValidationError({"academic_year": "Academic year must belong to the same tenant as the course."})
         if self.tenant_id and course_tenant and self.tenant_id != course_tenant:
             raise ValidationError({"tenant_id": "Course offering tenant must match the course tenant."})
-        self.tenant_id = self.tenant_id or course_tenant or classroom_tenant or teacher_tenant
+        self.tenant_id = self.tenant_id or course_tenant or classroom_tenant or teacher_tenant or academic_year_tenant
         if self.end_date <= self.start_date:
             raise ValidationError({"end_date": "End date must be later than the start date."})
+        if self.classroom_id and self.course_id:
+            course_school_id = self.course.school_id
+            classroom_school_id = self.classroom.school_id
+            if course_school_id and classroom_school_id and course_school_id != classroom_school_id:
+                raise ValidationError({"classroom": "The classroom must belong to the same school as the course."})
+        if self.teacher_id and self.course_id:
+            course_school_id = self.course.school_id
+            teacher_school_id = self.teacher.school_id
+            if course_school_id and teacher_school_id and course_school_id != teacher_school_id:
+                raise ValidationError({"teacher": "The teacher must belong to the same school as the course."})
+        if self.teacher_id and self.classroom_id:
+            teacher_school_id = self.teacher.school_id
+            classroom_school_id = self.classroom.school_id
+            if teacher_school_id and classroom_school_id and teacher_school_id != classroom_school_id:
+                raise ValidationError({"teacher": "The teacher must belong to the same school as the classroom."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -89,6 +112,8 @@ class Lesson(models.Model):
             raise ValidationError({"tenant_id": "Lesson tenant must match the offering tenant."})
         if offering_tenant and not self.tenant_id:
             self.tenant_id = offering_tenant
+        if not (self.tenant_id or "").strip():
+            raise ValidationError({"tenant_id": "tenant_id is required."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -143,6 +168,8 @@ class Assignment(models.Model):
             raise ValidationError({"tenant_id": "Assignment tenant must match the offering tenant."})
         if offering_tenant and not self.tenant_id:
             self.tenant_id = offering_tenant
+        if not (self.tenant_id or "").strip():
+            raise ValidationError({"tenant_id": "tenant_id is required."})
         if self.due_at <= self.opens_at:
             raise ValidationError({"due_at": "Due date must be later than the opening date."})
 
@@ -186,8 +213,17 @@ class Submission(models.Model):
         if self.tenant_id and student_tenant and self.tenant_id != student_tenant:
             raise ValidationError({"tenant_id": "Submission tenant must match the student tenant."})
         self.tenant_id = self.tenant_id or assignment_tenant or student_tenant
+        if not (self.tenant_id or "").strip():
+            raise ValidationError({"tenant_id": "tenant_id is required."})
         if self.score is not None and self.score > self.assignment.max_score:
             raise ValidationError({"score": "The score cannot exceed the assignment maximum score."})
+        if self.assignment_id and self.student_id:
+            offering = self.assignment.offering
+            if offering.classroom_id:
+                Enrollment = apps.get_model("school", "Enrollment")
+                enrolled = Enrollment.objects.filter(student=self.student, classroom=offering.classroom).exists()
+                if not enrolled:
+                    raise ValidationError({"student": "Student must be enrolled in the offering classroom."})
 
     def save(self, *args, **kwargs):
         self.full_clean()

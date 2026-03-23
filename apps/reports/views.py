@@ -34,7 +34,7 @@ class ReportViewSet(RobustModelViewSet):
 
     @action(detail=False, methods=["post"])
     def generate(self, request):
-        serializer = ReportGenerationSerializer(data=request.data)
+        serializer = ReportGenerationSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         validated = serializer.validated_data
 
@@ -47,18 +47,26 @@ class ReportViewSet(RobustModelViewSet):
             classroom=validated.get("classroom"),
             period_scope=validated.get("period_scope"),
             period_order=validated.get("period_order"),
+            emit_alerts=validated.get("emit_alerts", False),
         )
 
         if not validated.get("persist", True):
             return Response(payload, status=status.HTTP_200_OK)
 
         title = validated.get("title") or payload.get("title") or service.default_title_for(validated["report_kind"], payload)
+        tenant_id = ""
+        if validated.get("student") is not None:
+            tenant_id = getattr(validated["student"], "tenant_id", "") or ""
+        if not tenant_id:
+            profile = getattr(request.user, "school_profile", None)
+            tenant_id = getattr(profile, "tenant_id", "") if profile else ""
         report = Report.objects.create(
             title=title,
             type=service.report_type_for(validated["report_kind"]),
             period=service.default_period_for(payload),
             content=payload,
             student=validated.get("student") if validated["report_kind"] in service.STUDENT_KINDS else None,
+            tenant_id=tenant_id,
         )
         data = self.get_serializer(report).data
         return Response(data, status=status.HTTP_201_CREATED)

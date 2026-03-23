@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Guardian, Student, StudentCompetency, StudentGuardian
+from .models import Guardian, Student, StudentCompetency, StudentGuardian, StudentOutcome
 
 
 class StudentCompetencySerializer(serializers.ModelSerializer):
@@ -12,15 +12,39 @@ class StudentCompetencySerializer(serializers.ModelSerializer):
         fields = ["id", "competency", "competency_name", "level", "updated_at"]
 
 
+class StudentOutcomeSerializer(serializers.ModelSerializer):
+    outcome_code = serializers.CharField(source="outcome.code", read_only=True)
+    outcome_description = serializers.CharField(source="outcome.description", read_only=True)
+    taxonomy_level = serializers.CharField(source="outcome.taxonomy_level", read_only=True)
+    knowledge_dimension = serializers.CharField(source="outcome.knowledge_dimension", read_only=True)
+
+    class Meta:
+        model = StudentOutcome
+        fields = "__all__"
+
+
 class StudentSerializer(serializers.ModelSerializer):
     competencies = StudentCompetencySerializer(source="studentcompetency_set", many=True, read_only=True)
+    outcomes = StudentOutcomeSerializer(source="studentoutcome_set", many=True, read_only=True)
     cycle = serializers.IntegerField(read_only=True)
     education_level = serializers.CharField(read_only=True)
     status = serializers.CharField(source="estado")
 
     class Meta:
         model = Student
-        fields = ["id", "user", "name", "tenant_id", "birth_date", "grade", "cycle", "education_level", "status", "competencies"]
+        fields = [
+            "id",
+            "user",
+            "name",
+            "tenant_id",
+            "birth_date",
+            "grade",
+            "cycle",
+            "education_level",
+            "status",
+            "competencies",
+            "outcomes",
+        ]
 
 
 class GuardianSerializer(serializers.ModelSerializer):

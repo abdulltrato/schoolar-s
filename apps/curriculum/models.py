@@ -99,6 +99,116 @@ class Competency(models.Model):
         ordering = ["name"]
 
 
+class LearningOutcome(models.Model):
+    TAXONOMY_LEVEL_CHOICES = [
+        ("remember", "Recordar"),
+        ("understand", "Compreender"),
+        ("apply", "Aplicar"),
+        ("analyze", "Analisar"),
+        ("evaluate", "Avaliar"),
+        ("create", "Criar"),
+    ]
+    KNOWLEDGE_DIMENSION_CHOICES = [
+        ("factual", "Factual"),
+        ("conceptual", "Conceitual"),
+        ("procedural", "Procedimental"),
+        ("metacognitive", "Metacognitivo"),
+    ]
+
+    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
+    code = models.CharField(max_length=60, verbose_name="Código")
+    description = models.TextField(verbose_name="Descrição")
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Disciplina")
+    grade = models.ForeignKey(Grade, null=True, blank=True, on_delete=models.PROTECT, verbose_name="Classe")
+    cycle = models.IntegerField(verbose_name="Ciclo")
+    taxonomy_level = models.CharField(max_length=20, choices=TAXONOMY_LEVEL_CHOICES, verbose_name="Nível cognitivo")
+    knowledge_dimension = models.CharField(
+        max_length=20,
+        choices=KNOWLEDGE_DIMENSION_CHOICES,
+        blank=True,
+        verbose_name="Dimensão do conhecimento",
+    )
+    active = models.BooleanField(default=True, verbose_name="Ativo")
+    competencies = models.ManyToManyField(
+        Competency,
+        through="CompetencyOutcome",
+        related_name="learning_outcomes",
+        verbose_name="Competências",
+    )
+
+    def clean(self):
+        self.tenant_id = (self.tenant_id or "").strip()
+        if not self.tenant_id:
+            raise ValidationError({"tenant_id": "tenant_id is required."})
+        if not self.subject_id and not self.grade_id:
+            raise ValidationError({"subject": "Informe uma disciplina ou classe para o resultado de aprendizagem."})
+
+        if self.grade_id:
+            self.cycle = self.grade.cycle
+
+        if self.subject_id:
+            if self.cycle and self.subject.cycle != self.cycle:
+                raise ValidationError({"subject": "A disciplina deve pertencer ao mesmo ciclo."})
+            self.cycle = self.subject.cycle
+
+        if self.cycle not in {1, 2}:
+            raise ValidationError({"cycle": "O ciclo deve ser 1 ou 2."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.code} - {self.description[:40]}"
+
+    class Meta:
+        verbose_name = "Resultado de aprendizagem"
+        verbose_name_plural = "Resultados de aprendizagem"
+        ordering = ["code"]
+        unique_together = ("tenant_id", "code", "subject", "grade")
+
+
+class CompetencyOutcome(models.Model):
+    competency = models.ForeignKey(Competency, on_delete=models.CASCADE, verbose_name="Competência")
+    outcome = models.ForeignKey(LearningOutcome, on_delete=models.CASCADE, verbose_name="Resultado de aprendizagem")
+    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
+    weight = models.DecimalField(max_digits=5, decimal_places=2, default=100, verbose_name="Peso")
+    notes = models.CharField(max_length=255, blank=True, verbose_name="Observações")
+
+    def clean(self):
+        outcome_tenant = (self.outcome.tenant_id or "").strip() if self.outcome_id else ""
+        if outcome_tenant:
+            if self.tenant_id and self.tenant_id != outcome_tenant:
+                raise ValidationError({"tenant_id": "O tenant do alinhamento deve coincidir com o resultado."})
+            if not self.tenant_id:
+                self.tenant_id = outcome_tenant
+        if not (self.tenant_id or "").strip():
+            raise ValidationError({"tenant_id": "tenant_id is required."})
+        if self.weight <= 0 or self.weight > 100:
+            raise ValidationError({"weight": "O peso deve estar entre 0 e 100."})
+
+        if self.outcome_id:
+            if self.outcome.subject_id and self.competency.subject_id and self.outcome.subject_id != self.competency.subject_id:
+                raise ValidationError({"competency": "A competência deve pertencer à mesma disciplina do resultado."})
+            if self.outcome.grade_id and self.competency.grade_id and self.outcome.grade_id != self.competency.grade_id:
+                raise ValidationError({"competency": "A competência deve pertencer à mesma classe do resultado."})
+            if self.outcome.cycle and self.competency.cycle and self.outcome.cycle != self.competency.cycle:
+                raise ValidationError({"competency": "A competência deve pertencer ao mesmo ciclo do resultado."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.outcome.code} - {self.competency.name}"
+
+    class Meta:
+        verbose_name = "Alinhamento competência-resultado"
+        verbose_name_plural = "Alinhamentos competência-resultado"
+        ordering = ["outcome__code", "competency__name"]
+        unique_together = ("tenant_id", "competency", "outcome")
+
+
 class BaseCurriculum(models.Model):
     cycle = models.IntegerField(verbose_name="Ciclo")
     competencies = models.ManyToManyField(Competency, verbose_name="Competências")
@@ -151,6 +261,7 @@ class SubjectCurriculumPlan(models.Model):
         related_name="curriculum_plan",
         verbose_name="Disciplina da classe",
     )
+    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     objectives = models.TextField(blank=True, verbose_name="Objetivos")
     planned_competencies = models.ManyToManyField(
         Competency,
@@ -175,12 +286,20 @@ class SubjectCurriculumPlan(models.Model):
 
     def clean(self):
         if self.grade_subject_id:
+            grade_subject_tenant = (self.grade_subject.tenant_id or "").strip()
+            if grade_subject_tenant:
+                if self.tenant_id and self.tenant_id != grade_subject_tenant:
+                    raise ValidationError({"tenant_id": "Curriculum plan tenant must match the grade subject tenant."})
+                if not self.tenant_id:
+                    self.tenant_id = grade_subject_tenant
+        if not (self.tenant_id or "").strip():
+            raise ValidationError({"tenant_id": "tenant_id is required."})
+        if self.pk:
             self.validate_competencies(self.planned_competencies.all())
 
     def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
         self.full_clean()
-        return self
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Plan {self.grade_subject.subject} - {self.grade_subject.grade}"

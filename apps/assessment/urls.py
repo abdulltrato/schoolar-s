@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     AssessmentComponentViewSet,
+    AssessmentOutcomeMapViewSet,
     AssessmentPeriodViewSet,
     AssessmentViewSet,
     SubjectPeriodResultViewSet,
@@ -11,6 +12,7 @@ from .views import (
 router = DefaultRouter()
 router.register(r"periods", AssessmentPeriodViewSet)
 router.register(r"components", AssessmentComponentViewSet)
+router.register(r"component-outcomes", AssessmentOutcomeMapViewSet)
 router.register(r"assessments", AssessmentViewSet)
 router.register(r"subject-period-results", SubjectPeriodResultViewSet)
 

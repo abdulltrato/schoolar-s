@@ -14,6 +14,7 @@ class AlunoModelTests(TestCase):
                 birth_date=date(2015, 1, 1),
                 grade=0,
                 cycle=1,
+                tenant_id="tenant-esc-1",
             )
 
     def test_define_ciclo_automaticamente_a_partir_da_classe(self):
@@ -22,6 +23,7 @@ class AlunoModelTests(TestCase):
             birth_date=date(2014, 1, 1),
             grade=5,
             cycle=1,
+            tenant_id="tenant-esc-1",
         )
 
         self.assertEqual(student.cycle, 2)
@@ -32,6 +34,7 @@ class AlunoModelTests(TestCase):
             birth_date=date(2012, 1, 1),
             grade=7,
             cycle=1,
+            tenant_id="tenant-esc-1",
         )
 
         self.assertEqual(student.education_level, "secundario")

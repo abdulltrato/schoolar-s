@@ -59,9 +59,24 @@ class ValidatedSearchOrderingMixin:
 
 class TenantScopedQuerysetMixin:
     tenant_field_name = "tenant_id"
+    ADMIN_ROLES = {"national_admin", "provincial_admin", "district_admin"}
 
-    def _get_request_tenant_id(self):
-        return getattr(self.request, "tenant_id", None)
+    def _get_profile(self):
+        user = getattr(self.request, "user", None)
+        if not user or not getattr(user, "is_authenticated", False):
+            return None
+        return getattr(user, "school_profile", None)
+
+    def _resolve_tenant_id(self):
+        header_tenant = getattr(self.request, "tenant_id", None)
+        if header_tenant:
+            return header_tenant
+        profile = self._get_profile()
+        if not profile:
+            return None
+        if profile.role in self.ADMIN_ROLES:
+            return None
+        return (profile.tenant_id or "").strip() or None
 
     def _get_model(self):
         queryset = super().get_queryset()
@@ -78,22 +93,30 @@ class TenantScopedQuerysetMixin:
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        tenant_id = self._get_request_tenant_id()
+        tenant_id = self._resolve_tenant_id()
         model = getattr(queryset, "model", None)
         if tenant_id and self._has_tenant_field(model):
             return queryset.filter(**{self.tenant_field_name: tenant_id})
+        if self._has_tenant_field(model):
+            profile = self._get_profile()
+            if profile and profile.role not in self.ADMIN_ROLES and not (profile.tenant_id or "").strip():
+                raise PermissionDenied("Tenant header is required for this resource.")
         return queryset
 
     def perform_create(self, serializer):
-        tenant_id = self._get_request_tenant_id()
+        tenant_id = self._resolve_tenant_id()
         model = getattr(getattr(serializer, "Meta", None), "model", None)
         if tenant_id and self._has_tenant_field(model):
             serializer.save(**{self.tenant_field_name: tenant_id})
             return
+        if self._has_tenant_field(model):
+            profile = self._get_profile()
+            if profile and profile.role not in self.ADMIN_ROLES and not (profile.tenant_id or "").strip():
+                raise PermissionDenied("Tenant header is required for this resource.")
         super().perform_create(serializer)
 
     def perform_update(self, serializer):
-        tenant_id = self._get_request_tenant_id()
+        tenant_id = self._resolve_tenant_id()
         model = getattr(getattr(serializer, "Meta", None), "model", None)
         if tenant_id and self._has_tenant_field(model):
             instance = serializer.instance
@@ -102,6 +125,10 @@ class TenantScopedQuerysetMixin:
                 raise PermissionDenied("Record belongs to a different tenant.")
             serializer.save(**{self.tenant_field_name: tenant_id})
             return
+        if self._has_tenant_field(model):
+            profile = self._get_profile()
+            if profile and profile.role not in self.ADMIN_ROLES and not (profile.tenant_id or "").strip():
+                raise PermissionDenied("Tenant header is required for this resource.")
         super().perform_update(serializer)
 
 

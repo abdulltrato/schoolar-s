@@ -12,6 +12,7 @@ class Progression(models.Model):
     ]
 
     student = models.ForeignKey("academic.Student", on_delete=models.CASCADE, verbose_name="Aluno")
+    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     cycle = models.IntegerField(verbose_name="Ciclo")
     academic_year = models.CharField(max_length=10, verbose_name="Ano letivo")
     decision_date = models.DateField(verbose_name="Data da decisão")
@@ -19,6 +20,14 @@ class Progression(models.Model):
     comment = models.TextField(blank=True, verbose_name="Comentário")
 
     def clean(self):
+        student_tenant = (self.student.tenant_id or "").strip() if self.student_id else ""
+        if student_tenant:
+            if self.tenant_id and self.tenant_id != student_tenant:
+                raise ValidationError({"tenant_id": "Progression tenant must match the student tenant."})
+            if not self.tenant_id:
+                self.tenant_id = student_tenant
+        if not (self.tenant_id or "").strip():
+            raise ValidationError({"tenant_id": "tenant_id is required."})
         if self.cycle not in {1, 2}:
             raise ValidationError({"cycle": "The progression cycle must be 1 or 2."})
         if self.student_id and self.student.cycle != self.cycle:

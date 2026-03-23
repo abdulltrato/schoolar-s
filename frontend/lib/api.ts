@@ -772,6 +772,48 @@ async function writeJson<T>(
   }
 }
 
+async function deleteJson<T>(path: string): Promise<MutationResult<T>> {
+  const baseUrl = resolveApiBaseUrl();
+
+  try {
+    const response = await fetch(`${baseUrl}${path}`, {
+      method: "DELETE",
+      cache: "no-store",
+      headers: await buildHeaders("PATCH"),
+    });
+
+    const data = await parseJsonSafe<T & { error?: { message?: string } }>(response);
+    const errorMessage =
+      data && typeof data === "object" && "error" in data && data.error?.message
+        ? data.error.message
+        : undefined;
+
+    return {
+      ok: response.ok,
+      statusCode: response.status,
+      data,
+      error: errorMessage,
+    };
+  } catch {
+    return {
+      ok: false,
+      statusCode: 0,
+      error: "Não foi possível ligar ao backend.",
+    };
+  }
+}
+
+export async function mutateRecord(
+  path: string,
+  method: "POST" | "PATCH" | "DELETE",
+  payload?: Record<string, unknown>,
+) {
+  if (method === "DELETE") {
+    return deleteJson<unknown>(path);
+  }
+  return writeJson<unknown>(path, method, payload ?? {});
+}
+
 async function readJsonWithRetry<T>(
   path: string,
   attempts = 2,

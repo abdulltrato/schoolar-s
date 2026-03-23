@@ -175,21 +175,6 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# The domain apps were renamed to English identifiers. Keeping the legacy
-# migrations in sync would require a full migration tree rewrite, so these
-# apps are created directly from the current models.
-MIGRATION_MODULES = {
-    "academic": None,
-    "assessment": None,
-    "curriculum": None,
-    "events": None,
-    "learning": None,
-    "progress": None,
-    "reports": None,
-    "school": None,
-    "tenants": None,
-}
-
 # DRF settings
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (

@@ -44,6 +44,7 @@ class ErrorContractTests(TestCase):
             },
             format="json",
             HTTP_X_REQUEST_ID="req-error-1",
+            HTTP_X_TENANT_ID="tenant-error",
         )
 
         self.assertEqual(response.status_code, 400)
@@ -99,7 +100,7 @@ class AuditContractTests(TestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_announcement_create_emits_audit_log(self):
-        school = School.objects.create(code="AUD-01", name="Audit School")
+        school = School.objects.create(code="AUD-01", name="Audit School", tenant_id="tenant-audit-1")
 
         with self.assertLogs("schoolar.audit", level="INFO") as captured:
             response = self.client.post(
@@ -111,6 +112,7 @@ class AuditContractTests(TestCase):
                     "audience": "school",
                 },
                 format="json",
+                HTTP_X_TENANT_ID=school.tenant_id,
             )
 
         self.assertEqual(response.status_code, 201)
@@ -120,7 +122,7 @@ class AuditContractTests(TestCase):
         self.assertEqual(event.username, "audit-user")
 
     def test_announcement_update_emits_audit_log(self):
-        school = School.objects.create(code="AUD-02", name="Audit School 2")
+        school = School.objects.create(code="AUD-02", name="Audit School 2", tenant_id="tenant-audit-2")
         create_response = self.client.post(
             "/api/v1/school/announcements/",
             {
@@ -130,6 +132,7 @@ class AuditContractTests(TestCase):
                 "audience": "school",
             },
             format="json",
+            HTTP_X_TENANT_ID=school.tenant_id,
         )
         announcement_id = create_response.json()["id"]
 
@@ -141,6 +144,7 @@ class AuditContractTests(TestCase):
                     "message": "A prova foi reagendada para sexta.",
                 },
                 format="json",
+                HTTP_X_TENANT_ID=school.tenant_id,
             )
 
         self.assertEqual(response.status_code, 200)
@@ -150,7 +154,7 @@ class AuditContractTests(TestCase):
         self.assertIn("message", event.changed_fields)
 
     def test_audit_api_filters_by_resource(self):
-        school = School.objects.create(code="AUD-03", name="Audit School 3")
+        school = School.objects.create(code="AUD-03", name="Audit School 3", tenant_id="tenant-audit-3")
         self.client.post(
             "/api/v1/school/announcements/",
             {
@@ -160,16 +164,20 @@ class AuditContractTests(TestCase):
                 "audience": "school",
             },
             format="json",
+            HTTP_X_TENANT_ID=school.tenant_id,
         )
 
-        response = self.client.get("/api/v1/school/audit-events/?resource=announcement")
+        response = self.client.get(
+            "/api/v1/school/audit-events/?resource=announcement",
+            HTTP_X_TENANT_ID=school.tenant_id,
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertGreaterEqual(response.json()["count"], 1)
         self.assertTrue(all(item["resource"] == "announcement" for item in response.json()["results"]))
 
     def test_audit_export_csv_returns_attachment(self):
-        school = School.objects.create(code="AUD-04", name="Audit School 4")
+        school = School.objects.create(code="AUD-04", name="Audit School 4", tenant_id="tenant-audit-4")
         self.client.post(
             "/api/v1/school/announcements/",
             {
@@ -179,16 +187,20 @@ class AuditContractTests(TestCase):
                 "audience": "school",
             },
             format="json",
+            HTTP_X_TENANT_ID=school.tenant_id,
         )
 
-        response = self.client.get("/api/v1/school/audit-events/exports/download/?resource=announcement&export_format=csv")
+        response = self.client.get(
+            "/api/v1/school/audit-events/exports/download/?resource=announcement&export_format=csv",
+            HTTP_X_TENANT_ID=school.tenant_id,
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "text/csv")
         self.assertIn("attachment;", response["Content-Disposition"])
 
     def test_repeated_audit_events_generate_alert(self):
-        school = School.objects.create(code="AUD-05", name="Audit School 5")
+        school = School.objects.create(code="AUD-05", name="Audit School 5", tenant_id="tenant-audit-5")
 
         for index in range(5):
             self.client.post(
@@ -200,6 +212,7 @@ class AuditContractTests(TestCase):
                     "audience": "school",
                 },
                 format="json",
+                HTTP_X_TENANT_ID=school.tenant_id,
             )
 
         self.assertTrue(AuditAlert.objects.filter(alert_type="actor_concentration", username="audit-user").exists())

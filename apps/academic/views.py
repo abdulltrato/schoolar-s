@@ -1,16 +1,18 @@
 from core.viewsets import RobustModelViewSet
 
-from .models import Guardian, Student, StudentGuardian
+from .models import Guardian, Student, StudentGuardian, StudentOutcome
 from .serializers import (
     GuardianSerializer,
     StudentGuardianSerializer,
+    StudentOutcomeSerializer,
     StudentSerializer,
 )
 
 
 class StudentViewSet(RobustModelViewSet):
     queryset = Student.objects.prefetch_related(
-        "studentcompetency_set__competency"
+        "studentcompetency_set__competency",
+        "studentoutcome_set__outcome",
     ).all()
     serializer_class = StudentSerializer
     search_fields = ("name", "estado", "tenant_id")
@@ -103,6 +105,40 @@ class StudentGuardianViewSet(RobustModelViewSet):
             "district_admin",
             "school_director",
             "teacher",
+            "guardian",
+        },
+    }
+
+
+class StudentOutcomeViewSet(RobustModelViewSet):
+    queryset = StudentOutcome.objects.select_related("student", "outcome").all()
+    serializer_class = StudentOutcomeSerializer
+    search_fields = ("student__name", "outcome__code", "outcome__description", "tenant_id")
+    ordering_fields = ("id", "updated_at", "mastery_level", "evidence_count")
+    ordering = ("-updated_at",)
+    allowed_roles = {
+        "*": {
+            "national_admin",
+            "provincial_admin",
+            "district_admin",
+            "school_director",
+        },
+        "list": {
+            "national_admin",
+            "provincial_admin",
+            "district_admin",
+            "school_director",
+            "teacher",
+            "student",
+            "guardian",
+        },
+        "retrieve": {
+            "national_admin",
+            "provincial_admin",
+            "district_admin",
+            "school_director",
+            "teacher",
+            "student",
             "guardian",
         },
     }

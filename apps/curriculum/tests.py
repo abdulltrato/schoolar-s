@@ -63,6 +63,7 @@ class CurriculoApiTests(TestCase):
         subject = Subject.objects.create(name="Matemática", area=area, cycle=1)
         academic_year = AcademicYear.objects.create(
             code="2026-2027",
+            tenant_id="tenant-esc-1",
             start_date=date(2026, 2, 1),
             end_date=date(2026, 12, 15),
             active=True,
@@ -88,6 +89,7 @@ class CurriculoApiTests(TestCase):
         outra_disciplina = Subject.objects.create(name="História", area=area, cycle=1)
         academic_year = AcademicYear.objects.create(
             code="2027-2028",
+            tenant_id="tenant-esc-2",
             start_date=date(2027, 2, 1),
             end_date=date(2027, 12, 15),
             active=True,

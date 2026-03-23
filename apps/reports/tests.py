@@ -34,6 +34,7 @@ class RelatorioModelTests(TestCase):
             birth_date=date(2015, 3, 12),
             grade=1,
             cycle=1,
+            tenant_id="tenant-esc-01",
         )
 
     def test_relatorio_de_aluno_exige_aluno(self):
@@ -77,9 +78,10 @@ class ReportGenerationApiTests(APITestCase):
         self.user = user_model.objects.create_user(username="director", password="secret123")
         self.teacher_user = user_model.objects.create_user(username="teacher", password="secret123")
 
-        self.school = School.objects.create(code="ESC-01", name="Escola Primaria Central")
+        self.school = School.objects.create(code="ESC-01", name="Escola Primaria Central", tenant_id=self.tenant_id)
         self.academic_year = AcademicYear.objects.create(
             code="2026-2027",
+            tenant_id=self.tenant_id,
             start_date=date(2026, 2, 1),
             end_date=date(2026, 12, 15),
             active=True,
@@ -94,7 +96,6 @@ class ReportGenerationApiTests(APITestCase):
         )
         self.classroom = Classroom.objects.create(
             name="2A",
-            tenant_id=self.tenant_id,
             school=self.school,
             grade=self.grade,
             cycle=1,
@@ -111,7 +112,6 @@ class ReportGenerationApiTests(APITestCase):
         self.enrollment = Enrollment.objects.create(
             student=self.student,
             classroom=self.classroom,
-            tenant_id=self.tenant_id,
         )
 
         self.profile = self.user.school_profile
@@ -132,7 +132,6 @@ class ReportGenerationApiTests(APITestCase):
         self.assignment = TeachingAssignment.objects.create(
             teacher=self.teacher,
             classroom=self.classroom,
-            tenant_id=self.tenant_id,
             grade_subject=self.grade_subject,
         )
         self.period_1 = AssessmentPeriod.objects.create(

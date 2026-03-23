@@ -25,7 +25,7 @@ def custom_exception_handler(exc, context):
                 "ok": False,
                 "error": {
                     "code": "internal_error",
-                "message": "Internal server error.",
+                    "message": "Internal server error.",
                     "details": None,
                 },
                 "meta": {

@@ -21,7 +21,7 @@ from .models import (
 
 class EscolaModelTests(TestCase):
     def setUp(self):
-        self.school = School.objects.create(code="ESC-01", name="School Primaria Central")
+        self.school = School.objects.create(code="ESC-01", name="School Primaria Central", tenant_id="tenant-esc-01")
         user = get_user_model().objects.create_user(username="prof", password="secret")
         self.teacher = Teacher.objects.create(user=user, name="Prof. Carla", school=self.school)
         self.student = Student.objects.create(
@@ -29,9 +29,11 @@ class EscolaModelTests(TestCase):
             birth_date=date(2015, 5, 20),
             grade=2,
             cycle=1,
+            tenant_id=self.school.tenant_id,
         )
         self.academic_year = AcademicYear.objects.create(
             code="2026-2027",
+            tenant_id=self.school.tenant_id,
             start_date=date(2026, 2, 1),
             end_date=date(2026, 12, 15),
             active=True,
@@ -52,6 +54,7 @@ class EscolaModelTests(TestCase):
         with self.assertRaises(ValidationError):
             AcademicYear.objects.create(
                 code="2026",
+                tenant_id=self.school.tenant_id,
                 start_date=date(2026, 2, 1),
                 end_date=date(2026, 12, 15),
             )
@@ -143,6 +146,7 @@ class UserProfileSignalTests(TestCase):
             name="Escola Secundaria Central",
             province="Maputo",
             district="KaMpfumo",
+            tenant_id="tenant-school-02",
         )
         user = get_user_model().objects.create_user(username="teacher-sync", password="secret")
 

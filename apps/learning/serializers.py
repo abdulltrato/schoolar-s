@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from core.serializers import TenantAcademicYearField
+
 from .models import Assignment, Course, CourseOffering, Lesson, LessonMaterial, Submission
 
 
@@ -12,6 +14,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class CourseOfferingSerializer(serializers.ModelSerializer):
+    academic_year = TenantAcademicYearField()
     course_title = serializers.CharField(source="course.title", read_only=True)
     classroom_name = serializers.CharField(source="classroom.name", read_only=True)
     teacher_name = serializers.CharField(source="teacher.name", read_only=True)

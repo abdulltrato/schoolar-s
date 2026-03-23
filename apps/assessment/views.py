@@ -1,8 +1,9 @@
 from core.viewsets import RobustModelViewSet
 
-from .models import Assessment, AssessmentComponent, AssessmentPeriod, SubjectPeriodResult
+from .models import Assessment, AssessmentComponent, AssessmentOutcomeMap, AssessmentPeriod, SubjectPeriodResult
 from .serializers import (
     AssessmentComponentSerializer,
+    AssessmentOutcomeMapSerializer,
     AssessmentPeriodSerializer,
     AssessmentSerializer,
     SubjectPeriodResultSerializer,
@@ -34,6 +35,20 @@ class AssessmentComponentViewSet(RobustModelViewSet):
     search_fields = ("name", "type", "period__name", "grade_subject__subject__name")
     ordering_fields = ("id", "period__order", "grade_subject__subject__name", "name", "weight")
     ordering = ("period__academic_year__code", "period__order", "grade_subject__subject__name")
+    allowed_roles = AssessmentPeriodViewSet.allowed_roles
+
+
+class AssessmentOutcomeMapViewSet(RobustModelViewSet):
+    queryset = AssessmentOutcomeMap.objects.select_related(
+        "component",
+        "component__grade_subject",
+        "component__grade_subject__subject",
+        "outcome",
+    ).all()
+    serializer_class = AssessmentOutcomeMapSerializer
+    search_fields = ("component__name", "outcome__code", "outcome__description", "tenant_id")
+    ordering_fields = ("id", "weight", "tenant_id")
+    ordering = ("-weight",)
     allowed_roles = AssessmentPeriodViewSet.allowed_roles
 
 

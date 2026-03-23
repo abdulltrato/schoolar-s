@@ -39,6 +39,7 @@ class Report(models.Model):
     period = models.CharField(max_length=50, blank=True, verbose_name="Período")
     content = models.JSONField(verbose_name="Conteúdo")
     student = models.ForeignKey("academic.Student", on_delete=models.CASCADE, null=True, blank=True, verbose_name="Aluno")
+    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     serial_number = models.CharField(max_length=40, unique=True, blank=True, editable=False, verbose_name="Número de série")
     verification_code = models.CharField(max_length=32, unique=True, blank=True, editable=False, verbose_name="Código de verificação")
     verification_hash = models.CharField(max_length=64, blank=True, editable=False, verbose_name="Assinatura de verificação")
@@ -50,6 +51,14 @@ class Report(models.Model):
             raise ValidationError({"student": "Student reports require an associated student."})
         if self.type != "student" and self.student_id:
             raise ValidationError({"student": "Only student reports may reference a student."})
+        student_tenant = (self.student.tenant_id or "").strip() if self.student_id else ""
+        if student_tenant:
+            if self.tenant_id and self.tenant_id != student_tenant:
+                raise ValidationError({"tenant_id": "Report tenant must match the student tenant."})
+            if not self.tenant_id:
+                self.tenant_id = student_tenant
+        if not (self.tenant_id or "").strip():
+            raise ValidationError({"tenant_id": "tenant_id is required."})
 
     def _build_verification_payload(self):
         content = self.content if isinstance(self.content, dict) else {}

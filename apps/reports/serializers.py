@@ -3,6 +3,7 @@ from rest_framework.reverse import reverse
 
 from apps.academic.models import Student
 from apps.school.models import AcademicYear, Classroom, Grade
+from core.serializers import TenantAcademicYearField
 
 from .models import Report
 
@@ -45,6 +46,9 @@ class ReportGenerationSerializer(serializers.Serializer):
         ("directors_list", "Lista de diretores e coordenadores"),
         ("students_by_grade_year", "Lista de estudantes por classe e ano"),
         ("students_by_grade_year_classroom", "Lista de estudantes por classe, ano e turma"),
+        ("bloom_distribution", "Distribuição por Taxonomia de Bloom"),
+        ("learning_risk_alerts", "Alertas de risco de aprendizagem"),
+        ("learning_intervention_plan", "Plano de intervenção pedagógica"),
     ]
     PERIOD_SCOPE_CHOICES = [
         ("quarterly", "Trimestral"),
@@ -54,15 +58,22 @@ class ReportGenerationSerializer(serializers.Serializer):
 
     report_kind = serializers.ChoiceField(choices=REPORT_KIND_CHOICES)
     student = serializers.PrimaryKeyRelatedField(queryset=Student.objects.all(), required=False, allow_null=True)
-    academic_year = serializers.PrimaryKeyRelatedField(queryset=AcademicYear.objects.all(), required=False, allow_null=True)
+    academic_year = TenantAcademicYearField(queryset=AcademicYear.objects.all(), required=False, allow_null=True)
     grade = serializers.PrimaryKeyRelatedField(queryset=Grade.objects.all(), required=False, allow_null=True)
     classroom = serializers.PrimaryKeyRelatedField(queryset=Classroom.objects.select_related("academic_year", "grade"), required=False, allow_null=True)
     period_scope = serializers.ChoiceField(choices=PERIOD_SCOPE_CHOICES, required=False, allow_null=True)
     period_order = serializers.IntegerField(required=False, allow_null=True, min_value=1, max_value=4)
     persist = serializers.BooleanField(required=False, default=True)
     title = serializers.CharField(required=False, allow_blank=True, max_length=200)
+    emit_alerts = serializers.BooleanField(required=False, default=False)
 
     def validate(self, attrs):
+        request = self.context.get("request")
+        profile = getattr(getattr(request, "user", None), "school_profile", None) if request else None
+        tenant_id = getattr(request, "tenant_id", None)
+        if not tenant_id and profile and profile.role not in {"national_admin", "provincial_admin", "district_admin"}:
+            tenant_id = (profile.tenant_id or "").strip() or None
+
         report_kind = attrs["report_kind"]
         student = attrs.get("student")
         academic_year = attrs.get("academic_year")
@@ -103,6 +114,20 @@ class ReportGenerationSerializer(serializers.Serializer):
             if not classroom:
                 raise serializers.ValidationError({"classroom": "Este relatório exige uma turma."})
 
+        if report_kind == "bloom_distribution":
+            if not academic_year:
+                raise serializers.ValidationError({"academic_year": "Este relatório exige um ano letivo."})
+
+        if report_kind == "learning_risk_alerts":
+            if not academic_year:
+                raise serializers.ValidationError({"academic_year": "Este relatório exige um ano letivo."})
+
+        if report_kind == "learning_intervention_plan":
+            if not academic_year:
+                raise serializers.ValidationError({"academic_year": "Este relatório exige um ano letivo."})
+            if "emit_alerts" not in self.initial_data:
+                attrs["emit_alerts"] = True
+
         if classroom and academic_year and classroom.academic_year_id != academic_year.id:
             raise serializers.ValidationError({"classroom": "A turma deve pertencer ao ano letivo selecionado."})
 
@@ -117,5 +142,13 @@ class ReportGenerationSerializer(serializers.Serializer):
 
         if report_kind == "annual_grade_sheet" and period_scope and period_scope != "annual":
             raise serializers.ValidationError({"period_scope": "A pauta anual usa escopo anual."})
+
+        if tenant_id:
+            if student and (student.tenant_id or "").strip() != tenant_id:
+                raise serializers.ValidationError({"student": "O estudante deve pertencer ao mesmo tenant."})
+            if academic_year and (academic_year.tenant_id or "").strip() != tenant_id:
+                raise serializers.ValidationError({"academic_year": "O ano letivo deve pertencer ao mesmo tenant."})
+            if classroom and (classroom.tenant_id or "").strip() != tenant_id:
+                raise serializers.ValidationError({"classroom": "A turma deve pertencer ao mesmo tenant."})
 
         return attrs

@@ -22,6 +22,7 @@ const navigation = [
   { href: "/teacher", label: "Professor", tooltip: "Área do professor e alocações docentes" },
   { href: "/finance", label: "Financeiro", tooltip: "Faturas, pagamentos e acompanhamentos" },
   { href: "/communication", label: "Comunicação", tooltip: "Comunicados e alcance com as famílias" },
+  { href: "/crud", label: "CRUD", tooltip: "Operações completas de criação e manutenção" },
   { href: "/audit", label: "Auditoria", tooltip: "Trilha sensível de mudanças e geração de provas" },
 ];
 

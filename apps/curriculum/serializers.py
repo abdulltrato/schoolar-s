@@ -2,7 +2,16 @@ from rest_framework import serializers
 
 from apps.school.models import Grade
 
-from .models import BaseCurriculum, Competency, CurriculumArea, LocalCurriculum, Subject, SubjectCurriculumPlan
+from .models import (
+    BaseCurriculum,
+    Competency,
+    CompetencyOutcome,
+    CurriculumArea,
+    LearningOutcome,
+    LocalCurriculum,
+    Subject,
+    SubjectCurriculumPlan,
+)
 
 
 class CurriculumAreaSerializer(serializers.ModelSerializer):
@@ -100,3 +109,22 @@ class SubjectCurriculumPlanSerializer(serializers.ModelSerializer):
         if "competencia_ids" in normalized and "competency_ids" not in normalized:
             normalized["competency_ids"] = normalized["competencia_ids"]
         return super().to_internal_value(normalized)
+
+
+class LearningOutcomeSerializer(serializers.ModelSerializer):
+    subject_name = serializers.CharField(source="subject.name", read_only=True)
+    grade_number = serializers.IntegerField(source="grade.number", read_only=True)
+
+    class Meta:
+        model = LearningOutcome
+        fields = "__all__"
+
+
+class CompetencyOutcomeSerializer(serializers.ModelSerializer):
+    competency_name = serializers.CharField(source="competency.name", read_only=True)
+    outcome_code = serializers.CharField(source="outcome.code", read_only=True)
+    outcome_description = serializers.CharField(source="outcome.description", read_only=True)
+
+    class Meta:
+        model = CompetencyOutcome
+        fields = "__all__"

@@ -1,9 +1,12 @@
 from rest_framework import serializers
 
-from .models import Assessment, AssessmentComponent, AssessmentPeriod, SubjectPeriodResult
+from core.serializers import TenantAcademicYearField
+
+from .models import Assessment, AssessmentComponent, AssessmentOutcomeMap, AssessmentPeriod, SubjectPeriodResult
 
 
 class AssessmentPeriodSerializer(serializers.ModelSerializer):
+    academic_year = TenantAcademicYearField()
     academic_year_code = serializers.CharField(source="academic_year.code", read_only=True)
 
     class Meta:
@@ -19,6 +22,16 @@ class AssessmentComponentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AssessmentComponent
+        fields = "__all__"
+
+
+class AssessmentOutcomeMapSerializer(serializers.ModelSerializer):
+    component_name = serializers.CharField(source="component.name", read_only=True)
+    outcome_code = serializers.CharField(source="outcome.code", read_only=True)
+    outcome_description = serializers.CharField(source="outcome.description", read_only=True)
+
+    class Meta:
+        model = AssessmentOutcomeMap
         fields = "__all__"
 
 

@@ -15,13 +15,17 @@ def validate_academic_year_code(code: str):
 
 
 class AcademicYear(models.Model):
-    code = models.CharField(max_length=9, unique=True, verbose_name="Ano letivo")
+    code = models.CharField(max_length=9, verbose_name="Ano letivo")
+    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     start_date = models.DateField(verbose_name="Data de início")
     end_date = models.DateField(verbose_name="Data de fim")
     active = models.BooleanField(default=False, verbose_name="Ativo")
 
     def clean(self):
         validate_academic_year_code(self.code)
+        self.tenant_id = (self.tenant_id or "").strip()
+        if not self.tenant_id:
+            raise ValidationError({"tenant_id": "tenant_id is required."})
         if self.end_date <= self.start_date:
             raise ValidationError({"end_date": "End date must be later than the start date."})
 
@@ -36,6 +40,7 @@ class AcademicYear(models.Model):
         verbose_name = "Ano letivo"
         verbose_name_plural = "Anos letivos"
         ordering = ["-code"]
+        unique_together = ("tenant_id", "code")
 
 
 class Grade(models.Model):
@@ -81,10 +86,20 @@ class Grade(models.Model):
 
 class School(models.Model):
     code = models.CharField(max_length=30, unique=True, verbose_name="Código")
+    tenant_id = models.CharField(max_length=50, unique=True, blank=True, verbose_name="Identificador do tenant")
     name = models.CharField(max_length=150, verbose_name="Nome")
     district = models.CharField(max_length=100, blank=True, verbose_name="Distrito")
     province = models.CharField(max_length=100, blank=True, verbose_name="Província")
     active = models.BooleanField(default=True, verbose_name="Ativa")
+
+    def clean(self):
+        self.tenant_id = (self.tenant_id or self.code or "").strip()
+        if not self.tenant_id:
+            raise ValidationError({"tenant_id": "tenant_id is required."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -116,6 +131,14 @@ class Teacher(models.Model):
                 raise ValidationError({"tenant_id": "Teacher tenant must match the linked user profile tenant."})
             if profile_tenant_id and not self.tenant_id:
                 self.tenant_id = profile_tenant_id
+        school_tenant = (self.school.tenant_id or "").strip() if self.school_id else ""
+        if school_tenant:
+            if self.tenant_id and self.tenant_id != school_tenant:
+                raise ValidationError({"tenant_id": "Teacher tenant must match the school tenant."})
+            if not self.tenant_id:
+                self.tenant_id = school_tenant
+        if not (self.tenant_id or "").strip():
+            raise ValidationError({"tenant_id": "tenant_id is required."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -165,6 +188,21 @@ class Classroom(models.Model):
         if not self.academic_year_id:
             raise ValidationError({"academic_year": "A classroom must be linked to an academic year."})
 
+        school_tenant = (self.school.tenant_id or "").strip() if self.school_id else ""
+        academic_tenant = (self.academic_year.tenant_id or "").strip() if self.academic_year_id else ""
+        if school_tenant:
+            if self.tenant_id and self.tenant_id != school_tenant:
+                raise ValidationError({"tenant_id": "Classroom tenant must match the school tenant."})
+            if not self.tenant_id:
+                self.tenant_id = school_tenant
+        if academic_tenant:
+            if self.tenant_id and self.tenant_id != academic_tenant:
+                raise ValidationError({"tenant_id": "Classroom tenant must match the academic year tenant."})
+            if school_tenant and academic_tenant != school_tenant:
+                raise ValidationError({"academic_year": "Academic year must belong to the same tenant as the school."})
+            if not self.tenant_id:
+                self.tenant_id = academic_tenant
+
         if self.lead_teacher_id and self.school_id and self.lead_teacher.school_id:
             if self.lead_teacher.school_id != self.school_id:
                 raise ValidationError({"lead_teacher": "The lead teacher must belong to the same school."})
@@ -176,6 +214,8 @@ class Classroom(models.Model):
 
         if self.grade_id:
             self.cycle = self.grade.cycle
+        if not (self.tenant_id or "").strip():
+            raise ValidationError({"tenant_id": "tenant_id is required."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -188,10 +228,11 @@ class Classroom(models.Model):
         verbose_name = "Turma"
         verbose_name_plural = "Turmas"
         ordering = ["academic_year__code", "grade__number", "name"]
-        unique_together = ("name", "grade", "academic_year")
+        unique_together = ("tenant_id", "name", "grade", "academic_year")
 
 
 class GradeSubject(models.Model):
+    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, verbose_name="Ano letivo")
     grade = models.ForeignKey(Grade, on_delete=models.CASCADE, verbose_name="Classe")
     subject = models.ForeignKey("curriculum.Subject", on_delete=models.CASCADE, verbose_name="Disciplina")
@@ -200,6 +241,14 @@ class GradeSubject(models.Model):
     def clean(self):
         if self.subject_id and self.grade_id and self.subject.cycle != self.grade.cycle:
             raise ValidationError({"subject": "The subject must belong to the same cycle as the grade."})
+        academic_tenant = (self.academic_year.tenant_id or "").strip() if self.academic_year_id else ""
+        if academic_tenant:
+            if self.tenant_id and self.tenant_id != academic_tenant:
+                raise ValidationError({"tenant_id": "Grade subject tenant must match the academic year tenant."})
+            if not self.tenant_id:
+                self.tenant_id = academic_tenant
+        if not (self.tenant_id or "").strip():
+            raise ValidationError({"tenant_id": "tenant_id is required."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -212,7 +261,7 @@ class GradeSubject(models.Model):
         verbose_name = "Disciplina da classe"
         verbose_name_plural = "Disciplinas da classe"
         ordering = ["academic_year__code", "grade__number", "subject__name"]
-        unique_together = ("academic_year", "grade", "subject")
+        unique_together = ("tenant_id", "academic_year", "grade", "subject")
 
 
 class TeachingAssignment(models.Model):
@@ -229,13 +278,20 @@ class TeachingAssignment(models.Model):
         if self.classroom_id and self.grade_subject_id:
             teacher_tenant = (self.teacher.tenant_id or "").strip()
             classroom_tenant = (self.classroom.tenant_id or "").strip()
+            grade_subject_tenant = (self.grade_subject.tenant_id or "").strip()
             if teacher_tenant and classroom_tenant and teacher_tenant != classroom_tenant:
                 raise ValidationError({"tenant_id": "Teacher and classroom must belong to the same tenant."})
+            if grade_subject_tenant and classroom_tenant and grade_subject_tenant != classroom_tenant:
+                raise ValidationError({"tenant_id": "Grade subject and classroom must belong to the same tenant."})
+            if grade_subject_tenant and teacher_tenant and grade_subject_tenant != teacher_tenant:
+                raise ValidationError({"tenant_id": "Grade subject and teacher must belong to the same tenant."})
             if self.tenant_id and teacher_tenant and self.tenant_id != teacher_tenant:
                 raise ValidationError({"tenant_id": "Teaching assignment tenant must match the teacher tenant."})
             if self.tenant_id and classroom_tenant and self.tenant_id != classroom_tenant:
                 raise ValidationError({"tenant_id": "Teaching assignment tenant must match the classroom tenant."})
-            self.tenant_id = self.tenant_id or teacher_tenant or classroom_tenant
+            if self.tenant_id and grade_subject_tenant and self.tenant_id != grade_subject_tenant:
+                raise ValidationError({"tenant_id": "Teaching assignment tenant must match the grade subject tenant."})
+            self.tenant_id = self.tenant_id or teacher_tenant or classroom_tenant or grade_subject_tenant
             if self.classroom.grade_id != self.grade_subject.grade_id:
                 raise ValidationError({"grade_subject": "The subject must belong to the classroom grade."})
 
@@ -333,10 +389,21 @@ class ManagementAssignment(models.Model):
     def clean(self):
         self.role = self.LEGACY_ROLE_MAP.get(self.role, self.role)
         teacher_tenant = (self.teacher.tenant_id or "").strip() if self.teacher_id else ""
+        school_tenant = (self.school.tenant_id or "").strip() if self.school_id else ""
+        academic_tenant = (self.academic_year.tenant_id or "").strip() if self.academic_year_id else ""
         if self.tenant_id and teacher_tenant and self.tenant_id != teacher_tenant:
             raise ValidationError({"tenant_id": "Management assignment tenant must match the teacher tenant."})
-        if teacher_tenant and not self.tenant_id:
-            self.tenant_id = teacher_tenant
+        if self.tenant_id and school_tenant and self.tenant_id != school_tenant:
+            raise ValidationError({"tenant_id": "Management assignment tenant must match the school tenant."})
+        if self.tenant_id and academic_tenant and self.tenant_id != academic_tenant:
+            raise ValidationError({"tenant_id": "Management assignment tenant must match the academic year tenant."})
+        if teacher_tenant and school_tenant and teacher_tenant != school_tenant:
+            raise ValidationError({"tenant_id": "Teacher and school must belong to the same tenant."})
+        if academic_tenant and school_tenant and academic_tenant != school_tenant:
+            raise ValidationError({"tenant_id": "Academic year and school must belong to the same tenant."})
+        self.tenant_id = self.tenant_id or teacher_tenant or school_tenant or academic_tenant
+        if not (self.tenant_id or "").strip():
+            raise ValidationError({"tenant_id": "tenant_id is required."})
         if self.teacher.school_id and self.teacher.school_id != self.school_id:
             raise ValidationError({"teacher": "The teacher must belong to the same school as the assignment."})
 
@@ -400,6 +467,18 @@ class UserProfile(models.Model):
     district = models.CharField(max_length=100, blank=True, verbose_name="Distrito")
     active = models.BooleanField(default=True, verbose_name="Ativo")
 
+    def clean(self):
+        school_tenant = (self.school.tenant_id or "").strip() if self.school_id else ""
+        if school_tenant:
+            if self.tenant_id and self.tenant_id != school_tenant:
+                raise ValidationError({"tenant_id": "Profile tenant must match the school tenant."})
+            if not self.tenant_id:
+                self.tenant_id = school_tenant
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.user.username} - {self.role}"
 
@@ -429,6 +508,8 @@ class AttendanceRecord(models.Model):
             raise ValidationError({"tenant_id": "Attendance tenant must match the enrollment tenant."})
         if enrollment_tenant and not self.tenant_id:
             self.tenant_id = enrollment_tenant
+        if not (self.tenant_id or "").strip():
+            raise ValidationError({"tenant_id": "tenant_id is required."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -465,16 +546,25 @@ class Announcement(models.Model):
 
     def clean(self):
         classroom_tenant = (self.classroom.tenant_id or "").strip() if self.classroom_id else ""
+        school_tenant = (self.school.tenant_id or "").strip() if self.school_id else ""
         author_tenant = ""
         if self.author_id and hasattr(self.author, "school_profile"):
             author_tenant = (self.author.school_profile.tenant_id or "").strip()
         if self.tenant_id and classroom_tenant and self.tenant_id != classroom_tenant:
             raise ValidationError({"tenant_id": "Announcement tenant must match the classroom tenant."})
+        if self.tenant_id and school_tenant and self.tenant_id != school_tenant:
+            raise ValidationError({"tenant_id": "Announcement tenant must match the school tenant."})
         if self.tenant_id and author_tenant and self.tenant_id != author_tenant:
             raise ValidationError({"tenant_id": "Announcement tenant must match the author tenant."})
         if classroom_tenant and author_tenant and classroom_tenant != author_tenant:
             raise ValidationError({"tenant_id": "Announcement classroom and author must belong to the same tenant."})
-        self.tenant_id = self.tenant_id or classroom_tenant or author_tenant
+        if school_tenant and classroom_tenant and school_tenant != classroom_tenant:
+            raise ValidationError({"tenant_id": "Announcement school and classroom must belong to the same tenant."})
+        if school_tenant and author_tenant and school_tenant != author_tenant:
+            raise ValidationError({"tenant_id": "Announcement school and author must belong to the same tenant."})
+        self.tenant_id = self.tenant_id or classroom_tenant or author_tenant or school_tenant
+        if not (self.tenant_id or "").strip():
+            raise ValidationError({"tenant_id": "tenant_id is required."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -510,10 +600,16 @@ class Invoice(models.Model):
 
     def clean(self):
         student_tenant = (self.student.tenant_id or "").strip() if self.student_id else ""
+        school_tenant = (self.school.tenant_id or "").strip() if self.school_id else ""
         if self.tenant_id and student_tenant and self.tenant_id != student_tenant:
             raise ValidationError({"tenant_id": "Invoice tenant must match the student tenant."})
-        if student_tenant and not self.tenant_id:
-            self.tenant_id = student_tenant
+        if self.tenant_id and school_tenant and self.tenant_id != school_tenant:
+            raise ValidationError({"tenant_id": "Invoice tenant must match the school tenant."})
+        if student_tenant and school_tenant and student_tenant != school_tenant:
+            raise ValidationError({"tenant_id": "Invoice student and school must belong to the same tenant."})
+        self.tenant_id = self.tenant_id or student_tenant or school_tenant
+        if not (self.tenant_id or "").strip():
+            raise ValidationError({"tenant_id": "tenant_id is required."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -583,6 +679,15 @@ class AuditEvent(models.Model):
     changed_fields = models.JSONField(default=list, blank=True, verbose_name="Campos alterados")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
 
+    def clean(self):
+        self.tenant_id = (self.tenant_id or "").strip()
+        if not self.tenant_id:
+            raise ValidationError({"tenant_id": "tenant_id is required."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.resource}#{self.object_id} {self.action}"
 
@@ -607,6 +712,15 @@ class AuditAlert(models.Model):
     details = models.JSONField(default=dict, blank=True, verbose_name="Detalhes")
     acknowledged = models.BooleanField(default=False, verbose_name="Reconhecido")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
+
+    def clean(self):
+        self.tenant_id = (self.tenant_id or "").strip()
+        if not self.tenant_id:
+            raise ValidationError({"tenant_id": "tenant_id is required."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.alert_type} ({self.severity})"

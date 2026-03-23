@@ -6,8 +6,9 @@ from decimal import Decimal
 from django.db.models import Avg, Count, Q
 from django.utils import timezone
 
-from apps.academic.models import Student
+from apps.academic.models import Student, StudentOutcome
 from apps.assessment.models import Assessment, AssessmentPeriod, SubjectPeriodResult
+from apps.curriculum.models import LearningOutcome
 from apps.school.models import (
     AcademicYear,
     AttendanceRecord,
@@ -97,6 +98,21 @@ class ReportGenerationService:
             "scope": "school",
             "requires": ["academic_year", "classroom"],
         },
+        "bloom_distribution": {
+            "label": "Distribuição por Taxonomia de Bloom",
+            "scope": "school",
+            "requires": ["academic_year"],
+        },
+        "learning_risk_alerts": {
+            "label": "Alertas de risco de aprendizagem",
+            "scope": "school",
+            "requires": ["academic_year"],
+        },
+        "learning_intervention_plan": {
+            "label": "Plano de intervenção pedagógica",
+            "scope": "school",
+            "requires": ["academic_year"],
+        },
     }
 
     STUDENT_KINDS = {
@@ -114,7 +130,18 @@ class ReportGenerationService:
         self.user = user
         self.profile = getattr(user, "school_profile", None) if user and getattr(user, "is_authenticated", False) else None
 
-    def generate(self, *, report_kind, student=None, academic_year=None, grade=None, classroom=None, period_scope=None, period_order=None):
+    def generate(
+        self,
+        *,
+        report_kind,
+        student=None,
+        academic_year=None,
+        grade=None,
+        classroom=None,
+        period_scope=None,
+        period_order=None,
+        emit_alerts=False,
+    ):
         generator = getattr(self, f"_generate_{report_kind}")
         payload = generator(
             student=student,
@@ -123,6 +150,7 @@ class ReportGenerationService:
             classroom=classroom,
             period_scope=period_scope,
             period_order=period_order,
+            emit_alerts=emit_alerts,
         )
         payload["report_kind"] = report_kind
         payload["generated_at"] = timezone.now().isoformat()
@@ -516,6 +544,492 @@ class ReportGenerationService:
 
     def _generate_students_by_grade_year_classroom(self, *, academic_year=None, classroom=None, **kwargs):
         return self._generate_students_list(academic_year=academic_year, classroom=classroom)
+
+    def _generate_bloom_distribution(self, *, academic_year=None, grade=None, classroom=None, **kwargs):
+        enrollments = list(self._scoped_enrollments(academic_year=academic_year, grade=grade, classroom=classroom))
+        student_ids = {enrollment.student_id for enrollment in enrollments}
+        enrollment_by_student = {}
+        for enrollment in enrollments:
+            enrollment_by_student.setdefault(enrollment.student_id, enrollment.classroom)
+
+        taxonomy_labels = dict(LearningOutcome.TAXONOMY_LEVEL_CHOICES)
+        knowledge_labels = dict(LearningOutcome.KNOWLEDGE_DIMENSION_CHOICES)
+
+        def empty_bucket():
+            return {
+                "not_started": 0,
+                "developing": 0,
+                "proficient": 0,
+                "advanced": 0,
+            }
+
+        overall = empty_bucket()
+        taxonomy = {level: empty_bucket() for level in taxonomy_labels}
+        knowledge = {level: empty_bucket() for level in knowledge_labels}
+        knowledge["unspecified"] = empty_bucket()
+
+        classroom_buckets = {}
+        student_buckets = {}
+
+        if not student_ids:
+            return {
+                "title": "Distribuição por Taxonomia de Bloom",
+                "metadata": self._base_metadata(academic_year=academic_year, grade=grade, classroom=classroom, period_label="Ano letivo"),
+                "summary": {
+                    "students_count": 0,
+                    "total_outcomes": 0,
+                    "mastery_distribution": overall,
+                    "taxonomy_levels": [],
+                    "knowledge_dimensions": [],
+                },
+                "rows": [],
+            }
+
+        outcomes = StudentOutcome.objects.select_related("student", "outcome").filter(student_id__in=student_ids)
+        tenant_filter = self._tenant_filter()
+        if tenant_filter:
+            outcomes = outcomes.filter(**tenant_filter)
+        if grade:
+            outcomes = outcomes.filter(outcome__grade=grade)
+        if classroom and classroom.grade_id:
+            outcomes = outcomes.filter(outcome__grade=classroom.grade)
+
+        for record in outcomes:
+            status = record.status
+            overall[status] += 1
+            level = record.outcome.taxonomy_level
+            taxonomy.setdefault(level, empty_bucket())
+            taxonomy[level][status] += 1
+
+            dimension = record.outcome.knowledge_dimension or "unspecified"
+            knowledge.setdefault(dimension, empty_bucket())
+            knowledge[dimension][status] += 1
+
+            classroom_obj = enrollment_by_student.get(record.student_id)
+            if classroom_obj:
+                bucket = classroom_buckets.setdefault(
+                    classroom_obj.id,
+                    {
+                        "classroom_id": classroom_obj.id,
+                        "classroom": classroom_obj.name,
+                        "grade": classroom_obj.grade.number,
+                        "mastery_distribution": empty_bucket(),
+                        "total_outcomes": 0,
+                    },
+                )
+                bucket["mastery_distribution"][status] += 1
+                bucket["total_outcomes"] += 1
+
+            if classroom:
+                student_bucket = student_buckets.setdefault(
+                    record.student_id,
+                    {
+                        "student_id": record.student_id,
+                        "student_name": record.student.name,
+                        "mastery_distribution": empty_bucket(),
+                        "total_outcomes": 0,
+                    },
+                )
+                student_bucket["mastery_distribution"][status] += 1
+                student_bucket["total_outcomes"] += 1
+
+        def build_level_summary(level_key, bucket):
+            total = sum(bucket.values())
+            attainment = bucket["proficient"] + bucket["advanced"]
+            return {
+                "level": level_key,
+                "label": taxonomy_labels.get(level_key, level_key),
+                "total": total,
+                "mastery_distribution": bucket,
+                "attainment_rate": float(attainment / total) if total else 0.0,
+            }
+
+        def build_dimension_summary(dim_key, bucket):
+            total = sum(bucket.values())
+            attainment = bucket["proficient"] + bucket["advanced"]
+            return {
+                "dimension": dim_key,
+                "label": knowledge_labels.get(dim_key, "Sem dimensão"),
+                "total": total,
+                "mastery_distribution": bucket,
+                "attainment_rate": float(attainment / total) if total else 0.0,
+            }
+
+        taxonomy_rows = [build_level_summary(level, bucket) for level, bucket in taxonomy.items()]
+        knowledge_rows = [build_dimension_summary(level, bucket) for level, bucket in knowledge.items()]
+
+        total_outcomes = sum(overall.values())
+        attainment_total = overall["proficient"] + overall["advanced"]
+
+        rows = list(classroom_buckets.values())
+        if classroom:
+            rows = list(student_buckets.values())
+
+        return {
+            "title": "Distribuição por Taxonomia de Bloom",
+            "metadata": self._base_metadata(academic_year=academic_year, grade=grade, classroom=classroom, period_label="Ano letivo"),
+            "summary": {
+                "students_count": len(student_ids),
+                "total_outcomes": total_outcomes,
+                "mastery_distribution": overall,
+                "attainment_rate": float(attainment_total / total_outcomes) if total_outcomes else 0.0,
+                "taxonomy_levels": taxonomy_rows,
+                "knowledge_dimensions": knowledge_rows,
+                "methodology": "snapshot",
+            },
+            "rows": rows,
+        }
+
+    def _generate_learning_risk_alerts(self, *, academic_year=None, grade=None, classroom=None, **kwargs):
+        enrollments = list(self._scoped_enrollments(academic_year=academic_year, grade=grade, classroom=classroom))
+        student_ids = {enrollment.student_id for enrollment in enrollments}
+        enrollment_by_student = {enrollment.student_id: enrollment for enrollment in enrollments}
+
+        if not student_ids:
+            return {
+                "title": "Alertas de risco de aprendizagem",
+                "metadata": self._base_metadata(academic_year=academic_year, grade=grade, classroom=classroom, period_label="Ano letivo"),
+                "summary": {
+                    "students_count": 0,
+                    "risk_levels": {"high": 0, "medium": 0, "low": 0, "no_data": 0},
+                    "taxonomy_gaps": [],
+                },
+                "rows": [],
+            }
+
+        outcomes = StudentOutcome.objects.select_related("student", "outcome").filter(student_id__in=student_ids)
+        tenant_filter = self._tenant_filter()
+        if tenant_filter:
+            outcomes = outcomes.filter(**tenant_filter)
+        if grade:
+            outcomes = outcomes.filter(outcome__grade=grade)
+        if classroom and classroom.grade_id:
+            outcomes = outcomes.filter(outcome__grade=classroom.grade)
+
+        taxonomy_labels = dict(LearningOutcome.TAXONOMY_LEVEL_CHOICES)
+        taxonomy_gap_counts = {level: 0 for level in taxonomy_labels}
+
+        def classify_risk(attainment_rate, total_outcomes):
+            if total_outcomes == 0:
+                return "no_data"
+            if attainment_rate < 0.4:
+                return "high"
+            if attainment_rate < 0.7:
+                return "medium"
+            return "low"
+
+        student_buckets = {}
+        for record in outcomes:
+            bucket = student_buckets.setdefault(
+                record.student_id,
+                {
+                    "student_id": record.student_id,
+                    "student_name": record.student.name,
+                    "classroom": None,
+                    "grade": None,
+                    "total_outcomes": 0,
+                    "mastery_distribution": {
+                        "not_started": 0,
+                        "developing": 0,
+                        "proficient": 0,
+                        "advanced": 0,
+                    },
+                    "gaps": [],
+                },
+            )
+            bucket["total_outcomes"] += 1
+            bucket["mastery_distribution"][record.status] += 1
+
+            if record.status in {"not_started", "developing"}:
+                taxonomy_gap_counts[record.outcome.taxonomy_level] = taxonomy_gap_counts.get(record.outcome.taxonomy_level, 0) + 1
+                if len(bucket["gaps"]) < 5:
+                    bucket["gaps"].append(
+                        {
+                            "outcome_code": record.outcome.code,
+                            "outcome_description": record.outcome.description,
+                            "taxonomy_level": record.outcome.taxonomy_level,
+                            "knowledge_dimension": record.outcome.knowledge_dimension,
+                            "status": record.status,
+                            "mastery_level": float(record.mastery_level),
+                        }
+                    )
+
+        rows = []
+        risk_levels = {"high": 0, "medium": 0, "low": 0, "no_data": 0}
+        for student_id in student_ids:
+            enrollment = enrollment_by_student.get(student_id)
+            bucket = student_buckets.get(student_id)
+            if not bucket:
+                bucket = {
+                    "student_id": student_id,
+                    "student_name": enrollment.student.name if enrollment else "",
+                    "classroom": enrollment.classroom.name if enrollment else None,
+                    "grade": enrollment.classroom.grade.number if enrollment else None,
+                    "total_outcomes": 0,
+                    "mastery_distribution": {
+                        "not_started": 0,
+                        "developing": 0,
+                        "proficient": 0,
+                        "advanced": 0,
+                    },
+                    "gaps": [],
+                }
+
+            bucket["classroom"] = enrollment.classroom.name if enrollment else bucket["classroom"]
+            bucket["grade"] = enrollment.classroom.grade.number if enrollment else bucket["grade"]
+            total = bucket["total_outcomes"]
+            attainment = bucket["mastery_distribution"]["proficient"] + bucket["mastery_distribution"]["advanced"]
+            attainment_rate = float(attainment / total) if total else 0.0
+            bucket["attainment_rate"] = attainment_rate
+            bucket["risk_level"] = classify_risk(attainment_rate, total)
+            risk_levels[bucket["risk_level"]] += 1
+            rows.append(bucket)
+
+        taxonomy_gaps = [
+            {
+                "level": level,
+                "label": taxonomy_labels.get(level, level),
+                "count": count,
+            }
+            for level, count in taxonomy_gap_counts.items()
+        ]
+
+        return {
+            "title": "Alertas de risco de aprendizagem",
+            "metadata": self._base_metadata(academic_year=academic_year, grade=grade, classroom=classroom, period_label="Ano letivo"),
+            "summary": {
+                "students_count": len(student_ids),
+                "risk_levels": risk_levels,
+                "taxonomy_gaps": taxonomy_gaps,
+            },
+            "rows": rows,
+        }
+
+    def _generate_learning_intervention_plan(self, *, academic_year=None, grade=None, classroom=None, emit_alerts=False, **kwargs):
+        enrollments = list(self._scoped_enrollments(academic_year=academic_year, grade=grade, classroom=classroom))
+        student_ids = {enrollment.student_id for enrollment in enrollments}
+        enrollment_by_student = {enrollment.student_id: enrollment for enrollment in enrollments}
+
+        if not student_ids:
+            return {
+                "title": "Plano de intervenção pedagógica",
+                "metadata": self._base_metadata(academic_year=academic_year, grade=grade, classroom=classroom, period_label="Ano letivo"),
+                "summary": {
+                    "students_count": 0,
+                    "tiers": {"tier1": 0, "tier2": 0, "tier3": 0, "diagnostic": 0},
+                    "top_taxonomy_gaps": [],
+                },
+                "rows": [],
+            }
+
+        outcomes = StudentOutcome.objects.select_related("student", "outcome").filter(student_id__in=student_ids)
+        tenant_filter = self._tenant_filter()
+        if tenant_filter:
+            outcomes = outcomes.filter(**tenant_filter)
+        if grade:
+            outcomes = outcomes.filter(outcome__grade=grade)
+        if classroom and classroom.grade_id:
+            outcomes = outcomes.filter(outcome__grade=classroom.grade)
+
+        taxonomy_labels = dict(LearningOutcome.TAXONOMY_LEVEL_CHOICES)
+        knowledge_labels = dict(LearningOutcome.KNOWLEDGE_DIMENSION_CHOICES)
+
+        taxonomy_gap_counts = {level: 0 for level in taxonomy_labels}
+        knowledge_gap_counts = {level: 0 for level in knowledge_labels}
+        knowledge_gap_counts["unspecified"] = 0
+
+        def classify_risk(attainment_rate, total_outcomes):
+            if total_outcomes == 0:
+                return "diagnostic"
+            if attainment_rate < 0.4:
+                return "tier3"
+            if attainment_rate < 0.7:
+                return "tier2"
+            return "tier1"
+
+        tier_strategies = {
+            "tier1": [
+                "Reforço em sala com prática guiada e feedback imediato.",
+                "Rotina semanal de verificação formativa.",
+            ],
+            "tier2": [
+                "Pequenos grupos focados em lacunas específicas.",
+                "Ciclos curtos de intervenção (2-4 semanas) com metas claras.",
+            ],
+            "tier3": [
+                "Plano individual intensivo com monitoria contínua.",
+                "Ajuste de ritmo e apoio extra em habilidades pré-requisitos.",
+            ],
+            "diagnostic": [
+                "Aplicar diagnóstico rápido para mapear lacunas prioritárias.",
+                "Atualizar o plano após coleta de evidências iniciais.",
+            ],
+        }
+        taxonomy_strategies = {
+            "remember": "Prática de recuperação: cartões, quizzes rápidos, repetição espaçada.",
+            "understand": "Mapas conceituais, paráfrase guiada e exemplos concretos.",
+            "apply": "Exercícios contextualizados e resolução de problemas.",
+            "analyze": "Comparar, classificar e justificar relações entre conceitos.",
+            "evaluate": "Debates com critérios e rubricas de julgamento.",
+            "create": "Projetos curtos com produção autoral orientada.",
+        }
+        knowledge_strategies = {
+            "factual": "Foco em vocabulário-chave e fatos essenciais.",
+            "conceptual": "Conexão entre conceitos e princípios estruturantes.",
+            "procedural": "Demonstrações passo a passo e prática monitorada.",
+            "metacognitive": "Autoavaliação e diário de aprendizagem.",
+        }
+
+        student_buckets = {}
+        for record in outcomes:
+            bucket = student_buckets.setdefault(
+                record.student_id,
+                {
+                    "student_id": record.student_id,
+                    "student_name": record.student.name,
+                    "classroom": None,
+                    "grade": None,
+                    "total_outcomes": 0,
+                    "mastery_distribution": {
+                        "not_started": 0,
+                        "developing": 0,
+                        "proficient": 0,
+                        "advanced": 0,
+                    },
+                    "taxonomy_gaps": {},
+                    "knowledge_gaps": {},
+                },
+            )
+            bucket["total_outcomes"] += 1
+            bucket["mastery_distribution"][record.status] += 1
+
+            if record.status in {"not_started", "developing"}:
+                level = record.outcome.taxonomy_level
+                dimension = record.outcome.knowledge_dimension or "unspecified"
+                bucket["taxonomy_gaps"][level] = bucket["taxonomy_gaps"].get(level, 0) + 1
+                bucket["knowledge_gaps"][dimension] = bucket["knowledge_gaps"].get(dimension, 0) + 1
+                taxonomy_gap_counts[level] = taxonomy_gap_counts.get(level, 0) + 1
+                knowledge_gap_counts[dimension] = knowledge_gap_counts.get(dimension, 0) + 1
+
+        tiers_count = {"tier1": 0, "tier2": 0, "tier3": 0, "diagnostic": 0}
+        rows = []
+        for student_id in student_ids:
+            enrollment = enrollment_by_student.get(student_id)
+            bucket = student_buckets.get(student_id, {
+                "student_id": student_id,
+                "student_name": enrollment.student.name if enrollment else "",
+                "classroom": None,
+                "grade": None,
+                "total_outcomes": 0,
+                "mastery_distribution": {
+                    "not_started": 0,
+                    "developing": 0,
+                    "proficient": 0,
+                    "advanced": 0,
+                },
+                "taxonomy_gaps": {},
+                "knowledge_gaps": {},
+            })
+            bucket["classroom"] = enrollment.classroom.name if enrollment else bucket["classroom"]
+            bucket["grade"] = enrollment.classroom.grade.number if enrollment else bucket["grade"]
+
+            total = bucket["total_outcomes"]
+            attainment = bucket["mastery_distribution"]["proficient"] + bucket["mastery_distribution"]["advanced"]
+            attainment_rate = float(attainment / total) if total else 0.0
+            tier = classify_risk(attainment_rate, total)
+            tiers_count[tier] += 1
+
+            top_taxonomy = sorted(bucket["taxonomy_gaps"].items(), key=lambda item: item[1], reverse=True)[:3]
+            top_knowledge = sorted(bucket["knowledge_gaps"].items(), key=lambda item: item[1], reverse=True)[:2]
+
+            recommendations = []
+            recommendations.extend(tier_strategies.get(tier, []))
+            for level, _ in top_taxonomy:
+                strategy = taxonomy_strategies.get(level)
+                if strategy:
+                    recommendations.append(strategy)
+            for dimension, _ in top_knowledge:
+                strategy = knowledge_strategies.get(dimension)
+                if strategy:
+                    recommendations.append(strategy)
+
+            bucket["attainment_rate"] = attainment_rate
+            bucket["tier"] = tier
+            bucket["tenant_id"] = (enrollment.student.tenant_id or "").strip() if enrollment else ""
+            bucket["top_taxonomy_gaps"] = [
+                {"level": level, "label": taxonomy_labels.get(level, level), "count": count} for level, count in top_taxonomy
+            ]
+            bucket["top_knowledge_gaps"] = [
+                {"dimension": dim, "label": knowledge_labels.get(dim, "Sem dimensão"), "count": count} for dim, count in top_knowledge
+            ]
+            bucket["recommendations"] = recommendations[:6]
+            rows.append(bucket)
+
+        top_taxonomy_gaps = [
+            {"level": level, "label": taxonomy_labels.get(level, level), "count": count}
+            for level, count in sorted(taxonomy_gap_counts.items(), key=lambda item: item[1], reverse=True)
+        ]
+
+        payload = {
+            "title": "Plano de intervenção pedagógica",
+            "metadata": self._base_metadata(academic_year=academic_year, grade=grade, classroom=classroom, period_label="Ano letivo"),
+            "summary": {
+                "students_count": len(student_ids),
+                "tiers": tiers_count,
+                "top_taxonomy_gaps": top_taxonomy_gaps[:5],
+                "top_knowledge_gaps": [
+                    {"dimension": dim, "label": knowledge_labels.get(dim, "Sem dimensão"), "count": count}
+                    for dim, count in sorted(knowledge_gap_counts.items(), key=lambda item: item[1], reverse=True)
+                ],
+            },
+            "rows": rows,
+        }
+
+        if emit_alerts:
+            self._emit_learning_risk_alerts(rows, academic_year=academic_year)
+
+        return payload
+
+    def _emit_learning_risk_alerts(self, rows, *, academic_year=None):
+        from apps.school.models import AuditAlert
+
+        window_start = timezone.now() - timezone.timedelta(hours=24)
+        username = getattr(self.user, "username", "") if self.user else ""
+        for row in rows:
+            if row.get("tier") != "tier3":
+                continue
+            tenant_id = (row.get("tenant_id") or (self.profile.tenant_id if self.profile else "") or "").strip()
+            if not tenant_id:
+                continue
+            student_id = row.get("student_id")
+            student_name = row.get("student_name") or "Aluno"
+            summary = f"Risco alto: {student_name} ({student_id})"
+            exists = AuditAlert.objects.filter(
+                alert_type="learning_risk_tier3",
+                tenant_id=tenant_id,
+                summary=summary,
+                acknowledged=False,
+                created_at__gte=window_start,
+            ).exists()
+            if exists:
+                continue
+            AuditAlert.objects.create(
+                alert_type="learning_risk_tier3",
+                severity="elevated",
+                tenant_id=tenant_id,
+                resource="student",
+                username=username,
+                summary=summary,
+                details={
+                    "student_id": student_id,
+                    "classroom": row.get("classroom"),
+                    "grade": row.get("grade"),
+                    "attainment_rate": row.get("attainment_rate"),
+                    "academic_year": getattr(academic_year, "code", None),
+                    "top_taxonomy_gaps": row.get("top_taxonomy_gaps", []),
+                    "top_knowledge_gaps": row.get("top_knowledge_gaps", []),
+                },
+            )
 
 
 def resolve_report_dependencies(validated_data):

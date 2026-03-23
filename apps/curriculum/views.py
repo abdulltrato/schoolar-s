@@ -1,10 +1,21 @@
 from core.viewsets import RobustModelViewSet
 
-from .models import BaseCurriculum, Competency, CurriculumArea, LocalCurriculum, Subject, SubjectCurriculumPlan
+from .models import (
+    BaseCurriculum,
+    Competency,
+    CompetencyOutcome,
+    CurriculumArea,
+    LearningOutcome,
+    LocalCurriculum,
+    Subject,
+    SubjectCurriculumPlan,
+)
 from .serializers import (
     BaseCurriculumSerializer,
     CompetencySerializer,
+    CompetencyOutcomeSerializer,
     CurriculumAreaSerializer,
+    LearningOutcomeSerializer,
     LocalCurriculumSerializer,
     SubjectCurriculumPlanSerializer,
     SubjectSerializer,
@@ -70,3 +81,19 @@ class SubjectCurriculumPlanViewSet(RobustModelViewSet):
         "grade_subject__subject__name",
     )
     ordering = ("grade_subject__academic_year__code", "grade_subject__grade__number")
+
+
+class LearningOutcomeViewSet(RobustModelViewSet):
+    queryset = LearningOutcome.objects.select_related("subject", "grade").all()
+    serializer_class = LearningOutcomeSerializer
+    search_fields = ("code", "description", "tenant_id", "subject__name")
+    ordering_fields = ("id", "code", "taxonomy_level", "cycle", "tenant_id")
+    ordering = ("code",)
+
+
+class CompetencyOutcomeViewSet(RobustModelViewSet):
+    queryset = CompetencyOutcome.objects.select_related("competency", "outcome").all()
+    serializer_class = CompetencyOutcomeSerializer
+    search_fields = ("competency__name", "outcome__code", "tenant_id")
+    ordering_fields = ("id", "weight", "tenant_id")
+    ordering = ("-weight",)
