@@ -14,197 +14,198 @@ type PaginatedResponse<T> = {
   results?: T[];
 };
 
-export type AlunoCompetencia = {
+export type StudentCompetency = {
   id: number;
-  competencia: number;
-  competencia_nome: string;
-  nivel: string;
-  data_atualizacao: string;
+  competency: number;
+  competency_name: string;
+  level: string;
+  updated_at: string;
 };
 
-export type Aluno = {
+export type Student = {
   id: number;
-  nome: string;
-  data_nascimento: string;
-  classe: number;
-  ciclo: number;
-  estado: string;
-  competencias: AlunoCompetencia[];
+  name: string;
+  birth_date: string;
+  grade: number;
+  cycle: number;
+  status: string;
+  competencies: StudentCompetency[];
 };
 
-export type AnoLetivo = {
+export type AcademicYear = {
   id: number;
-  codigo: string;
-  data_inicio: string;
-  data_fim: string;
-  ativo: boolean;
+  code: string;
+  start_date: string;
+  end_date: string;
+  active: boolean;
 };
 
-export type Classe = {
+export type Grade = {
   id: number;
-  numero: number;
-  ciclo: number;
-  nome: string;
+  number: number;
+  cycle: number;
+  education_level: string;
+  name: string;
 };
 
-export type Escola = {
+export type School = {
   id: number;
-  codigo: string;
-  nome: string;
-  distrito: string;
-  provincia: string;
-  ativa: boolean;
+  code: string;
+  name: string;
+  district: string;
+  province: string;
+  active: boolean;
 };
 
-export type Professor = {
+export type Teacher = {
   id: number;
   user: number;
-  escola: number | null;
-  escola_nome?: string;
-  nome: string;
-  especialidade: string;
+  school: number | null;
+  school_name?: string;
+  name: string;
+  specialty: string;
 };
 
-export type Turma = {
+export type Classroom = {
   id: number;
-  nome: string;
-  escola: number | null;
-  escola_nome?: string;
-  classe: number;
-  classe_nome?: string;
-  ciclo: number;
-  ano_letivo: string;
-  professor_responsavel: number | null;
-  professor_responsavel_nome?: string;
+  name: string;
+  school: number | null;
+  school_name?: string;
+  grade: number;
+  grade_name?: string;
+  cycle: number;
+  academic_year: string;
+  lead_teacher: number | null;
+  lead_teacher_name?: string;
 };
 
-export type DisciplinaClasse = {
+export type GradeSubject = {
   id: number;
-  ano_letivo: string;
-  classe: number;
-  disciplina: number;
-  disciplina_nome?: string;
-  carga_horaria_semanal: number;
+  academic_year: string;
+  grade: number;
+  subject: number;
+  subject_name?: string;
+  weekly_workload: number;
 };
 
-export type AlocacaoDocente = {
+export type TeachingAssignment = {
   id: number;
-  professor: number;
-  professor_nome?: string;
-  turma: number;
-  turma_nome?: string;
-  escola_nome?: string;
-  disciplina_classe: number;
-  disciplina_nome?: string;
-  ano_letivo?: string;
-  classe?: number;
+  teacher: number;
+  teacher_name?: string;
+  classroom: number;
+  classroom_name?: string;
+  school_name?: string;
+  grade_subject: number;
+  subject_name?: string;
+  academic_year_code?: string;
+  grade_number?: number;
 };
 
-export type Matricula = {
+export type Enrollment = {
   id: number;
-  aluno: number;
-  aluno_nome?: string;
-  turma: number;
-  turma_nome?: string;
-  data_matricula: string;
-  escola_nome?: string;
-  ano_letivo?: string;
-  classe?: number;
+  student: number;
+  student_name?: string;
+  classroom: number;
+  classroom_name?: string;
+  enrollment_date: string;
+  school_name?: string;
+  academic_year_code?: string;
+  grade_number?: number;
 };
 
-export type AtribuicaoGestao = {
+export type ManagementAssignment = {
   id: number;
-  professor: number;
-  professor_nome?: string;
-  escola: number;
-  escola_nome?: string;
-  ano_letivo: number;
-  ano_letivo_codigo?: string;
-  cargo: string;
-  classe: number | null;
-  classe_numero?: number;
-  turma: number | null;
-  turma_nome?: string;
-  ciclo: number | null;
-  ativo: boolean;
+  teacher: number;
+  teacher_name?: string;
+  school: number;
+  school_name?: string;
+  academic_year: number;
+  academic_year_code?: string;
+  role: string;
+  grade: number | null;
+  grade_number?: number;
+  classroom: number | null;
+  classroom_name?: string;
+  cycle: number | null;
+  active: boolean;
 };
 
-export type PlanoCurricularDisciplina = {
+export type SubjectCurriculumPlan = {
   id: number;
-  disciplina_classe: number;
-  disciplina_nome?: string;
-  classe?: number;
-  ano_letivo?: string;
-  objetivos: string;
-  metodologia: string;
-  criterios_avaliacao: string;
-  ativo: boolean;
-  competencias_previstas: Array<{ id: number; nome: string }>;
+  grade_subject: number;
+  subject_name?: string;
+  grade_number?: number;
+  academic_year_code?: string;
+  objectives: string;
+  methodology: string;
+  assessment_criteria: string;
+  active: boolean;
+  planned_competencies: Array<{ id: number; name: string }>;
 };
 
-export type PeriodoAvaliativo = {
+export type AssessmentPeriod = {
   id: number;
-  ano_letivo: number;
-  ano_letivo_codigo?: string;
-  nome: string;
-  ordem: number;
-  data_inicio: string;
-  data_fim: string;
-  ativo: boolean;
+  academic_year: number;
+  academic_year_code?: string;
+  name: string;
+  order: number;
+  start_date: string;
+  end_date: string;
+  active: boolean;
 };
 
-export type ComponenteAvaliativa = {
+export type AssessmentComponent = {
   id: number;
-  periodo: number;
-  periodo_nome?: string;
-  disciplina_classe: number;
-  disciplina_nome?: string;
-  classe?: number;
-  ano_letivo?: string;
-  tipo: string;
-  nome: string;
-  peso: string;
-  nota_maxima: string;
-  obrigatoria: boolean;
+  period: number;
+  period_name?: string;
+  grade_subject: number;
+  subject_name?: string;
+  grade_number?: number;
+  academic_year_code?: string;
+  type: string;
+  name: string;
+  weight: string;
+  max_score: string;
+  mandatory: boolean;
 };
 
-export type Avaliacao = {
+export type Assessment = {
   id: number;
-  aluno: number;
-  aluno_nome?: string;
-  alocacao_docente: number | null;
-  periodo: number | null;
-  periodo_nome?: string;
-  componente: number | null;
-  componente_nome?: string;
-  competencia: number | null;
-  competencia_nome?: string;
-  professor_nome?: string;
-  turma_nome?: string;
-  disciplina_nome?: string;
-  ano_letivo?: string;
-  classe?: number;
-  tipo: string;
-  data: string;
-  nota: string | null;
-  comentario: string;
-  conhecimentos: boolean;
-  habilidades: boolean;
-  atitudes: boolean;
+  student: number;
+  student_name?: string;
+  teaching_assignment: number | null;
+  period: number | null;
+  period_name?: string;
+  component: number | null;
+  component_name?: string;
+  competency: number | null;
+  competency_name?: string;
+  teacher_name?: string;
+  classroom_name?: string;
+  subject_name?: string;
+  academic_year_code?: string;
+  grade_number?: number;
+  type: string;
+  date: string;
+  score: string | null;
+  comment: string;
+  knowledge: boolean;
+  skills: boolean;
+  attitudes: boolean;
 };
 
-export type ResultadoPeriodoDisciplina = {
+export type SubjectPeriodResult = {
   id: number;
-  aluno: number;
-  aluno_nome?: string;
-  alocacao_docente: number;
-  professor_nome?: string;
-  turma_nome?: string;
-  disciplina_nome?: string;
-  periodo: number;
-  periodo_nome?: string;
-  media_final: string;
-  avaliacoes_consideradas: number;
+  student: number;
+  student_name?: string;
+  teaching_assignment: number;
+  teacher_name?: string;
+  classroom_name?: string;
+  subject_name?: string;
+  period: number;
+  period_name?: string;
+  final_average: string;
+  assessments_counted: number;
 };
 
 type EndpointSnapshot = {
@@ -223,29 +224,6 @@ export type CollectionSnapshot<T> = {
   requiresAuth: boolean;
 };
 
-export type PlatformSnapshot = {
-  baseUrlLabel: string;
-  authConfigured: boolean;
-  tenantId: string | null;
-  health: EndpointSnapshot;
-  readiness: EndpointSnapshot;
-  alunos: CollectionSnapshot<Aluno>;
-  anosLetivos: CollectionSnapshot<AnoLetivo>;
-  classes: CollectionSnapshot<Classe>;
-  escolas: CollectionSnapshot<Escola>;
-  professores: CollectionSnapshot<Professor>;
-  turmas: CollectionSnapshot<Turma>;
-  disciplinasClasse: CollectionSnapshot<DisciplinaClasse>;
-  alocacoesDocentes: CollectionSnapshot<AlocacaoDocente>;
-  matriculas: CollectionSnapshot<Matricula>;
-  atribuicoesGestao: CollectionSnapshot<AtribuicaoGestao>;
-  planosDisciplina: CollectionSnapshot<PlanoCurricularDisciplina>;
-  periodos: CollectionSnapshot<PeriodoAvaliativo>;
-  componentes: CollectionSnapshot<ComponenteAvaliativa>;
-  avaliacoes: CollectionSnapshot<Avaliacao>;
-  resultadosPeriodo: CollectionSnapshot<ResultadoPeriodoDisciplina>;
-};
-
 type PlatformMeta = {
   baseUrlLabel: string;
   authConfigured: boolean;
@@ -255,36 +233,36 @@ type PlatformMeta = {
 };
 
 export type HomeSnapshot = PlatformMeta & {
-  escolas: CollectionSnapshot<Escola>;
-  atribuicoesGestao: CollectionSnapshot<AtribuicaoGestao>;
-  planosDisciplina: CollectionSnapshot<PlanoCurricularDisciplina>;
-  periodos: CollectionSnapshot<PeriodoAvaliativo>;
-  componentes: CollectionSnapshot<ComponenteAvaliativa>;
-  resultadosPeriodo: CollectionSnapshot<ResultadoPeriodoDisciplina>;
+  schools: CollectionSnapshot<School>;
+  managementAssignments: CollectionSnapshot<ManagementAssignment>;
+  subjectPlans: CollectionSnapshot<SubjectCurriculumPlan>;
+  periods: CollectionSnapshot<AssessmentPeriod>;
+  components: CollectionSnapshot<AssessmentComponent>;
+  periodResults: CollectionSnapshot<SubjectPeriodResult>;
 };
 
-export type GestaoSnapshot = PlatformMeta & {
-  anosLetivos: CollectionSnapshot<AnoLetivo>;
-  escolas: CollectionSnapshot<Escola>;
-  turmas: CollectionSnapshot<Turma>;
-  matriculas: CollectionSnapshot<Matricula>;
-  atribuicoesGestao: CollectionSnapshot<AtribuicaoGestao>;
+export type ManagementSnapshot = PlatformMeta & {
+  academicYears: CollectionSnapshot<AcademicYear>;
+  schools: CollectionSnapshot<School>;
+  classrooms: CollectionSnapshot<Classroom>;
+  enrollments: CollectionSnapshot<Enrollment>;
+  managementAssignments: CollectionSnapshot<ManagementAssignment>;
 };
 
-export type CurriculoSnapshot = PlatformMeta & {
-  anosLetivos: CollectionSnapshot<AnoLetivo>;
-  classes: CollectionSnapshot<Classe>;
-  disciplinasClasse: CollectionSnapshot<DisciplinaClasse>;
-  planosDisciplina: CollectionSnapshot<PlanoCurricularDisciplina>;
+export type CurriculumSnapshot = PlatformMeta & {
+  academicYears: CollectionSnapshot<AcademicYear>;
+  grades: CollectionSnapshot<Grade>;
+  gradeSubjects: CollectionSnapshot<GradeSubject>;
+  subjectPlans: CollectionSnapshot<SubjectCurriculumPlan>;
 };
 
-export type AvaliacaoSnapshot = PlatformMeta & {
-  anosLetivos: CollectionSnapshot<AnoLetivo>;
-  turmas: CollectionSnapshot<Turma>;
-  periodos: CollectionSnapshot<PeriodoAvaliativo>;
-  componentes: CollectionSnapshot<ComponenteAvaliativa>;
-  avaliacoes: CollectionSnapshot<Avaliacao>;
-  resultadosPeriodo: CollectionSnapshot<ResultadoPeriodoDisciplina>;
+export type AssessmentSnapshot = PlatformMeta & {
+  academicYears: CollectionSnapshot<AcademicYear>;
+  classrooms: CollectionSnapshot<Classroom>;
+  periods: CollectionSnapshot<AssessmentPeriod>;
+  components: CollectionSnapshot<AssessmentComponent>;
+  assessments: CollectionSnapshot<Assessment>;
+  periodResults: CollectionSnapshot<SubjectPeriodResult>;
 };
 
 function resolveApiBaseUrl() {
@@ -343,9 +321,7 @@ async function parseJsonSafe<T>(response: Response): Promise<T | undefined> {
   }
 }
 
-async function readJson<T>(
-  path: string,
-): Promise<{ ok: boolean; statusCode: number; data?: T }> {
+async function readJson<T>(path: string): Promise<{ ok: boolean; statusCode: number; data?: T }> {
   const baseUrl = resolveApiBaseUrl();
 
   try {
@@ -383,14 +359,14 @@ async function readJsonWithRetry<T>(
 
 function formatReadinessMessage(payload?: ReadinessPayload) {
   if (!payload?.checks) {
-    return "Sem detalhes retornados pelo endpoint de readiness.";
+    return "No readiness details were returned.";
   }
 
   const summary = Object.entries(payload.checks)
     .map(([key, value]) => `${key}: ${value}`)
     .join(" | ");
 
-  return `Checks reportados: ${summary}.`;
+  return `Reported checks: ${summary}.`;
 }
 
 function normalizeCollection<T>(payload?: PaginatedResponse<T> | T[]) {
@@ -416,31 +392,30 @@ function normalizeCollection<T>(payload?: PaginatedResponse<T> | T[]) {
 
 function getCollectionMessage(statusCode: number, count: number) {
   if (statusCode === 401 || statusCode === 403) {
-    return "Endpoint protegido. Configure API_USERNAME/API_PASSWORD para leitura autenticada.";
+    return "Protected endpoint. Configure API_USERNAME/API_PASSWORD for authenticated access.";
   }
 
   if (statusCode === 0) {
-    return "Sem conexao com o backend.";
+    return "No connection to the backend.";
   }
 
   if (count === 0) {
-    return "Endpoint acessivel, mas sem registos para mostrar.";
+    return "Endpoint is reachable, but no records are available.";
   }
 
-  return `${count} registos carregados do backend.`;
+  return `${count} records loaded from the backend.`;
 }
 
 async function readCollection<T>(path: string): Promise<CollectionSnapshot<T>> {
   const response = await readJsonWithRetry<PaginatedResponse<T> | T[]>(path);
   const normalized = normalizeCollection(response.data);
-  const ok = response.ok;
 
   return {
-    ok,
+    ok: response.ok,
     status:
       response.statusCode === 401 || response.statusCode === 403
         ? "AUTH"
-        : ok
+        : response.ok
           ? "ONLINE"
           : "OFFLINE",
     statusCode: response.statusCode,
@@ -467,8 +442,8 @@ async function getPlatformMeta(): Promise<PlatformMeta> {
       ok: healthResponse.ok,
       status: healthResponse.data?.status?.toUpperCase() || "OFFLINE",
       message: healthResponse.ok
-        ? "Endpoint respondeu corretamente e a aplicacao esta acessivel."
-        : `Nao foi possivel consultar o backend (${healthResponse.statusCode || "sem conexao"}).`,
+        ? "The endpoint responded successfully and the application is reachable."
+        : `Could not reach the backend (${healthResponse.statusCode || "no connection"}).`,
     },
     readiness: {
       ok: readinessResponse.ok && readinessResponse.data?.status === "ok",
@@ -476,152 +451,89 @@ async function getPlatformMeta(): Promise<PlatformMeta> {
       message:
         readinessResponse.ok && readinessResponse.data
           ? formatReadinessMessage(readinessResponse.data)
-          : `Readiness indisponivel (${readinessResponse.statusCode || "sem conexao"}).`,
+          : `Readiness is unavailable (${readinessResponse.statusCode || "no connection"}).`,
     },
-  };
-}
-
-export async function getPlatformSnapshot(): Promise<PlatformSnapshot> {
-  const meta = await getPlatformMeta();
-  const [
-    alunos,
-    anosLetivos,
-    classes,
-    escolas,
-    professores,
-    turmas,
-    disciplinasClasse,
-    alocacoesDocentes,
-    matriculas,
-    atribuicoesGestao,
-    planosDisciplina,
-    periodos,
-    componentes,
-    avaliacoes,
-    resultadosPeriodo,
-  ] = await Promise.all([
-    readCollection<Aluno>("/api/v1/academico/alunos/"),
-    readCollection<AnoLetivo>("/api/v1/escola/anos-letivos/"),
-    readCollection<Classe>("/api/v1/escola/classes/"),
-    readCollection<Escola>("/api/v1/escola/escolas/"),
-    readCollection<Professor>("/api/v1/escola/professores/"),
-    readCollection<Turma>("/api/v1/escola/turmas/"),
-    readCollection<DisciplinaClasse>("/api/v1/escola/disciplinas-classe/"),
-    readCollection<AlocacaoDocente>("/api/v1/escola/alocacoes-docentes/"),
-    readCollection<Matricula>("/api/v1/escola/matriculas/"),
-    readCollection<AtribuicaoGestao>("/api/v1/escola/atribuicoes-gestao/"),
-    readCollection<PlanoCurricularDisciplina>("/api/v1/curriculo/planos-disciplina/"),
-    readCollection<PeriodoAvaliativo>("/api/v1/avaliacao/periodos/"),
-    readCollection<ComponenteAvaliativa>("/api/v1/avaliacao/componentes/"),
-    readCollection<Avaliacao>("/api/v1/avaliacao/avaliacoes/"),
-    readCollection<ResultadoPeriodoDisciplina>("/api/v1/avaliacao/resultados-periodo/"),
-  ]);
-
-  return {
-    ...meta,
-    alunos,
-    anosLetivos,
-    classes,
-    escolas,
-    professores,
-    turmas,
-    disciplinasClasse,
-    alocacoesDocentes,
-    matriculas,
-    atribuicoesGestao,
-    planosDisciplina,
-    periodos,
-    componentes,
-    avaliacoes,
-    resultadosPeriodo,
   };
 }
 
 export async function getHomeSnapshot(): Promise<HomeSnapshot> {
   const meta = await getPlatformMeta();
-  const [
-    escolas,
-    atribuicoesGestao,
-    planosDisciplina,
-    periodos,
-    componentes,
-    resultadosPeriodo,
-  ] = await Promise.all([
-    readCollection<Escola>("/api/v1/escola/escolas/"),
-    readCollection<AtribuicaoGestao>("/api/v1/escola/atribuicoes-gestao/"),
-    readCollection<PlanoCurricularDisciplina>("/api/v1/curriculo/planos-disciplina/"),
-    readCollection<PeriodoAvaliativo>("/api/v1/avaliacao/periodos/"),
-    readCollection<ComponenteAvaliativa>("/api/v1/avaliacao/componentes/"),
-    readCollection<ResultadoPeriodoDisciplina>("/api/v1/avaliacao/resultados-periodo/"),
+  const [schools, managementAssignments, subjectPlans, periods, components, periodResults] = await Promise.all([
+    readCollection<School>("/api/v1/school/schools/"),
+    readCollection<ManagementAssignment>("/api/v1/school/management-assignments/"),
+    readCollection<SubjectCurriculumPlan>("/api/v1/curriculum/subject-plans/"),
+    readCollection<AssessmentPeriod>("/api/v1/assessment/periods/"),
+    readCollection<AssessmentComponent>("/api/v1/assessment/components/"),
+    readCollection<SubjectPeriodResult>("/api/v1/assessment/subject-period-results/"),
   ]);
 
   return {
     ...meta,
-    escolas,
-    atribuicoesGestao,
-    planosDisciplina,
-    periodos,
-    componentes,
-    resultadosPeriodo,
+    schools,
+    managementAssignments,
+    subjectPlans,
+    periods,
+    components,
+    periodResults,
   };
 }
 
-export async function getGestaoSnapshot(): Promise<GestaoSnapshot> {
+export async function getManagementSnapshot(): Promise<ManagementSnapshot> {
   const meta = await getPlatformMeta();
-  const [anosLetivos, escolas, turmas, matriculas, atribuicoesGestao] = await Promise.all([
-    readCollection<AnoLetivo>("/api/v1/escola/anos-letivos/"),
-    readCollection<Escola>("/api/v1/escola/escolas/"),
-    readCollection<Turma>("/api/v1/escola/turmas/"),
-    readCollection<Matricula>("/api/v1/escola/matriculas/"),
-    readCollection<AtribuicaoGestao>("/api/v1/escola/atribuicoes-gestao/"),
+  const [academicYears, schools, classrooms, enrollments, managementAssignments] = await Promise.all([
+    readCollection<AcademicYear>("/api/v1/school/academic-years/"),
+    readCollection<School>("/api/v1/school/schools/"),
+    readCollection<Classroom>("/api/v1/school/classrooms/"),
+    readCollection<Enrollment>("/api/v1/school/enrollments/"),
+    readCollection<ManagementAssignment>("/api/v1/school/management-assignments/"),
   ]);
 
   return {
     ...meta,
-    anosLetivos,
-    escolas,
-    turmas,
-    matriculas,
-    atribuicoesGestao,
+    academicYears,
+    schools,
+    classrooms,
+    enrollments,
+    managementAssignments,
   };
 }
 
-export async function getCurriculoSnapshot(): Promise<CurriculoSnapshot> {
+export async function getCurriculumSnapshot(): Promise<CurriculumSnapshot> {
   const meta = await getPlatformMeta();
-  const [anosLetivos, classes, disciplinasClasse, planosDisciplina] = await Promise.all([
-    readCollection<AnoLetivo>("/api/v1/escola/anos-letivos/"),
-    readCollection<Classe>("/api/v1/escola/classes/"),
-    readCollection<DisciplinaClasse>("/api/v1/escola/disciplinas-classe/"),
-    readCollection<PlanoCurricularDisciplina>("/api/v1/curriculo/planos-disciplina/"),
+  const [academicYears, grades, gradeSubjects, subjectPlans] = await Promise.all([
+    readCollection<AcademicYear>("/api/v1/school/academic-years/"),
+    readCollection<Grade>("/api/v1/school/grades/"),
+    readCollection<GradeSubject>("/api/v1/school/grade-subjects/"),
+    readCollection<SubjectCurriculumPlan>("/api/v1/curriculum/subject-plans/"),
   ]);
 
   return {
     ...meta,
-    anosLetivos,
-    classes,
-    disciplinasClasse,
-    planosDisciplina,
+    academicYears,
+    grades,
+    gradeSubjects,
+    subjectPlans,
   };
 }
 
-export async function getAvaliacaoSnapshot(): Promise<AvaliacaoSnapshot> {
+export async function getAssessmentSnapshot(): Promise<AssessmentSnapshot> {
   const meta = await getPlatformMeta();
-  const [anosLetivos, turmas, periodos, componentes, avaliacoes, resultadosPeriodo] = await Promise.all([
-    readCollection<AnoLetivo>("/api/v1/escola/anos-letivos/"),
-    readCollection<Turma>("/api/v1/escola/turmas/"),
-    readCollection<PeriodoAvaliativo>("/api/v1/avaliacao/periodos/"),
-    readCollection<ComponenteAvaliativa>("/api/v1/avaliacao/componentes/"),
-    readCollection<Avaliacao>("/api/v1/avaliacao/avaliacoes/"),
-    readCollection<ResultadoPeriodoDisciplina>("/api/v1/avaliacao/resultados-periodo/"),
+  const [academicYears, classrooms, periods, components, assessments, periodResults] = await Promise.all([
+    readCollection<AcademicYear>("/api/v1/school/academic-years/"),
+    readCollection<Classroom>("/api/v1/school/classrooms/"),
+    readCollection<AssessmentPeriod>("/api/v1/assessment/periods/"),
+    readCollection<AssessmentComponent>("/api/v1/assessment/components/"),
+    readCollection<Assessment>("/api/v1/assessment/assessments/"),
+    readCollection<SubjectPeriodResult>("/api/v1/assessment/subject-period-results/"),
   ]);
 
   return {
     ...meta,
-    anosLetivos,
-    turmas,
-    periodos,
-    componentes,
-    avaliacoes,
-    resultadosPeriodo,
+    academicYears,
+    classrooms,
+    periods,
+    components,
+    assessments,
+    periodResults,
   };
 }

@@ -31,13 +31,13 @@ class ErrorContractTests(TestCase):
 
     def test_erros_da_api_seguem_envelope_padrao(self):
         response = self.client.post(
-            "/api/v1/academico/alunos/",
+            "/api/v1/academic/alunos/",
             {
-                "nome": "Aluno",
-                "data_nascimento": "2016-01-01",
-                "classe": 5,
-                "ciclo": 1,
-                "estado": "ativo",
+                "name": "Student",
+                "birth_date": "2016-01-01",
+                "grade": 5,
+                "cycle": 1,
+                "estado": "active",
             },
             format="json",
             HTTP_X_REQUEST_ID="req-error-1",

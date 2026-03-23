@@ -7,13 +7,13 @@ import sys
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'schoolar_s.settings')
 django.setup()
 
-from aplicativos.academico.models import Aluno
-from aplicativos.curriculo.models import AreaCurricular, Disciplina, Competencia, CurriculoBase, CurriculoLocal
-from aplicativos.avaliacao.models import Avaliacao
-from aplicativos.progresso.models import Progressao
-from aplicativos.escola.models import Professor, Turma, Matricula
-from aplicativos.relatorios.models import Relatorio
-from aplicativos.eventos.models import Evento
+from apps.academic.models import Student
+from apps.curriculum.models import CurriculumArea, Subject, Competency, BaseCurriculum, LocalCurriculum
+from apps.assessment.models import Assessment
+from apps.progress.models import Progression
+from apps.school.models import Teacher, Classroom, Enrollment
+from apps.reports.models import Report
+from apps.events.models import Event
 from django.contrib.auth.models import User
 
 def test_models():
@@ -21,128 +21,128 @@ def test_models():
 
     # Teste Academico
     try:
-        aluno = Aluno.objects.create(
-            nome="Joao Silva",
-            data_nascimento="2010-05-15",
-            classe=1,
-            ciclo=1,
-            estado="ativo"
+        student = Student.objects.create(
+            name="Joao Silva",
+            birth_date="2010-05-15",
+            grade=1,
+            cycle=1,
+            estado="active"
         )
-        print(f"✓ Aluno criado: {aluno}")
+        print(f"✓ Student criado: {student}")
     except Exception as e:
-        print(f"✗ Erro em Aluno: {e}")
+        print(f"✗ Erro em Student: {e}")
 
     # Teste Curriculo
     try:
-        area = AreaCurricular.objects.create(nome="Ciencias Naturais")
+        area = CurriculumArea.objects.create(name="Ciencias Naturais")
         print(f"✓ Area Curricular criada: {area}")
 
-        disciplina = Disciplina.objects.create(
-            nome="Matematica",
+        subject = Subject.objects.create(
+            name="Matematica",
             area=area,
-            ciclo=1
+            cycle=1
         )
-        print(f"✓ Disciplina criada: {disciplina}")
+        print(f"✓ Subject criada: {subject}")
 
-        competencia = Competencia.objects.create(
-            nome="Resolver problemas matematicos",
-            descricao="Competencia em matematica basica",
+        competency = Competency.objects.create(
+            name="Resolver problemas matematicos",
+            description="Competency em matematica basica",
             area="saber_cientifico_tecnologico",
-            ciclo=1,
-            disciplina=disciplina
+            cycle=1,
+            subject=subject
         )
-        print(f"✓ Competencia criada: {competencia}")
+        print(f"✓ Competency criada: {competency}")
 
-        curriculo_base = CurriculoBase.objects.create(ciclo=1)
-        curriculo_base.competencias.add(competencia)
+        curriculo_base = BaseCurriculum.objects.create(cycle=1)
+        curriculo_base.competencies.add(competency)
         print(f"✓ Curriculo Base criado: {curriculo_base}")
 
-        curriculo_local = CurriculoLocal.objects.create(
+        curriculo_local = LocalCurriculum.objects.create(
             tenant_id="escola1",
-            ciclo=1
+            cycle=1
         )
         print(f"✓ Curriculo Local criado: {curriculo_local}")
 
     except Exception as e:
         print(f"✗ Erro em Curriculo: {e}")
 
-    # Teste Avaliacao
+    # Teste Assessment
     try:
-        avaliacao = Avaliacao.objects.create(
-            aluno=aluno,
-            competencia=competencia,
+        assessment = Assessment.objects.create(
+            student=student,
+            competency=competency,
             tipo="formativa",
             data="2023-10-01",
-            comentario="Bom desempenho",
-            conhecimentos=True,
-            habilidades=True,
-            atitudes=False
+            comment="Bom desempenho",
+            knowledge=True,
+            skills=True,
+            attitudes=False
         )
-        print(f"✓ Avaliacao criada: {avaliacao}")
+        print(f"✓ Assessment criada: {assessment}")
     except Exception as e:
-        print(f"✗ Erro em Avaliacao: {e}")
+        print(f"✗ Erro em Assessment: {e}")
 
     # Teste Progresso
     try:
-        progresso = Progressao.objects.create(
-            aluno=aluno,
-            ciclo=1,
-            ano_letivo="2023-2024",
+        progress = Progression.objects.create(
+            student=student,
+            cycle=1,
+            academic_year="2023-2024",
             data_decisao="2024-06-15",
             decisao="aprovado",
-            comentario="Aprovado com sucesso"
+            comment="Aprovado com sucesso"
         )
-        print(f"✓ Progressao criada: {progresso}")
+        print(f"✓ Progression criada: {progress}")
     except Exception as e:
         print(f"✗ Erro em Progresso: {e}")
 
-    # Teste Escola
+    # Teste School
     try:
         user = User.objects.create_user(username="prof1", password="pass123")
-        professor = Professor.objects.create(
+        teacher = Teacher.objects.create(
             user=user,
-            nome="Prof. Maria",
-            especialidade="Matematica"
+            name="Prof. Maria",
+            specialty="Matematica"
         )
-        print(f"✓ Professor criado: {professor}")
+        print(f"✓ Teacher criado: {teacher}")
 
-        turma = Turma.objects.create(
-            nome="Turma A",
-            ciclo=1,
-            ano_letivo="2023-2024",
-            professor_responsavel=professor
+        classroom = Classroom.objects.create(
+            name="Classroom A",
+            cycle=1,
+            academic_year="2023-2024",
+            lead_teacher=teacher
         )
-        print(f"✓ Turma criada: {turma}")
+        print(f"✓ Classroom criada: {classroom}")
 
-        matricula = Matricula.objects.create(
-            aluno=aluno,
-            turma=turma
+        enrollment = Enrollment.objects.create(
+            student=student,
+            classroom=classroom
         )
-        print(f"✓ Matricula criada: {matricula}")
+        print(f"✓ Enrollment criada: {enrollment}")
     except Exception as e:
-        print(f"✗ Erro em Escola: {e}")
+        print(f"✗ Erro em School: {e}")
 
     # Teste Relatorios
     try:
-        relatorio = Relatorio.objects.create(
-            titulo="Relatorio de Aluno Joao",
-            tipo="aluno",
-            periodo="2023-2024",
+        relatorio = Report.objects.create(
+            titulo="Report de Student Joao",
+            tipo="student",
+            period="2023-2024",
             conteudo={"notas": [8, 9, 7]},
-            aluno=aluno
+            student=student
         )
-        print(f"✓ Relatorio criado: {relatorio}")
+        print(f"✓ Report criado: {relatorio}")
     except Exception as e:
         print(f"✗ Erro em Relatorios: {e}")
 
     # Teste Eventos
     try:
-        evento = Evento.objects.create(
+        evento = Event.objects.create(
             tipo="aluno_registrado",
-            dados={"aluno_id": aluno.id},
+            dados={"aluno_id": student.id},
             tenant_id="escola1"
         )
-        print(f"✓ Evento criado: {evento}")
+        print(f"✓ Event criado: {evento}")
     except Exception as e:
         print(f"✗ Erro em Eventos: {e}")
 

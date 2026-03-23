@@ -1,70 +1,17 @@
 
 > schoolar-s-frontend@0.1.0 dev
-> next dev --hostname 127.0.0.1 --port 3000
+> next dev --hostname 0.0.0.0 --port 3000
 
    ▲ Next.js 15.5.14
-   - Local:        http://127.0.0.1:3000
-   - Network:      http://127.0.0.1:3000
+   - Local:        http://localhost:3000
+   - Network:      http://0.0.0.0:3000
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 2.7s
- ○ Compiling /gestao ...
- ✓ Compiled /gestao in 5.5s (600 modules)
- GET /gestao 200 in 6309ms
+ ✓ Ready in 2.9s
  ○ Compiling / ...
- ✓ Compiled / in 859ms (608 modules)
- GET / 200 in 1577ms
- GET /gestao 200 in 704ms
- GET / 200 in 86ms
- GET /gestao 200 in 86ms
- ✓ Compiled /curriculo in 392ms (610 modules)
- ✓ Compiled in 271ms (235 modules)
- GET /curriculo 200 in 681ms
- GET /curriculo 200 in 160ms
- GET /curriculo 200 in 62ms
- ✓ Compiled /avaliacao in 335ms (598 modules)
- GET /avaliacao 200 in 500ms
- GET /avaliacao?ano=&periodo=&turma= 200 in 1817ms
- ✓ Compiled in 836ms (612 modules)
- GET /avaliacao?ano=&periodo=&turma= 200 in 234ms
- ✓ Compiled in 776ms (612 modules)
- GET /avaliacao?ano=&periodo=&turma= 200 in 251ms
- ✓ Compiled in 832ms (612 modules)
- GET /avaliacao?ano=&periodo=&turma= 200 in 282ms
- GET /avaliacao?ano=&periodo=&turma= 200 in 1300ms
- ✓ Compiled in 797ms (612 modules)
- GET /avaliacao?ano=&periodo=&turma= 200 in 246ms
- ✓ Compiled in 965ms (612 modules)
- GET /avaliacao?ano=&periodo=&turma= 200 in 391ms
- GET /avaliacao 200 in 1336ms
- GET /curriculo 200 in 992ms
- GET /gestao 200 in 1283ms
- GET / 200 in 1193ms
- ✓ Compiled in 979ms (612 modules)
- GET / 200 in 267ms
- GET / 200 in 1095ms
- ✓ Compiled in 1295ms (618 modules)
- GET / 200 in 312ms
- ✓ Compiled in 802ms (618 modules)
- GET / 200 in 314ms
- ✓ Compiled in 1206ms (618 modules)
- GET / 200 in 245ms
- GET / 200 in 1199ms
- ✓ Compiled in 763ms (618 modules)
- GET / 200 in 194ms
- ✓ Compiled in 673ms (618 modules)
- GET / 200 in 120ms
- ✓ Compiled in 862ms (618 modules)
- GET / 200 in 236ms
- GET / 200 in 1116ms
- GET /gestao 200 in 1112ms
- GET /curriculo 200 in 924ms
- GET /avaliacao 200 in 1214ms
- ✓ Compiled in 578ms (618 modules)
- GET /avaliacao 200 in 128ms
- GET /avaliacao?ano=&periodo=&turma= 200 in 1135ms
- GET / 200 in 1126ms
- GET /gestao 200 in 1117ms
- GET /curriculo 200 in 920ms
- GET /avaliacao 200 in 1079ms
+ ✓ Compiled / in 1355ms (592 modules)
+ GET / 200 in 1974ms
+ GET / 200 in 148ms
+ GET / 200 in 139ms
+ GET / 200 in 190ms

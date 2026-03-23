@@ -4,7 +4,7 @@
 
 O **SUBSTRATO EDUCAÇÃO** é um módulo do ecossistema SUBSTRATO responsável por gerir, monitorar e evoluir o ensino básico com base em competências.
 
-O sistema traduz o **Plano Curricular do Ensino Primário (PCEP)** numa infraestrutura digital escalável, preparada para operar desde uma escola local até nível nacional.
+O sistema traduz o **Plano Curricular do Ensino Primário (PCEP)** numa infraestrutura digital escalável, preparada para operar desde uma school local até nível nacional.
 
 ---
 
@@ -27,7 +27,7 @@ Digitalizar e operacionalizar o ensino básico com base em:
 
 * Domain-Driven Design (DDD)
 * Event-Driven Architecture
-* Multi-Tenant (por escola)
+* Multi-Tenant (por school)
 * API-first
 * Modular e desacoplado
 * Offline-first
@@ -40,7 +40,7 @@ Digitalizar e operacionalizar o ensino básico com base em:
 
 | Nível     | Escala            |
 | --------- | ----------------- |
-| Escola    | 1k – 20k alunos   |
+| School    | 1k – 20k alunos   |
 | Distrito  | 10 – 50 escolas   |
 | Província | 100 – 500 escolas |
 | Nacional  | milhões           |
@@ -51,13 +51,13 @@ Digitalizar e operacionalizar o ensino básico com base em:
 
 ## 🎓 Estrutura do Ensino
 
-* 1º Ciclo → 1ª a 3ª classe
-* 2º Ciclo → 4ª a 6ª classe
+* 1º Ciclo → 1ª a 3ª grade
+* 2º Ciclo → 4ª a 6ª grade
 
 Progressão:
 
-* Automática dentro do ciclo
-* Avaliação no fim do ciclo
+* Automática dentro do cycle
+* Avaliação no fim do cycle
 * Retenção apenas em casos excepcionais
 
 ---
@@ -74,7 +74,7 @@ O sistema é orientado por competências organizadas em 7 áreas:
 6. Bem-estar, Saúde e Ambiente
 7. Sensibilidade Estética e Artística
 
-👉 Competência é a unidade principal do sistema (não a nota).
+👉 Competência é a unidade principal do sistema (não a score).
 
 ---
 
@@ -93,7 +93,7 @@ O sistema é orientado por competências organizadas em 7 áreas:
 O sistema suporta personalização curricular:
 
 * Base nacional
-* Extensão local (escola/distrito/província)
+* Extensão local (school/district/província)
 
 Implementação:
 
@@ -153,16 +153,16 @@ Usado para:
 
 * Academico
 * Curriculo
-* Avaliacao
+* Assessment
 * Progresso
-* Escola
+* School
 * Relatorios
 
 ---
 
-## 👨‍🎓 Aluno
+## 👨‍🎓 Student
 
-* Classe
+* Grade
 * Ciclo
 * Competências
 * Avaliações
@@ -170,7 +170,7 @@ Usado para:
 
 ---
 
-## 🏫 Escola (Tenant)
+## 🏫 School (Tenant)
 
 * Isolamento por `tenant_id`
 * Operação offline
@@ -197,14 +197,14 @@ Usado para:
 ## 🔁 Progressão
 
 * Baseada em competências
-* Decisão formal no fim do ciclo
+* Decisão formal no fim do cycle
 
 ---
 
 ## 📊 Relatórios
 
-* Aluno
-* Escola
+* Student
+* School
 * Nacional
 
 ---
@@ -223,7 +223,7 @@ Eventos principais:
 
 # 🌐 MULTI-TENANT
 
-* Escola = tenant
+* School = tenant
 * Isolamento lógico
 * Preparado para shard por região
 
@@ -233,7 +233,7 @@ Eventos principais:
 
 Fluxo:
 
-Escola (offline) → armazenamento local → sincronização → servidor central
+School (offline) → armazenamento local → sincronização → servidor central
 
 ---
 
@@ -251,7 +251,7 @@ Métricas:
 
 RBAC:
 
-* Professor
+* Teacher
 * Diretor
 * Admin
 * Governo
@@ -268,18 +268,18 @@ Proteções:
 
 ```
 schoolar-s/
-├── aplicativos/
-│   ├── academico/
-│   ├── curriculo/
-│   ├── avaliacao/
-│   ├── progresso/
-│   ├── escola/
-│   ├── relatorios/
-│   ├── eventos/
+├── apps/
+│   ├── academic/
+│   ├── curriculum/
+│   ├── assessment/
+│   ├── progress/
+│   ├── school/
+│   ├── reports/
+│   ├── events/
 │   └── tenants/
-├── aplicacao/
-├── servicos/
-├── nucleo/
+├── application/
+├── services/
+├── core/
 └── schoolar_s/
     └── settings/
 ```
@@ -325,7 +325,7 @@ schoolar-s/
 - **Banco de dados atual**: SQLite para desenvolvimento
 - **Cache atual**: cache local em memória
 - **Testes atuais**: Django Test Runner
-- **Direção futura**: PostgreSQL, Redis, eventos assíncronos, frontend dedicado e observabilidade
+- **Direção futura**: PostgreSQL, Redis, events assíncronos, frontend dedicado e observabilidade
 
 ### Tecnologias Futuras
 
@@ -381,7 +381,7 @@ python manage.py runserver
 Configuração atual:
 
 * `DJANGO_SETTINGS_MODULE=schoolar_s.settings`
-* Estrutura modular em `aplicativos/`, `aplicacao/`, `nucleo/`, `servicos/` e `schoolar_s/settings/`
+* Estrutura modular em `apps/`, `application/`, `core/`, `services/` e `schoolar_s/settings/`
 * Endpoints operacionais de plataforma: `/health/` e `/ready/`
 * Banco relacional com suporte a PostgreSQL via variáveis `POSTGRES_*`
 
@@ -438,7 +438,7 @@ kubectl apply -f infra/k8s/
 * APIs básicas operacionais por domínio
 * Validações centrais e testes automatizados iniciais adicionados
 * Base robusta adicionada: request tracing, readiness, throttle, escopo por tenant via header e contrato padronizado de erros
-* Estrutura reorganizada em `aplicativos`, `aplicacao`, `nucleo`, `servicos` e `schoolar_s/settings`
+* Estrutura reorganizada em `apps`, `application`, `core`, `services` e `schoolar_s/settings`
 * Migrations sincronizadas com os modelos atuais
 
 ---

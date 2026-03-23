@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Schoolar-S",
-  description: "Painel inicial do ecossistema SUBSTRATO EDUCACAO.",
+  description: "Home dashboard for the SUBSTRATO EDUCATION ecosystem.",
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="pt">
+    <html lang="en">
       <body>{children}</body>
     </html>
   );

@@ -21,32 +21,32 @@ export default async function Home() {
   const snapshot = await getHomeSnapshot();
   const modules = [
     {
-      href: "/gestao",
-      title: "Gestao",
-      description: "Escolas, turmas, professores e cargos escolares.",
+      href: "/management",
+      title: "Management",
+      description: "Schools, classrooms, teachers, and leadership roles.",
     },
     {
-      href: "/curriculo",
-      title: "Curriculo",
-      description: "Oferta disciplinar e planos curriculares.",
+      href: "/curriculum",
+      title: "Curriculum",
+      description: "Subject offerings and curriculum plans.",
     },
     {
-      href: "/avaliacao",
-      title: "Avaliacao",
-      description: "Periodos, componentes, lancamentos e medias.",
+      href: "/assessment",
+      title: "Assessment",
+      description: "Periods, components, records, and weighted results.",
     },
   ];
 
   return (
     <DashboardShell
-      title="Painel executivo do ecossistema escolar"
-      description="Visao geral da operacao escolar, estrutura curricular e avaliacao. Os detalhes agora vivem em modulos dedicados."
+      title="Executive School Platform"
+      description="A high-level view of school operations, curriculum structure, and assessment. Details now live in dedicated modules."
       aside={(
         <section className="rounded-[0.9rem] border border-ink/10 bg-ink p-2.5 text-sand shadow-card">
           <SectionTitle
-            eyebrow="Modulos"
-            title="Navegacao por dominio"
-            description="A interface foi separada para reduzir ruido e permitir leitura por area funcional."
+            eyebrow="Modules"
+            title="Domain Navigation"
+            description="The interface is split by functional area to reduce noise and improve operational reading."
             inverse
           />
           <nav aria-label="Atalhos de modulos" className="mt-2 grid gap-2">
@@ -70,43 +70,43 @@ export default async function Home() {
     >
       <section className="grid gap-2 md:grid-cols-3 xl:grid-cols-6">
         <MetricCard
-          label="Escolas"
-          value={String(snapshot.escolas.count)}
-          detail="Unidades escolares registadas e ativas."
+          label="Schools"
+          value={String(snapshot.schools.count)}
+          detail="Registered and active school units."
         />
         <MetricCard
-          label="Gestao"
-          value={String(snapshot.atribuicoesGestao.count)}
-          detail="Cargos de coordenacao e direcao definidos."
+          label="Management"
+          value={String(snapshot.managementAssignments.count)}
+          detail="Defined coordination and leadership roles."
         />
         <MetricCard
-          label="Planos"
-          value={String(snapshot.planosDisciplina.count)}
-          detail="Planos curriculares por disciplina e classe."
+          label="Plans"
+          value={String(snapshot.subjectPlans.count)}
+          detail="Curriculum plans by subject and grade."
         />
         <MetricCard
-          label="Periodos"
-          value={String(snapshot.periodos.count)}
-          detail="Calendario avaliativo configurado."
+          label="Periods"
+          value={String(snapshot.periods.count)}
+          detail="Configured assessment calendar."
         />
         <MetricCard
-          label="Componentes"
-          value={String(snapshot.componentes.count)}
-          detail="ACS, ACP, testes, exames e trabalhos."
+          label="Components"
+          value={String(snapshot.components.count)}
+          detail="ACS, ACP, tests, exams, and coursework."
         />
         <MetricCard
-          label="Resultados"
-          value={String(snapshot.resultadosPeriodo.count)}
-          detail="Medias ponderadas por disciplina."
+          label="Results"
+          value={String(snapshot.periodResults.count)}
+          detail="Weighted averages by subject."
         />
       </section>
 
       <section className="grid gap-2">
         <div className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-2.5 shadow-card backdrop-blur">
           <SectionTitle
-            eyebrow="Estado"
-            title="Conectividade da plataforma"
-            description="Leitura resumida dos recursos principais. Use os modulos para detalhar cada dominio."
+            eyebrow="Status"
+            title="Platform Connectivity"
+            description="A compact read of the core resources. Use the modules to inspect each domain in detail."
           />
           <div className="mt-2 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
             <StatusCard
@@ -122,22 +122,22 @@ export default async function Home() {
               body={snapshot.readiness.message}
             />
             <StatusCard
-              title="Gestao API"
-              status={statusForCollection(snapshot.atribuicoesGestao)}
-              tone={toneForCollection(snapshot.atribuicoesGestao)}
-              body={snapshot.atribuicoesGestao.message}
+              title="Management API"
+              status={statusForCollection(snapshot.managementAssignments)}
+              tone={toneForCollection(snapshot.managementAssignments)}
+              body={snapshot.managementAssignments.message}
             />
             <StatusCard
-              title="Curriculo API"
-              status={statusForCollection(snapshot.planosDisciplina)}
-              tone={toneForCollection(snapshot.planosDisciplina)}
-              body={snapshot.planosDisciplina.message}
+              title="Curriculum API"
+              status={statusForCollection(snapshot.subjectPlans)}
+              tone={toneForCollection(snapshot.subjectPlans)}
+              body={snapshot.subjectPlans.message}
             />
             <StatusCard
-              title="Avaliacao API"
-              status={statusForCollection(snapshot.resultadosPeriodo)}
-              tone={toneForCollection(snapshot.resultadosPeriodo)}
-              body={snapshot.resultadosPeriodo.message}
+              title="Assessment API"
+              status={statusForCollection(snapshot.periodResults)}
+              tone={toneForCollection(snapshot.periodResults)}
+              body={snapshot.periodResults.message}
             />
           </div>
         </div>

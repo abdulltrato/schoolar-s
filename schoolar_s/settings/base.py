@@ -44,18 +44,18 @@ SHARED_APPS = [
 
 TENANT_APPS = [
     # your tenant-specific apps
-    "aplicativos.academico",
-    "aplicativos.curriculo",
-    "aplicativos.avaliacao",
-    "aplicativos.progresso",
-    "aplicativos.escola",
-    "aplicativos.relatorios",
-    "aplicativos.eventos",
+    "apps.academic",
+    "apps.curriculum",
+    "apps.assessment",
+    "apps.progress",
+    "apps.school",
+    "apps.reports",
+    "apps.events",
 ]
 
 INSTALLED_APPS = SHARED_APPS + TENANT_APPS  # list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
-# TENANT_MODEL = "tenants.Escola"  # app.Model
+# TENANT_MODEL = "tenants.School"  # app.Model
 
 # TENANT_DOMAIN_MODEL = "tenants.Domain"  # app.Model
 
@@ -64,13 +64,13 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "nucleo.middleware.RequestContextMiddleware",
+    "core.middleware.RequestContextMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "nucleo.middleware.ResponseHeadersMiddleware",
+    "core.middleware.ResponseHeadersMiddleware",
 ]
 
 # DATABASE_ROUTERS = (
@@ -86,7 +86,7 @@ TEMPLATES = [
         "APP_DIRS": True,
         "OPTIONS": {
             "builtins": [
-                "nucleo.templatetags.compat_filters",
+                "core.templatetags.compat_filters",
             ],
             "context_processors": [
                 "django.template.context_processors.debug",
@@ -143,7 +143,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-LANGUAGE_CODE = "pt-pt"
+LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = os.getenv("DJANGO_TIME_ZONE", "Africa/Maputo")
 
@@ -155,6 +155,20 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# The domain apps were renamed to English identifiers. Keeping the legacy
+# migrations in sync would require a full migration tree rewrite, so these
+# apps are created directly from the current models.
+MIGRATION_MODULES = {
+    "academic": None,
+    "assessment": None,
+    "curriculum": None,
+    "events": None,
+    "progress": None,
+    "reports": None,
+    "school": None,
+    "tenants": None,
+}
 
 # DRF settings
 REST_FRAMEWORK = {
@@ -175,7 +189,7 @@ REST_FRAMEWORK = {
         "anon": "60/minute",
         "user": "300/minute",
     },
-    "EXCEPTION_HANDLER": "nucleo.api.custom_exception_handler",
+    "EXCEPTION_HANDLER": "core.api.custom_exception_handler",
 }
 
 # CORS
@@ -221,22 +235,22 @@ LOGGING = {
 
 # Jazzmin settings for modern admin theme
 JAZZMIN_SETTINGS = {
-    "site_title": "SUBSTRATO EDUCAÇÃO Admin",
-    "site_header": "SUBSTRATO EDUCAÇÃO",
+    "site_title": "SUBSTRATO EDUCATION Admin",
+    "site_header": "SUBSTRATO EDUCATION",
     "site_brand": "Schoolar-S",
     "site_logo": None,
     "login_logo": None,
     "login_logo_dark": None,
     "site_logo_classes": "img-circle",
     "site_icon": None,
-    "welcome_sign": "Bem-vindo ao SUBSTRATO EDUCAÇÃO",
-    "copyright": "SUBSTRATO EDUCAÇÃO Ltd",
-    "search_model": ["academico.Aluno", "curriculo.Competencia"],
+    "welcome_sign": "Welcome to SUBSTRATO EDUCATION",
+    "copyright": "SUBSTRATO EDUCATION Ltd",
+    "search_model": ["academic.Student", "curriculum.Competency"],
     "user_avatar": None,
     "topmenu_links": [
         {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
-        {"model": "academico.Aluno"},
-        {"app": "curriculo"},
+        {"model": "academic.Student"},
+        {"app": "curriculum"},
     ],
     "usermenu_links": [
         {"name": "Support", "url": "https://github.com/farridav/django-jazzmin/issues", "new_window": True},
@@ -246,26 +260,26 @@ JAZZMIN_SETTINGS = {
     "navigation_expanded": True,
     "hide_apps": [],
     "hide_models": [],
-    "order_with_respect_to": ["academico", "curriculo", "avaliacao", "progresso", "escola", "relatorios", "eventos"],
+    "order_with_respect_to": ["academic", "curriculum", "assessment", "progress", "school", "reports", "events"],
     "custom_links": {},
     "icons": {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
         "auth.Group": "fas fa-users",
-        "academico.Aluno": "fas fa-user-graduate",
-        "academico.AlunoCompetencia": "fas fa-chart-line",
-        "curriculo.AreaCurricular": "fas fa-book",
-        "curriculo.Disciplina": "fas fa-chalkboard-teacher",
-        "curriculo.Competencia": "fas fa-target",
-        "curriculo.CurriculoBase": "fas fa-file-alt",
-        "curriculo.CurriculoLocal": "fas fa-map-marker-alt",
-        "avaliacao.Avaliacao": "fas fa-clipboard-check",
-        "progresso.Progressao": "fas fa-arrow-up",
-        "escola.Professor": "fas fa-user-tie",
-        "escola.Turma": "fas fa-users",
-        "escola.Matricula": "fas fa-user-plus",
-        "relatorios.Relatorio": "fas fa-chart-bar",
-        "eventos.Evento": "fas fa-calendar-alt",
+        "academic.Student": "fas fa-user-graduate",
+        "academic.StudentCompetency": "fas fa-chart-line",
+        "curriculum.CurriculumArea": "fas fa-book",
+        "curriculum.Subject": "fas fa-chalkboard-teacher",
+        "curriculum.Competency": "fas fa-target",
+        "curriculum.BaseCurriculum": "fas fa-file-alt",
+        "curriculum.LocalCurriculum": "fas fa-map-marker-alt",
+        "assessment.Assessment": "fas fa-clipboard-check",
+        "progress.Progression": "fas fa-arrow-up",
+        "school.Teacher": "fas fa-user-tie",
+        "school.Classroom": "fas fa-users",
+        "school.Enrollment": "fas fa-user-plus",
+        "reports.Report": "fas fa-chart-bar",
+        "events.Event": "fas fa-calendar-alt",
     },
     "default_icon_parents": "fas fa-chevron-circle-right",
     "default_icon_children": "fas fa-circle",
