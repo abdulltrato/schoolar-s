@@ -109,7 +109,7 @@ class ReportViewSet(RobustModelViewSet):
     @action(detail=True, methods=["get"])
     def export(self, request, pk=None):
         report = self.get_object()
-        export_format = (request.query_params.get("format") or "html").strip().lower()
+        export_format = (request.query_params.get("export_format") or "html").strip().lower()
         safe_serial = (report.serial_number or f"report-{report.pk}").replace("/", "-")
 
         if export_format == "pdf":

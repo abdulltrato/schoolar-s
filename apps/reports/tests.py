@@ -366,8 +366,8 @@ class ReportGenerationApiTests(APITestCase):
         self.assertEqual(response.status_code, 201)
         report_id = response.data["id"]
 
-        html_response = self.client.get(f"/api/v1/reports/reports/{report_id}/export/?format=html")
-        pdf_response = self.client.get(f"/api/v1/reports/reports/{report_id}/export/?format=pdf")
+        html_response = self.client.get(f"/api/v1/reports/reports/{report_id}/export/?export_format=html")
+        pdf_response = self.client.get(f"/api/v1/reports/reports/{report_id}/export/?export_format=pdf")
 
         self.assertEqual(html_response.status_code, 200)
         self.assertIn("text/html", html_response["Content-Type"])
