@@ -80,7 +80,7 @@ export default async function Home() {
             description="A interface está dividida por área funcional para reduzir ruído e melhorar a leitura operacional."
             inverse
           />
-          <nav aria-label="Atalhos de modulos" className="mt-2 grid gap-2">
+          <nav aria-label="Atalhos de módulos" className="mt-2 grid gap-2">
             {modules.map((module) => (
               <Link
                 key={module.href}

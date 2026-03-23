@@ -148,36 +148,36 @@ export default async function LearningPage({ searchParams }: PageProps) {
 
   return (
     <DashboardShell
-      title="Learning Operations"
-      description="Digital delivery layer for courses, live lessons, materials, assignments, and submissions."
+      title="Operações de ensino"
+      description="Camada digital para cursos, aulas, materiais, tarefas e submissões."
       aside={(
         <>
           <section className="rounded-[1.25rem] border border-ink/10 bg-white/80 p-4 shadow-card backdrop-blur">
             <SectionTitle
-              eyebrow="Coverage"
-              title="Learning Surface"
-              description="Operational summary of the online and blended teaching stack."
+              eyebrow="Cobertura"
+              title="Superfície de ensino"
+              description="Resumo operacional dos fluxos presenciais, híbridos e online."
             />
             <dl className="mt-4 space-y-3 text-sm leading-5 text-ink/72">
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Courses</dt>
-                <dd>{snapshot.courses.count} configured learning products.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Cursos</dt>
+                <dd>{snapshot.courses.count} produtos de ensino configurados.</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Lessons</dt>
-                <dd>{snapshot.lessons.count} lessons loaded from the backend.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Aulas</dt>
+                <dd>{snapshot.lessons.count} aulas carregadas do backend.</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Assignments</dt>
-                <dd>{snapshot.assignments.count} published or draft tasks.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Tarefas</dt>
+                <dd>{snapshot.assignments.count} tarefas publicadas ou rascunho.</dd>
               </div>
             </dl>
           </section>
-          <nav aria-label="Learning secondary navigation" className="rounded-[1.25rem] border border-ink/10 bg-sand p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Sections</p>
+          <nav aria-label="Navegação secundária de ensino" className="rounded-[1.25rem] border border-ink/10 bg-sand p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Secções</p>
             <ul className="mt-3 space-y-2 text-sm text-ink/75">
-              <li><a href="#courses">Courses and delivery</a></li>
-              <li><a href="#work">Assignments and submissions</a></li>
+              <li><a href="#courses">Cursos e ofertas</a></li>
+              <li><a href="#work">Tarefas e submissões</a></li>
             </ul>
           </nav>
         </>
@@ -185,17 +185,17 @@ export default async function LearningPage({ searchParams }: PageProps) {
     >
       {status ? (
         <section className={`rounded-[0.9rem] border px-3 py-2 text-sm ${status.endsWith("error") ? "border-ember/20 bg-ember/10 text-ember" : "border-fern/20 bg-fern/10 text-fern"}`}>
-          {status === "lesson-created" && "Lesson created successfully."}
-          {status === "assignment-created" && "Assignment created successfully."}
-          {status === "material-created" && "Lesson material created successfully."}
-          {status === "lesson-updated" && "Lesson updated successfully."}
-          {status === "assignment-updated" && "Assignment updated successfully."}
-          {status === "lesson-error" && "Could not create the lesson."}
-          {status === "assignment-error" && "Could not create the assignment."}
-          {status === "material-error" && "Could not create the lesson material."}
-          {status === "lesson-update-error" && "Could not update the lesson."}
-          {status === "assignment-update-error" && "Could not update the assignment."}
-          {status === "session-expired" && "Your session expired. Sign in again to continue."}
+          {status === "lesson-created" && "Aula criada com sucesso."}
+          {status === "assignment-created" && "Tarefa criada com sucesso."}
+          {status === "material-created" && "Material da aula criado com sucesso."}
+          {status === "lesson-updated" && "Aula atualizada com sucesso."}
+          {status === "assignment-updated" && "Tarefa atualizada com sucesso."}
+          {status === "lesson-error" && "Não foi possível criar a aula."}
+          {status === "assignment-error" && "Não foi possível criar a tarefa."}
+          {status === "material-error" && "Não foi possível criar o material."}
+          {status === "lesson-update-error" && "Não foi possível atualizar a aula."}
+          {status === "assignment-update-error" && "Não foi possível atualizar a tarefa."}
+          {status === "session-expired" && "A sua sessão expirou. Entre novamente para continuar."}
         </section>
       ) : null}
 
@@ -203,7 +203,7 @@ export default async function LearningPage({ searchParams }: PageProps) {
         fields={[
           {
             name: "modality",
-            label: "Modality",
+            label: "Modalidade",
             value: modality,
             options: Array.from(new Set(snapshot.courses.items.map((item) => item.modality))).map((item) => ({
               value: item,
@@ -212,7 +212,7 @@ export default async function LearningPage({ searchParams }: PageProps) {
           },
           {
             name: "teacher",
-            label: "Teacher",
+            label: "Professor",
             value: teacher,
             options: Array.from(new Set(snapshot.offerings.items.map((item) => item.teacher_name).filter(Boolean) as string[])).map((item) => ({
               value: item,
@@ -221,11 +221,11 @@ export default async function LearningPage({ searchParams }: PageProps) {
           },
           {
             name: "published",
-            label: "Published",
+            label: "Publicado",
             value: published,
             options: [
-              { value: "true", label: "Published" },
-              { value: "false", label: "Draft" },
+              { value: "true", label: "Publicado" },
+              { value: "false", label: "Rascunho" },
             ],
           },
         ]}
@@ -234,90 +234,90 @@ export default async function LearningPage({ searchParams }: PageProps) {
       <section className="grid gap-4 lg:grid-cols-2">
         <article className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-3 shadow-card backdrop-blur">
           <SectionTitle
-            eyebrow="Create"
-            title="Schedule Lesson"
-            description="Open a new teaching event from the learning operations workspace."
+            eyebrow="Criar"
+            title="Agendar aula"
+            description="Abra um novo evento letivo a partir da área de operações de ensino."
           />
           <form action={createLessonAction} className="mt-3 grid gap-2">
             <select name="offering" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
               {snapshot.offerings.items.map((offering) => (
-                <option key={offering.id} value={offering.id}>{offering.course_title} | {offering.classroom_name || "No classroom"}</option>
+                <option key={offering.id} value={offering.id}>{offering.course_title} | {offering.classroom_name || "Turma não definida"}</option>
               ))}
             </select>
-            <input name="title" required placeholder="Lesson title" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <textarea name="description" rows={3} placeholder="Lesson description" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
+            <input name="title" required placeholder="Título da aula" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
+            <textarea name="description" rows={3} placeholder="Descrição da aula" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
             <input name="scheduled_at" type="datetime-local" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
             <input name="duration_minutes" type="number" min="1" defaultValue="45" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <input name="meeting_url" type="url" placeholder="Meeting URL" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
+            <input name="meeting_url" type="url" placeholder="URL da aula" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
             <label className="flex items-center gap-2 text-sm text-ink/75">
               <input name="published" type="checkbox" />
-              Publish immediately
+              Publicar imediatamente
             </label>
-            <SubmitButton idleLabel="Create lesson" pendingLabel="Creating lesson..." />
+            <SubmitButton idleLabel="Criar aula" pendingLabel="A criar aula..." />
           </form>
         </article>
 
         <article className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-3 shadow-card backdrop-blur">
           <SectionTitle
-            eyebrow="Create"
-            title="Open Assignment"
-            description="Publish a new task with opening and due windows."
+            eyebrow="Criar"
+            title="Abrir tarefa"
+            description="Publique uma nova tarefa com janela de abertura e vencimento."
           />
           <form action={createAssignmentAction} className="mt-3 grid gap-2">
             <select name="offering" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
               {snapshot.offerings.items.map((offering) => (
-                <option key={offering.id} value={offering.id}>{offering.course_title} | {offering.classroom_name || "No classroom"}</option>
+                <option key={offering.id} value={offering.id}>{offering.course_title} | {offering.classroom_name || "Turma não definida"}</option>
               ))}
             </select>
-            <input name="title" required placeholder="Assignment title" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <textarea name="instructions" rows={3} placeholder="Instructions" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
+            <input name="title" required placeholder="Título da tarefa" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
+            <textarea name="instructions" rows={3} placeholder="Instruções" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
             <input name="opens_at" type="datetime-local" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
             <input name="due_at" type="datetime-local" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
             <input name="max_score" type="number" min="1" defaultValue="20" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
             <label className="flex items-center gap-2 text-sm text-ink/75">
               <input name="published" type="checkbox" />
-              Publish immediately
+              Publicar imediatamente
             </label>
-            <SubmitButton idleLabel="Create assignment" pendingLabel="Creating assignment..." />
+            <SubmitButton idleLabel="Criar tarefa" pendingLabel="A criar tarefa..." />
           </form>
         </article>
       </section>
 
       <section className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-3 shadow-card backdrop-blur">
-        <SectionTitle
-          eyebrow="Create"
-          title="Attach Lesson Material"
-          description="Add a link, document, video, or another resource to an existing lesson."
-        />
+          <SectionTitle
+            eyebrow="Criar"
+            title="Adicionar material"
+            description="Anexe link, documento, vídeo ou outro recurso a uma aula existente."
+          />
         <form action={createLessonMaterialAction} className="mt-3 grid gap-2 md:grid-cols-2">
           <select name="lesson" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
             {snapshot.lessons.items.map((lesson) => (
               <option key={lesson.id} value={lesson.id}>{lesson.title}</option>
             ))}
           </select>
-          <input name="title" required placeholder="Material title" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
+          <input name="title" required placeholder="Título do material" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
           <select name="material_type" defaultValue="document" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
             <option value="link">Link</option>
-            <option value="document">Document</option>
-            <option value="video">Video</option>
-            <option value="audio">Audio</option>
-            <option value="other">Other</option>
+            <option value="document">Documento</option>
+            <option value="video">Vídeo</option>
+            <option value="audio">Áudio</option>
+            <option value="other">Outro</option>
           </select>
-          <input name="url" type="url" required placeholder="Resource URL" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
+          <input name="url" type="url" required placeholder="URL do recurso" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
           <label className="flex items-center gap-2 text-sm text-ink/75 md:col-span-2">
             <input name="required" type="checkbox" />
-            Mark as required material
+            Marcar como material obrigatório
           </label>
           <div className="md:col-span-2">
-            <SubmitButton idleLabel="Attach material" pendingLabel="Attaching material..." />
+            <SubmitButton idleLabel="Anexar material" pendingLabel="A anexar material..." />
           </div>
         </form>
       </section>
 
       <section id="courses" className="grid gap-4 lg:grid-cols-2">
         <RecordList
-          title="Courses"
-          subtitle="Configured online, blended, and classroom-supported learning products."
+          title="Cursos"
+          subtitle="Produtos de ensino online, híbrido e presencial já configurados."
           snapshot={snapshot.courses}
           rows={filteredCourses.slice(0, 6)}
           renderRow={(course: Course) => (
@@ -328,16 +328,16 @@ export default async function LearningPage({ searchParams }: PageProps) {
                   {course.modality}
                 </span>
               </div>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">{course.school_name || "School not resolved"}</p>
+              <p className="mt-1.5 text-sm leading-5 text-ink/70">{course.school_name || "Escola não identificada"}</p>
               <p className="mt-1 text-sm leading-5 text-ink/55">
-                {course.description || "No course description has been filled in yet."}
+                {course.description || "Ainda não existe descrição preenchida para este curso."}
               </p>
             </div>
           )}
         />
         <RecordList
-          title="Offerings"
-          subtitle="Operational delivery by teacher, classroom, and academic year."
+          title="Ofertas"
+          subtitle="Execução operacional por professor, turma e ano letivo."
           snapshot={snapshot.offerings}
           rows={filteredOfferings.slice(0, 6)}
           renderRow={(offering: CourseOffering) => (
@@ -349,10 +349,10 @@ export default async function LearningPage({ searchParams }: PageProps) {
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">
-                {offering.teacher_name || "Teacher not assigned"} | {offering.classroom_name || "No classroom"}
+                {offering.teacher_name || "Professor não atribuído"} | {offering.classroom_name || "Turma não definida"}
               </p>
               <p className="mt-1 text-sm leading-5 text-ink/55">
-                {offering.start_date} to {offering.end_date}
+                {offering.start_date} a {offering.end_date}
               </p>
             </div>
           )}
@@ -361,8 +361,8 @@ export default async function LearningPage({ searchParams }: PageProps) {
 
       <section className="grid gap-4 lg:grid-cols-2">
         <RecordList
-          title="Lessons"
-          subtitle="Scheduled delivery with optional meeting and recording links."
+          title="Aulas"
+          subtitle="Execução agendada com links opcionais de sessão e gravação."
           snapshot={snapshot.lessons}
           rows={filteredLessons.slice(0, 8)}
           renderRow={(lesson: Lesson) => (
@@ -370,11 +370,11 @@ export default async function LearningPage({ searchParams }: PageProps) {
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-ink">{lesson.title}</p>
                 <span className="rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70">
-                  {lesson.published ? "published" : "draft"}
+                  {lesson.published ? "publicado" : "rascunho"}
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">
-                {lesson.offering_title || "Offering not resolved"}
+                {lesson.offering_title || "Oferta não identificada"}
               </p>
               <p className="mt-1 text-sm leading-5 text-ink/55">
                 {formatDateTime(lesson.scheduled_at)} | {lesson.duration_minutes} min
@@ -383,15 +383,15 @@ export default async function LearningPage({ searchParams }: PageProps) {
                 <input type="hidden" name="id" value={lesson.id} />
                 <input type="hidden" name="published" value={lesson.published ? "true" : "false"} />
                 <button type="submit" className="rounded-full border border-ink/10 bg-sand px-2.5 py-1 text-[11px] font-semibold text-ink">
-                  {lesson.published ? "Unpublish" : "Publish"}
+                  {lesson.published ? "Retirar publicação" : "Publicar"}
                 </button>
               </form>
             </div>
           )}
         />
         <RecordList
-          title="Materials"
-          subtitle="Learning assets attached to lesson execution."
+          title="Materiais"
+          subtitle="Recursos de aprendizagem associados à execução da aula."
           snapshot={snapshot.materials}
           rows={snapshot.materials.items.slice(0, 8)}
           renderRow={(material: LessonMaterial) => (
@@ -402,9 +402,9 @@ export default async function LearningPage({ searchParams }: PageProps) {
                   {material.material_type}
                 </span>
               </div>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">{material.lesson_title || "Lesson not resolved"}</p>
+              <p className="mt-1.5 text-sm leading-5 text-ink/70">{material.lesson_title || "Aula não identificada"}</p>
               <p className="mt-1 text-sm leading-5 text-ink/55">
-                {material.required ? "Required material" : "Optional material"}
+                {material.required ? "Material obrigatório" : "Material opcional"}
               </p>
             </div>
           )}
@@ -413,8 +413,8 @@ export default async function LearningPage({ searchParams }: PageProps) {
 
       <section id="work" className="grid gap-4 lg:grid-cols-2">
         <RecordList
-          title="Assignments"
-          subtitle="Task windows with publication and due-date controls."
+          title="Tarefas"
+          subtitle="Janelas de trabalho com controlo de publicação e vencimento."
           snapshot={snapshot.assignments}
           rows={filteredAssignments.slice(0, 8)}
           renderRow={(assignment: Assignment) => (
@@ -425,36 +425,36 @@ export default async function LearningPage({ searchParams }: PageProps) {
                   {assignment.max_score} pts
                 </span>
               </div>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">{assignment.offering_title || "Offering not resolved"}</p>
+              <p className="mt-1.5 text-sm leading-5 text-ink/70">{assignment.offering_title || "Oferta não identificada"}</p>
               <p className="mt-1 text-sm leading-5 text-ink/55">
-                Opens {formatDateTime(assignment.opens_at)} | Due {formatDateTime(assignment.due_at)}
+                Abre {formatDateTime(assignment.opens_at)} | Vence {formatDateTime(assignment.due_at)}
               </p>
               <form action={toggleAssignmentPublicationAction} className="mt-2">
                 <input type="hidden" name="id" value={assignment.id} />
                 <input type="hidden" name="published" value={assignment.published ? "true" : "false"} />
                 <button type="submit" className="rounded-full border border-ink/10 bg-sand px-2.5 py-1 text-[11px] font-semibold text-ink">
-                  {assignment.published ? "Unpublish" : "Publish"}
+                  {assignment.published ? "Retirar publicação" : "Publicar"}
                 </button>
               </form>
             </div>
           )}
         />
         <RecordList
-          title="Submissions"
-          subtitle="Learner work returned through the digital learning flow."
+          title="Submissões"
+          subtitle="Trabalho devolvido pelos alunos através do fluxo digital."
           snapshot={snapshot.submissions}
           rows={snapshot.submissions.items.slice(0, 8)}
           renderRow={(submission: Submission) => (
             <div key={submission.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
               <div className="flex items-center justify-between gap-3">
-                <p className="font-semibold text-ink">{submission.student_name || "Student not resolved"}</p>
+                <p className="font-semibold text-ink">{submission.student_name || "Aluno não identificado"}</p>
                 <span className="rounded-full bg-fern/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-fern">
                   {submission.status}
                 </span>
               </div>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">{submission.assignment_title || "Assignment not resolved"}</p>
+              <p className="mt-1.5 text-sm leading-5 text-ink/70">{submission.assignment_title || "Tarefa não identificada"}</p>
               <p className="mt-1 text-sm leading-5 text-ink/55">
-                Score: {submission.score || "not graded"} | Submitted: {submission.submitted_at ? formatDateTime(submission.submitted_at) : "pending"}
+                Nota: {submission.score ?? "por corrigir"} | Submetido: {submission.submitted_at ? formatDateTime(submission.submitted_at) : "pendente"}
               </p>
             </div>
           )}

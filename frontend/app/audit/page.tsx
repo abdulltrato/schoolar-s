@@ -143,9 +143,9 @@ export default async function AuditPage({ searchParams }: PageProps) {
   const highActorConcentration = actorDominanceRatio >= 0.5;
   const highResourceConcentration = resourceDominanceRatio >= 0.6;
   const suspiciousSignals = [
-    highRecentVolume ? `High recent volume: ${recent24hCount} events in the last 24h.` : null,
-    highActorConcentration && topActors[0] ? `Actor concentration: ${topActors[0].label} owns ${Math.round(actorDominanceRatio * 100)}% of visible events.` : null,
-    highResourceConcentration && topResources[0] ? `Resource concentration: ${topResources[0].label} represents ${Math.round(resourceDominanceRatio * 100)}% of visible events.` : null,
+    highRecentVolume ? `Volume recente elevado: ${recent24hCount} eventos nas últimas 24h.` : null,
+    highActorConcentration && topActors[0] ? `Concentração por ator: ${topActors[0].label} representa ${Math.round(actorDominanceRatio * 100)}% dos eventos visíveis.` : null,
+    highResourceConcentration && topResources[0] ? `Concentração por recurso: ${topResources[0].label} representa ${Math.round(resourceDominanceRatio * 100)}% dos eventos visíveis.` : null,
   ].filter(Boolean) as string[];
   const riskLevel = suspiciousSignals.length >= 2 ? "ELEVATED" : suspiciousSignals.length === 1 ? "WATCH" : "STABLE";
   const riskToneValue = suspiciousSignals.length > 0;
@@ -154,35 +154,35 @@ export default async function AuditPage({ searchParams }: PageProps) {
 
   return (
     <DashboardShell
-      title="Audit Trail"
-      description="Operational trace of sensitive mutations across the school platform, with scope by resource, actor, tenant, and route."
+      title="Trilha de auditoria"
+      description="Rastreio operacional de mudanças sensíveis em recursos, atores, tenants e rotas."
       aside={(
         <>
           <section className="rounded-[1.25rem] border border-ink/10 bg-white/80 p-4 shadow-card backdrop-blur">
             <SectionTitle
-              eyebrow="Audit"
-              title="Control Surface"
-              description="Use this view to investigate sensitive operations without opening Django admin."
+              eyebrow="Auditoria"
+              title="Superfície de controlo"
+              description="Investigue operações sensíveis sem recorrer ao Django admin."
             />
             <dl className="mt-4 space-y-3 text-sm leading-5 text-ink/72">
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Events</dt>
-                <dd>{snapshot.auditEvents.count} persisted audit records available.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Eventos</dt>
+                <dd>{snapshot.auditEvents.count} registos de auditoria persistidos.</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Resources</dt>
-                <dd>{new Set(snapshot.auditEvents.items.map((event) => event.resource)).size} audited resource types.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Recursos</dt>
+                <dd>{new Set(snapshot.auditEvents.items.map((event) => event.resource)).size} tipos de recurso auditados.</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Actors</dt>
-                <dd>{new Set(snapshot.auditEvents.items.map((event) => event.username).filter(Boolean)).size} users with visible mutations.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Atores</dt>
+                <dd>{new Set(snapshot.auditEvents.items.map((event) => event.username).filter(Boolean)).size} utilizadores com mutações visíveis.</dd>
               </div>
             </dl>
           </section>
-          <nav aria-label="Audit secondary navigation" className="rounded-[1.25rem] border border-ink/10 bg-sand p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Sections</p>
+          <nav aria-label="Navegação secundária da auditoria" className="rounded-[1.25rem] border border-ink/10 bg-sand p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Secções</p>
             <ul className="mt-3 space-y-2 text-sm text-ink/75">
-              <li><a href="#audit-events">Audit events</a></li>
+              <li><a href="#audit-events">Eventos de auditoria</a></li>
             </ul>
           </nav>
         </>
@@ -190,89 +190,89 @@ export default async function AuditPage({ searchParams }: PageProps) {
     >
       {status ? (
         <section className={`rounded-[0.9rem] border px-3 py-2 text-sm ${status.endsWith("error") ? "border-ember/20 bg-ember/10 text-ember" : "border-fern/20 bg-fern/10 text-fern"}`}>
-          {status === "alert-acknowledged" && "Alert acknowledged successfully."}
-          {status === "alert-acknowledge-error" && "Could not acknowledge the alert."}
-          {status === "session_expired" && "Your session expired. Sign in again to continue."}
+          {status === "alert-acknowledged" && "Alerta reconhecido com sucesso."}
+          {status === "alert-acknowledge-error" && "Não foi possível reconhecer o alerta."}
+          {status === "session_expired" && "A sua sessão expirou. Entre novamente para continuar."}
         </section>
       ) : null}
 
       <section className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
-          label="Visible Events"
+          label="Eventos visíveis"
           value={String(snapshot.auditEvents.count)}
-          detail="Current paginated volume returned by the backend after server-side filters."
+          detail="Volume paginado devolvido pelo backend após filtros aplicados no servidor."
         />
         <MetricCard
-          label="Last 24 Hours"
+          label="Últimas 24h"
           value={String(recent24hCount)}
-          detail="Recent audit pressure across sensitive operations."
+          detail="Pressão recente de auditoria em operações sensíveis."
         />
         <MetricCard
-          label="Actors"
+          label="Atores"
           value={String(uniqueActors)}
-          detail="Distinct users represented in the current audit slice."
+          detail="Utilizadores distintos no recorte atual."
         />
         <MetricCard
           label="Tenants"
           value={String(uniqueTenants)}
-          detail="Tenant spread covered by the current filter set."
+          detail="Distribuição de tenants coberta pelos filtros aplicados."
         />
         <MetricCard
-          label="Open Alerts"
+          label="Alertas abertos"
           value={String(openAlertCount)}
-          detail="Persisted alerts not yet acknowledged."
+          detail="Alertas persistidos ainda não reconhecidos."
         />
       </section>
 
       <section className="grid gap-2 lg:grid-cols-4">
         <StatusCard
-          title="Risk Level"
+          title="Nível de risco"
           status={riskLevel}
           tone={riskTone(riskToneValue)}
           body={
             suspiciousSignals.length > 0
               ? suspiciousSignals.join(" ")
-              : "No simple anomaly threshold was crossed in the current audit slice."
+              : "Nenhum limiar de anomalia simples foi ultrapassado no recorte atual."
           }
         />
         <StatusCard
-          title="Latest Mutation"
-          status={latestEvent ? latestEvent.action.toUpperCase() : "EMPTY"}
+          title="Última mutação"
+          status={latestEvent ? latestEvent.action.toUpperCase() : "VAZIO"}
           tone={latestEvent ? "warning" : "success"}
           body={
             latestEvent
-              ? `${latestEvent.resource} by ${latestEvent.username || "unknown"} at ${formatDateTime(latestEvent.created_at)}.`
-              : "No audit events are visible with the current filters."
+              ? `${latestEvent.resource} por ${latestEvent.username || "utilizador desconhecido"} às ${formatDateTime(latestEvent.created_at)}.`
+              : "Nenhum evento de auditoria está visível com os filtros atuais."
           }
         />
         <StatusCard
-          title="Top Resource"
-          status={topResources[0]?.label?.toUpperCase() || "EMPTY"}
+          title="Recurso dominante"
+          status={topResources[0]?.label?.toUpperCase() || "VAZIO"}
           tone={topResources.length > 0 ? "warning" : "success"}
           body={
             topResources.length > 0
-              ? `${topResources[0].count} events in the current slice.`
-              : "No dominant resource in the current filter set."
+              ? `${topResources[0].count} eventos no recorte atual.`
+              : "Não existe recurso dominante no conjunto de filtros."
           }
         />
         <StatusCard
-          title="Top Actor"
-          status={topActors[0]?.label || "EMPTY"}
+          title="Ator dominante"
+          status={topActors[0]?.label || "VAZIO"}
           tone={topActors.length > 0 ? "warning" : "success"}
           body={
             topActors.length > 0
-              ? `${topActors[0].count} mutations attributed to this user.`
-              : "No actor concentration in the current filter set."
+              ? `${topActors[0].count} mutações atribuídas a este utilizador.`
+              : "Sem concentração de atores no recorte atual."
           }
         />
         <StatusCard
-          title="Latest Alert"
-          status={latestAlert ? latestAlert.severity.toUpperCase() : "CLEAR"}
+          title="Último alerta"
+          status={latestAlert ? latestAlert.severity.toUpperCase() : "SEM ALERTAS"}
           tone={latestAlert ? "warning" : "success"}
           body={
             latestAlert
               ? `${latestAlert.alert_type} | ${latestAlert.summary}`
-              : "No persisted audit alerts were triggered."
+              : "Nenhum alerta persistido foi disparado."
           }
         />
       </section>
@@ -280,7 +280,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
       <form className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-2.5 shadow-card backdrop-blur">
         <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
           <label className="block">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Resource</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Recurso</span>
             <select name="resource" defaultValue={resource} className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-1.5 text-xs text-ink sm:text-sm">
               <option value="">Todos</option>
               {Array.from(new Set([...snapshot.auditEvents.items.map((event) => event.resource), ...snapshot.auditAlerts.items.map((alert) => alert.resource)].filter(Boolean))).map((item) => (
@@ -289,7 +289,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
             </select>
           </label>
           <label className="block">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Action</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Ação</span>
             <select name="action" defaultValue={action} className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-1.5 text-xs text-ink sm:text-sm">
               <option value="">Todos</option>
               {Array.from(new Set(snapshot.auditEvents.items.map((event) => event.action))).map((item) => (
@@ -298,23 +298,23 @@ export default async function AuditPage({ searchParams }: PageProps) {
             </select>
           </label>
           <label className="block">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Severity</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Severidade</span>
             <select name="severity" defaultValue={severity} className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-1.5 text-xs text-ink sm:text-sm">
               <option value="">Todas</option>
-              <option value="watch">Watch</option>
-              <option value="elevated">Elevated</option>
+              <option value="watch">Observação</option>
+              <option value="elevated">Elevado</option>
             </select>
           </label>
           <label className="block">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Alert State</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Estado do alerta</span>
             <select name="acknowledged" defaultValue={acknowledged} className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-1.5 text-xs text-ink sm:text-sm">
               <option value="">Todos</option>
-              <option value="false">Open</option>
-              <option value="true">Acknowledged</option>
+              <option value="false">Aberto</option>
+              <option value="true">Reconhecido</option>
             </select>
           </label>
           <label className="block">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">User</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Utilizador</span>
             <select name="username" defaultValue={username} className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-1.5 text-xs text-ink sm:text-sm">
               <option value="">Todos</option>
               {Array.from(new Set([...snapshot.auditEvents.items.map((event) => event.username), ...snapshot.auditAlerts.items.map((alert) => alert.username)].filter(Boolean))).map((item) => (
@@ -332,11 +332,11 @@ export default async function AuditPage({ searchParams }: PageProps) {
             </select>
           </label>
           <label className="block">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Date From</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Data de início</span>
             <input name="date_from" type="date" defaultValue={dateFrom} className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-1.5 text-xs text-ink sm:text-sm" />
           </label>
           <label className="block">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Date To</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Data de fim</span>
             <input name="date_to" type="date" defaultValue={dateTo} className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-1.5 text-xs text-ink sm:text-sm" />
           </label>
         </div>
@@ -348,18 +348,18 @@ export default async function AuditPage({ searchParams }: PageProps) {
             Limpar
           </a>
           <a href={csvExportHref} className="rounded-full border border-ink/10 bg-sand px-2.5 py-1 text-[11px] font-semibold text-ink sm:text-xs">
-            Export CSV
+            Exportar CSV
           </a>
           <a href={jsonExportHref} className="rounded-full border border-ink/10 bg-sand px-2.5 py-1 text-[11px] font-semibold text-ink sm:text-xs">
-            Export JSON
+            Exportar JSON
           </a>
         </div>
       </form>
 
       <section id="audit-events" className="grid gap-4">
         <RecordList
-          title="Audit Alerts"
-          subtitle="Automatically generated alerts from audit thresholds in the last processing window."
+          title="Alertas de auditoria"
+          subtitle="Alertas gerados automaticamente por limiares no último ciclo."
           snapshot={snapshot.auditAlerts}
           rows={snapshot.auditAlerts.items.slice(0, 8)}
           renderRow={(alert: AuditAlert) => (
@@ -375,13 +375,13 @@ export default async function AuditPage({ searchParams }: PageProps) {
                 {alert.username || "system"} {alert.resource ? `| ${alert.resource}` : ""} {alert.tenant_id ? `| ${alert.tenant_id}` : ""}
               </p>
               <p className="mt-1 text-sm leading-5 text-ink/55">
-                {formatDateTime(alert.created_at)} | {alert.acknowledged ? "acknowledged" : "open"} | elevated in view: {elevatedAlertCount}
+                {formatDateTime(alert.created_at)} | {alert.acknowledged ? "reconhecido" : "aberto"} | alertas elevados visíveis: {elevatedAlertCount}
               </p>
               {!alert.acknowledged ? (
                 <form action={acknowledgeAuditAlertAction} className="mt-2">
                   <input type="hidden" name="id" value={alert.id} />
                   <input type="hidden" name="page_href" value={currentHref} />
-                  <SubmitButton idleLabel="Acknowledge alert" pendingLabel="Acknowledging..." />
+                  <SubmitButton idleLabel="Reconhecer alerta" pendingLabel="A reconhecer..." />
                 </form>
               ) : null}
             </div>
@@ -390,34 +390,34 @@ export default async function AuditPage({ searchParams }: PageProps) {
 
         <section className="grid gap-4 lg:grid-cols-2">
           <RecordList
-            title="Top Resources"
-            subtitle="Most frequently mutated resources in the current audit slice."
+            title="Principais recursos"
+            subtitle="Recursos com maior número de mutações no recorte atual."
             snapshot={rankedSnapshot}
             rows={topResources}
             renderRow={(entry: RankedEntry) => (
               <div key={entry.label} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
                 <p className="font-semibold text-ink">{entry.label}</p>
-                <p className="mt-1 text-sm leading-5 text-ink/55">{entry.count} events</p>
+                <p className="mt-1 text-sm leading-5 text-ink/55">{entry.count} eventos</p>
               </div>
             )}
           />
           <RecordList
-            title="Top Actors"
-            subtitle="Users with the highest mutation volume in the current audit slice."
+            title="Principais atores"
+            subtitle="Utilizadores com maior volume de mutações no recorte atual."
             snapshot={rankedSnapshot}
             rows={topActors}
             renderRow={(entry: RankedEntry) => (
               <div key={entry.label} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
                 <p className="font-semibold text-ink">{entry.label}</p>
-                <p className="mt-1 text-sm leading-5 text-ink/55">{entry.count} events</p>
+                <p className="mt-1 text-sm leading-5 text-ink/55">{entry.count} eventos</p>
               </div>
             )}
           />
         </section>
 
         <RecordList
-          title="Audit Events"
-          subtitle="Sensitive create and update operations persisted by the backend audit layer."
+          title="Eventos de auditoria"
+          subtitle="Operações sensíveis (criação/atualização) persistidas pelo backend."
           snapshot={snapshot.auditEvents}
           rows={snapshot.auditEvents.items}
           renderRow={(event: AuditEvent) => (
@@ -431,39 +431,39 @@ export default async function AuditPage({ searchParams }: PageProps) {
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">
-                {event.username || "unknown user"} {event.role ? `| ${event.role}` : ""} {event.tenant_id ? `| ${event.tenant_id}` : ""}
+                {event.username || "utilizador desconhecido"} {event.role ? `| ${event.role}` : ""} {event.tenant_id ? `| ${event.tenant_id}` : ""}
               </p>
               <p className="mt-1 text-sm leading-5 text-ink/55">
                 {event.method} {event.path}
               </p>
               <p className="mt-1 text-sm leading-5 text-ink/55">
-                {formatDateTime(event.created_at)} | changed: {event.changed_fields.length > 0 ? event.changed_fields.join(", ") : "none captured"}
+                {formatDateTime(event.created_at)} | alterações: {event.changed_fields.length > 0 ? event.changed_fields.join(", ") : "nenhum campo capturado"}
               </p>
               <p className="mt-1 text-sm leading-5 text-ink/55">
-                {event.object_repr || "No object label"} | request {event.request_id || "-"}
+                {event.object_repr || "Sem etiqueta do objeto"} | pedido {event.request_id || "-"}
               </p>
             </div>
           )}
         />
         <div className="flex items-center justify-between rounded-[0.9rem] border border-ink/10 bg-white/90 px-3 py-2 text-sm text-ink/70 shadow-card backdrop-blur">
-          <span>Page {page}</span>
+          <span>Página {page}</span>
           <div className="flex gap-2">
             {previousHref ? (
               <a href={previousHref} className="rounded-full border border-ink/10 bg-sand px-3 py-1 text-xs font-semibold text-ink">
-                Previous
+                Anterior
               </a>
             ) : (
               <span className="rounded-full border border-ink/10 bg-mist px-3 py-1 text-xs font-semibold text-ink/45">
-                Previous
+                Anterior
               </span>
             )}
             {nextHref ? (
               <a href={nextHref} className="rounded-full border border-ink/10 bg-sand px-3 py-1 text-xs font-semibold text-ink">
-                Next
+                Seguinte
               </a>
             ) : (
               <span className="rounded-full border border-ink/10 bg-mist px-3 py-1 text-xs font-semibold text-ink/45">
-                Next
+                Seguinte
               </span>
             )}
           </div>

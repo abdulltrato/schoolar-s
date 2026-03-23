@@ -98,36 +98,36 @@ export default async function FinancePage({ searchParams }: PageProps) {
 
   return (
     <DashboardShell
-      title="Finance Operations"
-      description="School-level financial follow-up across students, guardians, invoices, and payments."
+      title="Operações financeiras"
+      description="Acompanhamento financeiro escolar entre alunos, responsáveis, faturas e pagamentos."
       aside={(
         <>
           <section className="rounded-[1.25rem] border border-ink/10 bg-white/80 p-4 shadow-card backdrop-blur">
             <SectionTitle
-              eyebrow="Revenue"
-              title="Financial Pulse"
-              description="Compact view of billed students and payment coverage."
+              eyebrow="Receita"
+              title="Pulso financeiro"
+              description="Visão compacta dos alunos faturados e cobertura de pagamentos."
             />
             <dl className="mt-4 space-y-3 text-sm leading-5 text-ink/72">
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Invoices</dt>
-                <dd>{snapshot.invoices.count} invoice records loaded.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Faturas</dt>
+                <dd>{snapshot.invoices.count} registos de faturas carregados.</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Payments</dt>
-                <dd>{snapshot.payments.count} payment events visible.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Pagamentos</dt>
+                <dd>{snapshot.payments.count} eventos de pagamento visíveis.</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Guardians</dt>
-                <dd>{snapshot.guardians.count} guardian finance contacts.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Encarregados</dt>
+                <dd>{snapshot.guardians.count} contactos financeiros registados.</dd>
               </div>
             </dl>
           </section>
-          <nav aria-label="Finance secondary navigation" className="rounded-[1.25rem] border border-ink/10 bg-sand p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Sections</p>
+          <nav aria-label="Navegação secundária financeira" className="rounded-[1.25rem] border border-ink/10 bg-sand p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Secções</p>
             <ul className="mt-3 space-y-2 text-sm text-ink/75">
-              <li><a href="#billing">Billing</a></li>
-              <li><a href="#collections">Collections</a></li>
+              <li><a href="#billing">Faturação</a></li>
+              <li><a href="#collections">Cobranças</a></li>
             </ul>
           </nav>
         </>
@@ -135,13 +135,13 @@ export default async function FinancePage({ searchParams }: PageProps) {
     >
       {status ? (
         <section className={`rounded-[0.9rem] border px-3 py-2 text-sm ${status.endsWith("error") ? "border-ember/20 bg-ember/10 text-ember" : "border-fern/20 bg-fern/10 text-fern"}`}>
-          {status === "invoice-created" && "Invoice created successfully."}
-          {status === "payment-created" && "Payment created successfully."}
-          {status === "invoice-updated" && "Invoice updated successfully."}
-          {status === "invoice-error" && "Could not create the invoice."}
-          {status === "payment-error" && "Could not create the payment."}
-          {status === "invoice-update-error" && "Could not update the invoice."}
-          {status === "session-expired" && "Your session expired. Sign in again to continue."}
+          {status === "invoice-created" && "Fatura criada com sucesso."}
+          {status === "payment-created" && "Pagamento registado com sucesso."}
+          {status === "invoice-updated" && "Fatura atualizada com sucesso."}
+          {status === "invoice-error" && "Não foi possível criar a fatura."}
+          {status === "payment-error" && "Não foi possível registar o pagamento."}
+          {status === "invoice-update-error" && "Não foi possível atualizar a fatura."}
+          {status === "session-expired" && "A sua sessão expirou. Entre novamente para continuar."}
         </section>
       ) : null}
 
@@ -149,7 +149,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
         fields={[
           {
             name: "invoice_status",
-            label: "Invoice",
+            label: "Fatura",
             value: invoiceStatus,
             options: Array.from(new Set(snapshot.invoices.items.map((item) => item.status))).map((item) => ({
               value: item,
@@ -158,7 +158,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
           },
           {
             name: "payment_method",
-            label: "Payment",
+            label: "Pagamento",
             value: paymentMethod,
             options: Array.from(new Set(snapshot.payments.items.map((item) => item.method))).map((item) => ({
               value: item,
@@ -171,9 +171,9 @@ export default async function FinancePage({ searchParams }: PageProps) {
       <section className="grid gap-4 lg:grid-cols-2">
         <article className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-3 shadow-card backdrop-blur">
           <SectionTitle
-            eyebrow="Create"
-            title="Issue Invoice"
-            description="Register a new financial charge against a student."
+            eyebrow="Criar"
+            title="Emitir fatura"
+            description="Registe um novo encargo financeiro para um aluno."
           />
           <form action={createInvoiceAction} className="mt-3 grid gap-2">
             <select name="student" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
@@ -186,64 +186,64 @@ export default async function FinancePage({ searchParams }: PageProps) {
                 <option key={school.id} value={school.id}>{school.name}</option>
               ))}
             </select>
-            <input name="reference" required placeholder="Reference" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <input name="description" required placeholder="Description" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <input name="amount" type="number" step="0.01" min="0" required placeholder="Amount" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
+            <input name="reference" required placeholder="Referência" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
+            <input name="description" required placeholder="Descrição" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
+            <input name="amount" type="number" step="0.01" min="0" required placeholder="Montante" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
             <input name="due_date" type="date" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
             <select name="status" defaultValue="issued" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
-              <option value="draft">Draft</option>
-              <option value="issued">Issued</option>
-              <option value="paid">Paid</option>
-              <option value="overdue">Overdue</option>
+              <option value="draft">Rascunho</option>
+              <option value="issued">Emitida</option>
+              <option value="paid">Paga</option>
+              <option value="overdue">Em atraso</option>
             </select>
-            <SubmitButton idleLabel="Create invoice" pendingLabel="Creating invoice..." />
+            <SubmitButton idleLabel="Emitir fatura" pendingLabel="A emitir fatura..." />
           </form>
         </article>
 
         <article className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-3 shadow-card backdrop-blur">
-          <SectionTitle
-            eyebrow="Create"
-            title="Register Payment"
-            description="Capture a payment event against an existing invoice."
-          />
+            <SectionTitle
+              eyebrow="Criar"
+              title="Registar pagamento"
+              description="Registe um pagamento para uma fatura existente."
+            />
           <form action={createPaymentAction} className="mt-3 grid gap-2">
             <select name="invoice" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
               {snapshot.invoices.items.map((invoice) => (
                 <option key={invoice.id} value={invoice.id}>{invoice.reference} | {invoice.student_name}</option>
               ))}
             </select>
-            <input name="amount" type="number" step="0.01" min="0" required placeholder="Paid amount" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
+            <input name="amount" type="number" step="0.01" min="0" required placeholder="Montante pago" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
             <input name="payment_date" type="date" required className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
             <select name="method" defaultValue="cash" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink">
-              <option value="cash">Cash</option>
-              <option value="bank_transfer">Bank transfer</option>
-              <option value="mobile_money">Mobile money</option>
-              <option value="card">Card</option>
+              <option value="cash">Numerário</option>
+              <option value="bank_transfer">Transferência bancária</option>
+              <option value="mobile_money">Carteira móvel</option>
+              <option value="card">Cartão</option>
             </select>
-            <input name="reference" placeholder="Payment reference" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <input name="notes" placeholder="Notes" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
-            <SubmitButton idleLabel="Register payment" pendingLabel="Registering payment..." />
+            <input name="reference" placeholder="Referência do pagamento" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
+            <input name="notes" placeholder="Observações" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
+            <SubmitButton idleLabel="Registar pagamento" pendingLabel="A registar pagamento..." />
           </form>
         </article>
       </section>
 
       <section id="billing" className="grid gap-4 lg:grid-cols-2">
         <RecordList
-          title="Students"
-          subtitle="Base of billable learners within the current scope."
+          title="Alunos"
+          subtitle="Base de alunos faturáveis no recorte atual."
           snapshot={snapshot.students}
           rows={snapshot.students.items.slice(0, 8)}
           renderRow={(student: Student) => (
             <div key={student.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
               <p className="font-semibold text-ink">{student.name}</p>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">Grade {student.grade} | {student.education_level}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">Status: {student.status}</p>
+              <p className="mt-1 text-sm leading-5 text-ink/55">Estado: {student.status}</p>
             </div>
           )}
         />
         <RecordList
-          title="Invoices"
-          subtitle="Issued, pending, paid, or overdue billing records."
+          title="Faturas"
+          subtitle="Registos emitidos, pendentes, pagos ou em atraso."
           snapshot={snapshot.invoices}
           rows={filteredInvoices.slice(0, 8)}
           renderRow={(invoice: Invoice) => (
@@ -255,20 +255,20 @@ export default async function FinancePage({ searchParams }: PageProps) {
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">{invoice.student_name}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">
-                {invoice.amount} | Due {formatDate(invoice.due_date)}
+                <p className="mt-1 text-sm leading-5 text-ink/55">
+                {invoice.amount} | Vencimento {formatDate(invoice.due_date)}
               </p>
               <form action={updateInvoiceStatusAction} className="mt-2 flex gap-2">
                 <input type="hidden" name="id" value={invoice.id} />
                 <select name="status" defaultValue={invoice.status} className="rounded-md border border-ink/10 bg-sand px-2 py-1 text-xs text-ink">
-                  <option value="draft">Draft</option>
-                  <option value="issued">Issued</option>
-                  <option value="paid">Paid</option>
-                  <option value="overdue">Overdue</option>
-                  <option value="cancelled">Cancelled</option>
+                  <option value="draft">Rascunho</option>
+                  <option value="issued">Emitida</option>
+                  <option value="paid">Paga</option>
+                  <option value="overdue">Em atraso</option>
+                  <option value="cancelled">Cancelada</option>
                 </select>
                 <button type="submit" className="rounded-full border border-ink/10 bg-sand px-2.5 py-1 text-[11px] font-semibold text-ink">
-                  Update
+                  Atualizar
                 </button>
               </form>
             </div>
@@ -278,8 +278,8 @@ export default async function FinancePage({ searchParams }: PageProps) {
 
       <section id="collections" className="grid gap-4 lg:grid-cols-2">
         <RecordList
-          title="Payments"
-          subtitle="Received payments tied to invoice references."
+          title="Pagamentos"
+          subtitle="Pagamentos recebidos associados a faturas."
           snapshot={snapshot.payments}
           rows={filteredPayments.slice(0, 8)}
           renderRow={(payment: Payment) => (
@@ -291,20 +291,20 @@ export default async function FinancePage({ searchParams }: PageProps) {
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">{payment.method}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">{formatDate(payment.payment_date)} | {payment.reference || "No payment ref"}</p>
+              <p className="mt-1 text-sm leading-5 text-ink/55">{formatDate(payment.payment_date)} | {payment.reference || "Sem referência de pagamento"}</p>
             </div>
           )}
         />
-        <RecordList
-          title="Guardians"
-          subtitle="Primary family contacts supporting billing and follow-up."
+          <RecordList
+          title="Encarregados"
+          subtitle="Contactos prioritários para faturação e acompanhamento."
           snapshot={snapshot.guardians}
           rows={snapshot.guardians.items.slice(0, 8)}
           renderRow={(guardian: Guardian) => (
             <div key={guardian.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
               <p className="font-semibold text-ink">{guardian.name}</p>
-              <p className="mt-1.5 text-sm leading-5 text-ink/70">{guardian.relationship || "Relationship not set"}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">{guardian.phone || guardian.email || "No finance contact detail"}</p>
+              <p className="mt-1.5 text-sm leading-5 text-ink/70">{guardian.relationship || "Parentesco não definido"}</p>
+              <p className="mt-1 text-sm leading-5 text-ink/55">{guardian.phone || guardian.email || "Sem contacto financeiro"}</p>
             </div>
           )}
         />

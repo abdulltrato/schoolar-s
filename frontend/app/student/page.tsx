@@ -86,37 +86,37 @@ export default async function StudentPage({ searchParams }: PageProps) {
 
   return (
     <DashboardShell
-      title="Student Portal"
-      description="Personal view of attendance, active learning, results, school notices, and financial follow-up."
+      title="Portal do aluno"
+      description="Visão pessoal de presença, ensino em curso, resultados, comunicados e acompanhamento financeiro."
       aside={(
         <>
           <section className="rounded-[1.25rem] border border-ink/10 bg-white/80 p-4 shadow-card backdrop-blur">
             <SectionTitle
-              eyebrow="Student"
-              title={learner?.name || "No learner in scope"}
-              description={learner ? `Grade ${learner.grade} | ${learner.education_level}` : "Authentication or tenant scope has not resolved a student record yet."}
+              eyebrow="Aluno"
+              title={learner?.name || "Nenhum aluno identificado"}
+              description={learner ? `Classe ${learner.grade} | ${learner.education_level}` : "Autenticação ou tenant ainda não resolveram um registo de aluno."}
             />
             <dl className="mt-4 space-y-3 text-sm leading-5 text-ink/72">
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Results</dt>
-                <dd>{snapshot.periodResults.count} calculated subject results.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Resultados</dt>
+                <dd>{snapshot.periodResults.count} resultados calculados por disciplina.</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Attendance</dt>
-                <dd>{snapshot.attendance.count} attendance records in scope.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Presença</dt>
+                <dd>{snapshot.attendance.count} registos de presença disponíveis.</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Invoices</dt>
-                <dd>{snapshot.invoices.count} financial records available.</dd>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Faturas</dt>
+                <dd>{snapshot.invoices.count} registos financeiros disponíveis.</dd>
               </div>
             </dl>
           </section>
-          <nav aria-label="Student secondary navigation" className="rounded-[1.25rem] border border-ink/10 bg-sand p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Sections</p>
+          <nav aria-label="Navegação secundária do aluno" className="rounded-[1.25rem] border border-ink/10 bg-sand p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Secções</p>
             <ul className="mt-3 space-y-2 text-sm text-ink/75">
-              <li><a href="#progress">Progress and attendance</a></li>
-              <li><a href="#study">Study plan and tasks</a></li>
-              <li><a href="#money">Invoices and notices</a></li>
+              <li><a href="#progress">Progresso e presença</a></li>
+              <li><a href="#study">Estudo e tarefas</a></li>
+              <li><a href="#money">Faturas e comunicados</a></li>
             </ul>
           </nav>
         </>
@@ -124,9 +124,9 @@ export default async function StudentPage({ searchParams }: PageProps) {
     >
       {status ? (
         <section className={`rounded-[0.9rem] border px-3 py-2 text-sm ${status.endsWith("error") ? "border-ember/20 bg-ember/10 text-ember" : "border-fern/20 bg-fern/10 text-fern"}`}>
-          {status === "submission-created" && "Submission created successfully."}
-          {status === "submission-error" && "Could not create the submission."}
-          {status === "session-expired" && "Your session expired. Sign in again to continue."}
+          {status === "submission-created" && "Submissão criada com sucesso."}
+          {status === "submission-error" && "Não foi possível criar a submissão."}
+          {status === "session-expired" && "A sua sessão expirou. Entre novamente para continuar."}
         </section>
       ) : null}
 
@@ -134,7 +134,7 @@ export default async function StudentPage({ searchParams }: PageProps) {
         fields={[
           {
             name: "subject",
-            label: "Subject",
+            label: "Disciplina",
             value: subject,
             options: Array.from(new Set(snapshot.periodResults.items.map((item) => item.subject_name).filter(Boolean) as string[])).map((item) => ({
               value: item,
@@ -143,7 +143,7 @@ export default async function StudentPage({ searchParams }: PageProps) {
           },
           {
             name: "attendance_status",
-            label: "Attendance",
+            label: "Presença",
             value: attendanceStatus,
             options: Array.from(new Set(snapshot.attendance.items.map((item) => item.status))).map((item) => ({
               value: item,
@@ -152,7 +152,7 @@ export default async function StudentPage({ searchParams }: PageProps) {
           },
           {
             name: "invoice_status",
-            label: "Invoice",
+            label: "Fatura",
             value: invoiceStatus,
             options: Array.from(new Set(snapshot.invoices.items.map((item) => item.status))).map((item) => ({
               value: item,
@@ -164,8 +164,8 @@ export default async function StudentPage({ searchParams }: PageProps) {
 
       <section id="progress" className="grid gap-4 lg:grid-cols-2">
         <RecordList
-          title="Enrollment"
-          subtitle="Current classroom placement for the student in scope."
+          title="Matrícula"
+          subtitle="Posição atual do aluno na turma."
           snapshot={snapshot.enrollments}
           rows={snapshot.enrollments.items.slice(0, 4)}
           renderRow={(enrollment: Enrollment) => (
@@ -174,13 +174,13 @@ export default async function StudentPage({ searchParams }: PageProps) {
               <p className="mt-1.5 text-sm leading-5 text-ink/70">
                 {enrollment.school_name} | {enrollment.academic_year_code}
               </p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">Enrolled on {formatDate(enrollment.enrollment_date)}</p>
+              <p className="mt-1 text-sm leading-5 text-ink/55">Matriculado em {formatDate(enrollment.enrollment_date)}</p>
             </div>
           )}
         />
         <RecordList
-          title="Subject Results"
-          subtitle="Period-based weighted averages already calculated by the backend."
+          title="Resultados por disciplina"
+          subtitle="Médias ponderadas por período já calculadas."
           snapshot={snapshot.periodResults}
           rows={filteredResults.slice(0, 8)}
           renderRow={(result: SubjectPeriodResult) => (
@@ -192,7 +192,7 @@ export default async function StudentPage({ searchParams }: PageProps) {
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">{result.period_name}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">{result.assessments_counted} assessments counted</p>
+              <p className="mt-1 text-sm leading-5 text-ink/55">{result.assessments_counted} avaliações contabilizadas</p>
             </div>
           )}
         />
@@ -200,8 +200,8 @@ export default async function StudentPage({ searchParams }: PageProps) {
 
       <section className="grid gap-4 lg:grid-cols-2">
         <RecordList
-          title="Attendance"
-          subtitle="Presence history for the learner in the active scope."
+          title="Presenças"
+          subtitle="Histórico de presença no recorte ativo."
           snapshot={snapshot.attendance}
           rows={filteredAttendance.slice(0, 8)}
           renderRow={(record: AttendanceRecord) => (
@@ -213,13 +213,13 @@ export default async function StudentPage({ searchParams }: PageProps) {
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">{formatDate(record.lesson_date)}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">{record.notes || "No attendance notes."}</p>
+              <p className="mt-1 text-sm leading-5 text-ink/55">{record.notes || "Sem observações de presença."}</p>
             </div>
           )}
         />
         <RecordList
-          title="Upcoming Lessons"
-          subtitle="Learning agenda visible to the student."
+          title="Aulas futuras"
+          subtitle="Agenda de aprendizagem visível ao aluno."
           snapshot={snapshot.lessons}
           rows={snapshot.lessons.items.slice(0, 8)}
           renderRow={(lesson: Lesson) => (
@@ -234,9 +234,9 @@ export default async function StudentPage({ searchParams }: PageProps) {
 
       <section className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-3 shadow-card backdrop-blur">
         <SectionTitle
-          eyebrow="Submit"
-          title="Send Assignment Work"
-          description="Submit text or an attachment URL for an available assignment."
+          eyebrow="Enviar"
+          title="Enviar tarefa"
+          description="Submeta texto ou um link para uma tarefa disponível."
         />
         <form action={createSubmissionAction} className="mt-3 grid gap-2 md:grid-cols-2">
           <input type="hidden" name="student" value={learner?.id || ""} />
@@ -245,21 +245,21 @@ export default async function StudentPage({ searchParams }: PageProps) {
               <option key={assignment.id} value={assignment.id}>{assignment.title}</option>
             ))}
           </select>
-          <input name="attachment_url" type="url" placeholder="Attachment URL" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
+          <input name="attachment_url" type="url" placeholder="URL do anexo" className="rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
           <label className="block md:col-span-2">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Text Response</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/55">Resposta</span>
             <textarea name="text_response" rows={4} className="mt-1 w-full rounded-md border border-ink/10 bg-sand px-2.5 py-2 text-sm text-ink" />
           </label>
           <div className="md:col-span-2">
-            <SubmitButton idleLabel="Submit work" pendingLabel="Submitting..." />
+            <SubmitButton idleLabel="Enviar" pendingLabel="A enviar..." />
           </div>
         </form>
       </section>
 
       <section id="study" className="grid gap-4 lg:grid-cols-2">
         <RecordList
-          title="Assignments"
-          subtitle="Open tasks and deadlines for the student."
+          title="Tarefas"
+          subtitle="Tarefas abertas e prazos do aluno."
           snapshot={snapshot.assignments}
           rows={snapshot.assignments.items.slice(0, 8)}
           renderRow={(assignment: Assignment) => (
@@ -271,23 +271,23 @@ export default async function StudentPage({ searchParams }: PageProps) {
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">{assignment.offering_title}</p>
-              <p className="mt-1 text-sm leading-5 text-ink/55">Due {formatDateTime(assignment.due_at)}</p>
+              <p className="mt-1 text-sm leading-5 text-ink/55">Vencimento {formatDateTime(assignment.due_at)}</p>
             </div>
           )}
         />
         <RecordList
-          title="Submissions"
-          subtitle="What the student has already delivered through the platform."
+          title="Submissões"
+          subtitle="O que o aluno já entregou pela plataforma."
           snapshot={snapshot.submissions}
           rows={snapshot.submissions.items.slice(0, 8)}
           renderRow={(submission: Submission) => (
             <div key={submission.id} className="rounded-[0.95rem] border border-ink/10 bg-white px-3 py-3">
               <p className="font-semibold text-ink">{submission.assignment_title}</p>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">
-                {submission.submitted_at ? formatDateTime(submission.submitted_at) : "Not submitted yet"}
+                {submission.submitted_at ? formatDateTime(submission.submitted_at) : "Ainda não submetido"}
               </p>
               <p className="mt-1 text-sm leading-5 text-ink/55">
-                Status: {submission.status} | Score: {submission.score || "pending"}
+                Estado: {submission.status} | Nota: {submission.score ?? "por atribuir"}
               </p>
             </div>
           )}
@@ -296,8 +296,8 @@ export default async function StudentPage({ searchParams }: PageProps) {
 
       <section id="money" className="grid gap-4 lg:grid-cols-2">
         <RecordList
-          title="Invoices"
-          subtitle="Financial follow-up for the student or guardian portal."
+          title="Faturas"
+          subtitle="Acompanhamento financeiro para aluno/responsável."
           snapshot={snapshot.invoices}
           rows={filteredInvoices.slice(0, 8)}
           renderRow={(invoice: Invoice) => (
@@ -310,14 +310,14 @@ export default async function StudentPage({ searchParams }: PageProps) {
               </div>
               <p className="mt-1.5 text-sm leading-5 text-ink/70">{invoice.description}</p>
               <p className="mt-1 text-sm leading-5 text-ink/55">
-                Amount {invoice.amount} | Due {formatDate(invoice.due_date)}
+                Montante {invoice.amount} | Vencimento {formatDate(invoice.due_date)}
               </p>
             </div>
           )}
         />
         <RecordList
-          title="Announcements"
-          subtitle="School communications visible inside the student experience."
+          title="Comunicados"
+          subtitle="Comunicações escolares visíveis ao aluno."
           snapshot={snapshot.announcements}
           rows={snapshot.announcements.items.slice(0, 8)}
           renderRow={(announcement: Announcement) => (
