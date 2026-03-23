@@ -36,6 +36,34 @@ export default async function VerifyReportPage({ searchParams }: PageProps) {
           <p className="mt-2 text-sm leading-6 text-ink/72">
             Esta página valida se uma declaração, certificado, diploma, pauta ou relatório foi emitido pelo sistema e se a assinatura continua íntegra.
           </p>
+          <form className="mt-5 grid gap-3 rounded-[1rem] border border-ink/10 bg-sand/60 p-4 sm:grid-cols-[1fr_1fr_auto]">
+            <label className="block">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Código</span>
+              <input
+                name="code"
+                defaultValue={code}
+                placeholder="RPT-XXXXXX"
+                className="mt-1 w-full rounded-md border border-ink/10 bg-white px-3 py-2 text-sm text-ink"
+              />
+            </label>
+            <label className="block">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/55">Assinatura</span>
+              <input
+                name="hash"
+                defaultValue={hash}
+                placeholder="Hash SHA-256"
+                className="mt-1 w-full rounded-md border border-ink/10 bg-white px-3 py-2 text-sm text-ink"
+              />
+            </label>
+            <div className="flex items-end">
+              <button
+                type="submit"
+                className="w-full rounded-full bg-ink px-4 py-2 text-sm font-semibold text-sand sm:w-auto"
+              >
+                Validar
+              </button>
+            </div>
+          </form>
         </header>
 
         {!code ? (

@@ -1,3 +1,6 @@
+import html
+from io import BytesIO
+
 from decimal import Decimal
 
 from django.db.models import Avg, Count, Q
@@ -526,3 +529,189 @@ def resolve_report_dependencies(validated_data):
     if validated_data.get("classroom"):
         dependencies["classroom"] = Classroom.objects.select_related("academic_year", "grade", "school").get(pk=validated_data["classroom"].pk)
     return dependencies
+
+
+def build_report_export_context(report):
+    content = report.content if isinstance(report.content, dict) else {}
+    metadata = content.get("metadata") if isinstance(content.get("metadata"), dict) else {}
+    student_snapshot = content.get("student_snapshot") if isinstance(content.get("student_snapshot"), dict) else {}
+    summary = content.get("summary") if isinstance(content.get("summary"), dict) else {}
+    rows = content.get("rows") if isinstance(content.get("rows"), list) else []
+    return {
+        "title": report.title,
+        "serial_number": report.serial_number,
+        "verification_code": report.verification_code,
+        "verification_hash": report.verification_hash,
+        "generated_at": timezone.localtime(report.generated_at).strftime("%d/%m/%Y %H:%M") if report.generated_at else "",
+        "report_kind": content.get("report_kind", ""),
+        "metadata": metadata,
+        "student_snapshot": student_snapshot,
+        "summary": summary,
+        "rows": rows,
+    }
+
+
+def render_report_html(report):
+    context = build_report_export_context(report)
+    metadata = context["metadata"]
+    student_snapshot = context["student_snapshot"]
+    summary = context["summary"]
+    rows = context["rows"]
+
+    def block(title, value):
+        return f"<div class='meta'><span>{html.escape(title)}</span><strong>{html.escape(str(value or 'Sem valor'))}</strong></div>"
+
+    summary_items = []
+    for key, value in summary.items():
+        if isinstance(value, (dict, list)):
+            continue
+        summary_items.append(block(key.replace('_', ' ').title(), value))
+
+    row_cards = []
+    for index, row in enumerate(rows[:60], start=1):
+        cells = "".join(block(key.replace("_", " ").title(), value) for key, value in row.items())
+        row_cards.append(f"<section class='row-card'><h4>Linha {index}</h4><div class='grid'>{cells}</div></section>")
+
+    return f"""<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <title>{html.escape(context['title'])}</title>
+  <style>
+    body {{ font-family: 'Segoe UI', sans-serif; color:#14213d; margin:0; background:#f7f3e9; }}
+    .sheet {{ max-width: 920px; margin: 24px auto; background: white; padding: 32px; border:1px solid rgba(20,33,61,.12); }}
+    .brand {{ text-align:center; text-transform:uppercase; letter-spacing:.25em; font-size:11px; color:rgba(20,33,61,.6); }}
+    h1 {{ text-align:center; margin:10px 0 6px; }}
+    .sub {{ text-align:center; color:rgba(20,33,61,.75); margin-bottom:18px; }}
+    .banner {{ border:1px solid rgba(60,122,87,.2); background:rgba(60,122,87,.08); color:#24543c; padding:12px 14px; border-radius:14px; text-align:center; }}
+    .grid {{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }}
+    .meta {{ border:1px solid rgba(20,33,61,.12); background:#fbf8f2; border-radius:12px; padding:10px 12px; }}
+    .meta span {{ display:block; font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:rgba(20,33,61,.55); }}
+    .meta strong {{ display:block; margin-top:6px; font-size:14px; }}
+    h3 {{ margin:26px 0 10px; }}
+    .row-card {{ border:1px solid rgba(20,33,61,.12); border-radius:14px; padding:14px; margin-top:10px; }}
+    .footer {{ margin-top:28px; border-top:1px solid rgba(20,33,61,.12); padding-top:12px; font-size:12px; color:rgba(20,33,61,.7); word-break:break-all; }}
+    @media print {{ body {{ background:white; }} .sheet {{ margin:0; border:0; }} }}
+  </style>
+</head>
+<body>
+  <main class="sheet">
+    <p class="brand">Substrato Educação</p>
+    <h1>{html.escape(context["title"])}</h1>
+    <p class="sub">{html.escape(str(metadata.get("school") or "Sem escola"))} | {html.escape(str(metadata.get("academic_year") or report.period or "Sem período"))}</p>
+    <div class="banner">Documento oficial emitido pelo sistema | Série {html.escape(context["serial_number"])} | Código {html.escape(context["verification_code"])}</div>
+    <h3>Identificação</h3>
+    <div class="grid">
+      {block("Tipo", report.type)}
+      {block("Chave", context["report_kind"])}
+      {block("Gerado em", context["generated_at"])}
+      {block("Período", metadata.get("period_label") or report.period)}
+    </div>
+    {"<h3>Estudante</h3><div class='grid'>" + "".join(block(key.replace('_', ' ').title(), value) for key, value in student_snapshot.items()) + "</div>" if student_snapshot else ""}
+    {"<h3>Síntese</h3><div class='grid'>" + "".join(summary_items) + "</div>" if summary_items else ""}
+    {"<h3>Linhas</h3>" + "".join(row_cards) if row_cards else ""}
+    <div class="footer">
+      Série documental: {html.escape(context["serial_number"])}<br />
+      Código de verificação: {html.escape(context["verification_code"])}<br />
+      Assinatura criptográfica: {html.escape(context["verification_hash"])}
+    </div>
+  </main>
+</body>
+</html>"""
+
+
+def _escape_pdf_text(value):
+    return str(value).replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+
+
+def render_report_pdf(report):
+    context = build_report_export_context(report)
+    metadata = context["metadata"]
+    student_snapshot = context["student_snapshot"]
+    summary = context["summary"]
+    rows = context["rows"]
+
+    lines = [
+        "Substrato Educacao",
+        context["title"],
+        f"Serie: {context['serial_number']}",
+        f"Codigo: {context['verification_code']}",
+        f"Gerado em: {context['generated_at']}",
+        f"Periodo: {metadata.get('academic_year') or report.period or 'Sem periodo'}",
+    ]
+    if student_snapshot:
+        lines.append("")
+        lines.append("Estudante")
+        for key, value in student_snapshot.items():
+            lines.append(f"{key}: {value}")
+    if summary:
+        lines.append("")
+        lines.append("Resumo")
+        for key, value in summary.items():
+            if isinstance(value, (dict, list)):
+                continue
+            lines.append(f"{key}: {value}")
+    if rows:
+        lines.append("")
+        lines.append("Linhas")
+        for index, row in enumerate(rows[:25], start=1):
+            lines.append(f"Linha {index}")
+            for key, value in row.items():
+                if isinstance(value, (dict, list)):
+                    continue
+                lines.append(f"  {key}: {value}")
+    lines.append("")
+    lines.append(f"Assinatura: {context['verification_hash']}")
+
+    page_width = 595
+    page_height = 842
+    current_y = 800
+    commands = ["BT", "/F1 11 Tf", "40 800 Td"]
+    first_line = True
+    for line in lines:
+        if current_y < 50:
+            break
+        safe_line = _escape_pdf_text(line)
+        if first_line:
+            commands.append(f"({_escape_pdf_text(line)}) Tj")
+            first_line = False
+        else:
+            commands.append("0 -16 Td")
+            commands.append(f"({safe_line}) Tj")
+        current_y -= 16
+    commands.append("ET")
+    stream = "\n".join(commands).encode("latin-1", errors="replace")
+
+    objects = []
+
+    def add_object(data):
+        objects.append(data)
+        return len(objects)
+
+    font_id = add_object(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")
+    content_id = add_object(f"<< /Length {len(stream)} >>\nstream\n".encode("latin-1") + stream + b"\nendstream")
+    page_id = add_object(
+        f"<< /Type /Page /Parent 4 0 R /MediaBox [0 0 {page_width} {page_height}] /Resources << /Font << /F1 {font_id} 0 R >> >> /Contents {content_id} 0 R >>".encode(
+            "latin-1"
+        )
+    )
+    pages_id = add_object(f"<< /Type /Pages /Kids [{page_id} 0 R] /Count 1 >>".encode("latin-1"))
+    catalog_id = add_object(f"<< /Type /Catalog /Pages {pages_id} 0 R >>".encode("latin-1"))
+
+    output = BytesIO()
+    output.write(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
+    offsets = [0]
+    for index, obj in enumerate(objects, start=1):
+        offsets.append(output.tell())
+        output.write(f"{index} 0 obj\n".encode("latin-1"))
+        output.write(obj)
+        output.write(b"\nendobj\n")
+    xref_start = output.tell()
+    output.write(f"xref\n0 {len(objects) + 1}\n".encode("latin-1"))
+    output.write(b"0000000000 65535 f \n")
+    for offset in offsets[1:]:
+        output.write(f"{offset:010d} 00000 n \n".encode("latin-1"))
+    output.write(
+        f"trailer\n<< /Size {len(objects) + 1} /Root {catalog_id} 0 R >>\nstartxref\n{xref_start}\n%%EOF".encode("latin-1")
+    )
+    return output.getvalue()

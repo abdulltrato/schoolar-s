@@ -6,6 +6,7 @@ import secrets
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 
 
 class Report(models.Model):
@@ -38,6 +39,7 @@ class Report(models.Model):
     period = models.CharField(max_length=50, blank=True, verbose_name="Período")
     content = models.JSONField(verbose_name="Conteúdo")
     student = models.ForeignKey("academic.Student", on_delete=models.CASCADE, null=True, blank=True, verbose_name="Aluno")
+    serial_number = models.CharField(max_length=40, unique=True, blank=True, editable=False, verbose_name="Número de série")
     verification_code = models.CharField(max_length=32, unique=True, blank=True, editable=False, verbose_name="Código de verificação")
     verification_hash = models.CharField(max_length=64, blank=True, editable=False, verbose_name="Assinatura de verificação")
     verification_version = models.PositiveSmallIntegerField(default=1, editable=False, verbose_name="Versão de verificação")
@@ -78,12 +80,23 @@ class Report(models.Model):
     def _generate_verification_code(self):
         return f"RPT-{secrets.token_hex(6).upper()}"
 
+    def _series_prefix(self):
+        if self.type == "student":
+            return "ALN"
+        if self.type == "school":
+            return "ESC"
+        return "NAC"
+
     def save(self, *args, **kwargs):
         self.full_clean()
         if not self.verification_code:
             self.verification_code = self._generate_verification_code()
 
         result = super().save(*args, **kwargs)
+        if not self.serial_number:
+            year_label = (self.generated_at.year if self.generated_at else timezone.now().year)
+            self.serial_number = f"{self._series_prefix()}-{year_label}-{self.pk:06d}"
+            type(self).objects.filter(pk=self.pk).update(serial_number=self.serial_number)
         verification_hash = self.calculate_verification_hash()
         if self.verification_hash != verification_hash:
             self.verification_hash = verification_hash
