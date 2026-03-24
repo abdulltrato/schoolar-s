@@ -5,6 +5,7 @@ import { DashboardShell } from "@/components/dashboard-shell";
 import { PrintReportButton } from "@/components/print-report-button";
 import { SectionTitle } from "@/components/section-title";
 import { getReportDetail, requireAuthSession } from "@/lib/api";
+import { apiPath } from "@/lib/api-path";
 
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("pt-PT", {
@@ -202,7 +203,7 @@ export default async function ReportDetailPage({ params }: PageProps) {
             <div className="mt-3 flex flex-wrap gap-2">
               <PrintReportButton />
               <a
-                href={`/api/v1/reports/reports/${report.id}/export/?export_format=html`}
+                href={apiPath(`/reports/reports/${report.id}/export/?export_format=html`)}
                 target="_blank"
                 rel="noreferrer"
                 className="rounded-full border border-ink/10 bg-white px-3 py-1.5 text-xs font-semibold text-ink transition hover:border-ink/30"
@@ -210,7 +211,7 @@ export default async function ReportDetailPage({ params }: PageProps) {
                 Abrir HTML formal
               </a>
               <a
-                href={`/api/v1/reports/reports/${report.id}/export/?export_format=pdf`}
+                href={apiPath(`/reports/reports/${report.id}/export/?export_format=pdf`)}
                 target="_blank"
                 rel="noreferrer"
                 className="rounded-full border border-ink/10 bg-white px-3 py-1.5 text-xs font-semibold text-ink transition hover:border-ink/30"

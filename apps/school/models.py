@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from core.models import TenantAuditModel, TenantModel
+from core.models import BaseCodeModel, BaseNamedCodeModel
 
 
 def validate_academic_year_code(code: str):
@@ -16,7 +16,8 @@ def validate_academic_year_code(code: str):
         raise ValidationError("The academic year must end in the following calendar year.")
 
 
-class AcademicYear(TenantModel):
+class AcademicYear(BaseCodeModel):
+    AUTO_CODE = False
     code = models.CharField(max_length=9, verbose_name="Ano letivo")
     start_date = models.DateField(verbose_name="Data de início")
     end_date = models.DateField(verbose_name="Data de fim")
@@ -41,10 +42,16 @@ class AcademicYear(TenantModel):
         verbose_name = "Ano letivo"
         verbose_name_plural = "Anos letivos"
         ordering = ["-code"]
-        unique_together = ("tenant_id", "code")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant_id", "code"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_academic_year_code_active",
+            ),
+        ]
 
 
-class Grade(models.Model):
+class Grade(BaseNamedCodeModel):
     number = models.PositiveSmallIntegerField(unique=True, verbose_name="Classe")
     cycle = models.PositiveSmallIntegerField(verbose_name="Ciclo")
     name = models.CharField(max_length=50, blank=True, verbose_name="Nome")
@@ -85,10 +92,10 @@ class Grade(models.Model):
         ordering = ["number"]
 
 
-class School(TenantModel):
+class School(BaseNamedCodeModel):
+    CODE_PREFIX = "ESC"
     code = models.CharField(max_length=30, unique=True, verbose_name="Código")
     tenant_id = models.CharField(max_length=50, unique=True, blank=True, verbose_name="Identificador do tenant")
-    name = models.CharField(max_length=150, verbose_name="Nome")
     district = models.CharField(max_length=100, blank=True, verbose_name="Distrito")
     province = models.CharField(max_length=100, blank=True, verbose_name="Província")
     active = models.BooleanField(default=True, verbose_name="Ativa")
@@ -111,7 +118,7 @@ class School(TenantModel):
         ordering = ["name"]
 
 
-class Teacher(TenantModel):
+class Teacher(BaseNamedCodeModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="Usuário")
     school = models.ForeignKey(
         School,
@@ -121,7 +128,6 @@ class Teacher(TenantModel):
         related_name="teachers",
         verbose_name="Escola",
     )
-    name = models.CharField(max_length=100, verbose_name="Nome")
     specialty = models.CharField(max_length=100, blank=True, verbose_name="Especialidade")
 
     def clean(self):
@@ -153,8 +159,7 @@ class Teacher(TenantModel):
         ordering = ["name"]
 
 
-class Classroom(TenantModel):
-    name = models.CharField(max_length=50, verbose_name="Nome")
+class Classroom(BaseNamedCodeModel):
     school = models.ForeignKey(
         School,
         on_delete=models.SET_NULL,
@@ -227,10 +232,16 @@ class Classroom(TenantModel):
         verbose_name = "Turma"
         verbose_name_plural = "Turmas"
         ordering = ["academic_year__code", "grade__number", "name"]
-        unique_together = ("tenant_id", "name", "grade", "academic_year")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant_id", "name", "grade", "academic_year"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_classroom_active",
+            ),
+        ]
 
 
-class GradeSubject(TenantModel):
+class GradeSubject(BaseCodeModel):
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, verbose_name="Ano letivo")
     grade = models.ForeignKey(Grade, on_delete=models.CASCADE, verbose_name="Classe")
     subject = models.ForeignKey("curriculum.Subject", on_delete=models.CASCADE, verbose_name="Disciplina")
@@ -259,10 +270,16 @@ class GradeSubject(TenantModel):
         verbose_name = "Disciplina da classe"
         verbose_name_plural = "Disciplinas da classe"
         ordering = ["academic_year__code", "grade__number", "subject__name"]
-        unique_together = ("tenant_id", "academic_year", "grade", "subject")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant_id", "academic_year", "grade", "subject"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_grade_subject_active",
+            ),
+        ]
 
 
-class TeachingAssignment(TenantModel):
+class TeachingAssignment(BaseCodeModel):
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, verbose_name="Professor")
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, verbose_name="Turma")
     grade_subject = models.ForeignKey(
@@ -309,10 +326,16 @@ class TeachingAssignment(TenantModel):
         verbose_name = "Alocação docente"
         verbose_name_plural = "Alocações docentes"
         ordering = ["classroom__academic_year__code", "classroom__name", "grade_subject__subject__name"]
-        unique_together = ("classroom", "grade_subject")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["classroom", "grade_subject"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_teaching_assignment_active",
+            ),
+        ]
 
 
-class Enrollment(TenantModel):
+class Enrollment(BaseCodeModel):
     student = models.ForeignKey("academic.Student", on_delete=models.CASCADE, verbose_name="Aluno")
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, verbose_name="Turma")
     enrollment_date = models.DateField(auto_now_add=True, verbose_name="Data de matrícula")
@@ -341,13 +364,19 @@ class Enrollment(TenantModel):
         return f"Enrollment for {self.student} in {self.classroom}"
 
     class Meta:
-        unique_together = ("student", "classroom")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["student", "classroom"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_enrollment_active",
+            ),
+        ]
         verbose_name = "Matrícula"
         verbose_name_plural = "Matrículas"
         ordering = ["-enrollment_date"]
 
 
-class ManagementAssignment(TenantModel):
+class ManagementAssignment(BaseCodeModel):
     ROLE_CHOICES = [
         ("homeroom_director", "Diretor de turma"),
         ("grade_coordinator", "Coordenador de classe"),
@@ -441,7 +470,7 @@ class ManagementAssignment(TenantModel):
         ordering = ["academic_year__code", "school__name", "role", "teacher__name"]
 
 
-class UserProfile(TenantModel):
+class UserProfile(BaseCodeModel):
     ROLE_CHOICES = [
         ("national_admin", "Administrador nacional"),
         ("provincial_admin", "Administrador provincial"),
@@ -482,7 +511,7 @@ class UserProfile(TenantModel):
         ordering = ["user__username"]
 
 
-class AttendanceRecord(TenantModel):
+class AttendanceRecord(BaseCodeModel):
     STATUS_CHOICES = [
         ("present", "Presente"),
         ("late", "Atrasado"),
@@ -518,7 +547,7 @@ class AttendanceRecord(TenantModel):
         ordering = ["-lesson_date"]
 
 
-class Announcement(TenantModel):
+class Announcement(BaseCodeModel):
     AUDIENCE_CHOICES = [
         ("school", "Escola"),
         ("classroom", "Turma"),
@@ -571,7 +600,7 @@ class Announcement(TenantModel):
         ordering = ["-published_at"]
 
 
-class Invoice(TenantModel):
+class Invoice(BaseCodeModel):
     STATUS_CHOICES = [
         ("draft", "Rascunho"),
         ("issued", "Emitida"),
@@ -615,7 +644,7 @@ class Invoice(TenantModel):
         ordering = ["-issued_at"]
 
 
-class Payment(TenantModel):
+class Payment(BaseCodeModel):
     METHOD_CHOICES = [
         ("cash", "Numerário"),
         ("bank_transfer", "Transferência"),
@@ -650,7 +679,7 @@ class Payment(TenantModel):
         ordering = ["-payment_date"]
 
 
-class AuditEvent(TenantAuditModel):
+class AuditEvent(BaseCodeModel):
     ACTION_CHOICES = [
         ("create", "Criação"),
         ("update", "Atualização"),
@@ -684,7 +713,7 @@ class AuditEvent(TenantAuditModel):
         ordering = ["-created_at"]
 
 
-class AuditAlert(TenantAuditModel):
+class AuditAlert(BaseCodeModel):
     SEVERITY_CHOICES = [
         ("watch", "Observação"),
         ("elevated", "Elevado"),

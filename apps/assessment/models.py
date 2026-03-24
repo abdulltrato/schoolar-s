@@ -3,12 +3,11 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from core.models import TenantModel
+from core.models import BaseCodeModel, BaseNamedCodeModel
 
 
-class AssessmentPeriod(TenantModel):
+class AssessmentPeriod(BaseNamedCodeModel):
     academic_year = models.ForeignKey("school.AcademicYear", on_delete=models.CASCADE, verbose_name="Ano letivo")
-    name = models.CharField(max_length=50, verbose_name="Nome")
     order = models.PositiveSmallIntegerField(verbose_name="Ordem")
     start_date = models.DateField(verbose_name="Data de início")
     end_date = models.DateField(verbose_name="Data de fim")
@@ -47,10 +46,16 @@ class AssessmentPeriod(TenantModel):
         verbose_name = "Período avaliativo"
         verbose_name_plural = "Períodos avaliativos"
         ordering = ["academic_year__code", "order"]
-        unique_together = ("academic_year", "order")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["academic_year", "order"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_assessment_period_order_active",
+            ),
+        ]
 
 
-class AssessmentComponent(TenantModel):
+class AssessmentComponent(BaseNamedCodeModel):
     TYPE_CHOICES = [
         ("acs", "ACS"),
         ("acp", "ACP"),
@@ -84,7 +89,6 @@ class AssessmentComponent(TenantModel):
     period = models.ForeignKey(AssessmentPeriod, on_delete=models.CASCADE, verbose_name="Período")
     grade_subject = models.ForeignKey("school.GradeSubject", on_delete=models.CASCADE, verbose_name="Disciplina da classe")
     type = models.CharField(max_length=30, choices=TYPE_CHOICES, verbose_name="Tipo")
-    name = models.CharField(max_length=80, verbose_name="Nome")
     weight = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Peso")
     max_score = models.DecimalField(max_digits=5, decimal_places=2, default=20, verbose_name="Nota máxima")
     mandatory = models.BooleanField(default=True, verbose_name="Obrigatória")
@@ -121,10 +125,16 @@ class AssessmentComponent(TenantModel):
         verbose_name = "Componente avaliativa"
         verbose_name_plural = "Componentes avaliativas"
         ordering = ["period__academic_year__code", "period__order", "grade_subject__subject__name", "name"]
-        unique_together = ("period", "grade_subject", "name")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["period", "grade_subject", "name"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_assessment_component_active",
+            ),
+        ]
 
 
-class AssessmentOutcomeMap(TenantModel):
+class AssessmentOutcomeMap(BaseCodeModel):
     component = models.ForeignKey(AssessmentComponent, on_delete=models.CASCADE, verbose_name="Componente")
     outcome = models.ForeignKey("curriculum.LearningOutcome", on_delete=models.CASCADE, verbose_name="Resultado de aprendizagem")
     weight = models.DecimalField(max_digits=5, decimal_places=2, default=100, verbose_name="Peso")
@@ -174,10 +184,16 @@ class AssessmentOutcomeMap(TenantModel):
         verbose_name = "Mapeamento componente-resultado"
         verbose_name_plural = "Mapeamentos componente-resultado"
         ordering = ["component__name", "outcome__code"]
-        unique_together = ("tenant_id", "component", "outcome")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant_id", "component", "outcome"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_assessment_outcome_map_active",
+            ),
+        ]
 
 
-class Assessment(TenantModel):
+class Assessment(BaseCodeModel):
     TYPE_CHOICES = AssessmentComponent.TYPE_CHOICES
 
     def __init__(self, *args, **kwargs):
@@ -336,7 +352,7 @@ class Assessment(TenantModel):
         ordering = ["-date"]
 
 
-class SubjectPeriodResult(TenantModel):
+class SubjectPeriodResult(BaseCodeModel):
     student = models.ForeignKey("academic.Student", on_delete=models.CASCADE, verbose_name="Aluno")
     teaching_assignment = models.ForeignKey("school.TeachingAssignment", on_delete=models.CASCADE, verbose_name="Alocação docente")
     period = models.ForeignKey(AssessmentPeriod, on_delete=models.CASCADE, verbose_name="Período")
@@ -376,7 +392,7 @@ class SubjectPeriodResult(TenantModel):
         final_average = weighted_total / total_weight
 
         tenant_id = (getattr(student, "tenant_id", "") or getattr(teaching_assignment, "tenant_id", "") or getattr(period, "tenant_id", "") or "").strip()
-        result, _ = cls.objects.update_or_create(
+        result, _ = cls.all_objects.update_or_create(
             student=student,
             teaching_assignment=teaching_assignment,
             period=period,
@@ -384,6 +400,7 @@ class SubjectPeriodResult(TenantModel):
                 "tenant_id": tenant_id,
                 "final_average": final_average.quantize(Decimal("0.01")),
                 "assessments_counted": total_assessments,
+                "deleted_at": None,
             },
         )
         return result
@@ -426,4 +443,10 @@ class SubjectPeriodResult(TenantModel):
         verbose_name = "Resultado por período e disciplina"
         verbose_name_plural = "Resultados por período e disciplina"
         ordering = ["period__academic_year__code", "period__order", "student__name"]
-        unique_together = ("student", "teaching_assignment", "period")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["student", "teaching_assignment", "period"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_subject_period_result_active",
+            ),
+        ]

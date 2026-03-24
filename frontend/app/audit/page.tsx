@@ -6,6 +6,7 @@ import { SectionTitle } from "@/components/section-title";
 import { StatusCard } from "@/components/status-card";
 import { SubmitButton } from "@/components/submit-button";
 import { formatAuditAction, formatAuditSeverity } from "@/lib/labels";
+import { apiPath } from "@/lib/api-path";
 import {
   acknowledgeAuditAlert,
   getAuditSnapshot,
@@ -127,8 +128,12 @@ export default async function AuditPage({ searchParams }: PageProps) {
       ? `/audit?${new URLSearchParams([...queryWithoutPage.entries(), ["page", String(page + 1)]]).toString()}`
       : null;
   const exportBaseQuery = queryWithoutPage.toString();
-  const csvExportHref = `/api/v1/school/audit-events/exports/download/${exportBaseQuery ? `?${exportBaseQuery}&export_format=csv` : "?export_format=csv"}`;
-  const jsonExportHref = `/api/v1/school/audit-events/exports/download/${exportBaseQuery ? `?${exportBaseQuery}&export_format=json` : "?export_format=json"}`;
+  const csvExportHref = apiPath(
+    `/school/audit-events/exports/download/${exportBaseQuery ? `?${exportBaseQuery}&export_format=csv` : "?export_format=csv"}`,
+  );
+  const jsonExportHref = apiPath(
+    `/school/audit-events/exports/download/${exportBaseQuery ? `?${exportBaseQuery}&export_format=json` : "?export_format=json"}`,
+  );
   const auditItems = snapshot.auditEvents.items;
   const alertItems = snapshot.auditAlerts.items;
   const recent24hCount = auditItems.filter((event) => Date.now() - new Date(event.created_at).getTime() <= 24 * 60 * 60 * 1000).length;

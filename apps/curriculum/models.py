@@ -3,13 +3,12 @@ from django.db import models
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 
-from core.models import TenantModel
+from core.models import BaseCodeModel, BaseNamedCodeModel
 
 from apps.school.models import Grade
 
 
-class CurriculumArea(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name="Nome")
+class CurriculumArea(BaseNamedCodeModel):
 
     def __str__(self):
         return self.name
@@ -17,14 +16,26 @@ class CurriculumArea(models.Model):
     class Meta:
         verbose_name = "Área curricular"
         verbose_name_plural = "Áreas curriculares"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_curriculumarea_name",
+            ),
+        ]
 
 
-class Subject(models.Model):
-    name = models.CharField(max_length=100, verbose_name="Nome")
+class Subject(BaseNamedCodeModel):
     area = models.ForeignKey(CurriculumArea, on_delete=models.CASCADE, verbose_name="Área")
     cycle = models.IntegerField(verbose_name="Ciclo")
 
     def clean(self):
+        area_tenant = (self.area.tenant_id or "").strip() if self.area_id else ""
+        if area_tenant:
+            if self.tenant_id and self.tenant_id != area_tenant:
+                raise ValidationError({"tenant_id": "Subject tenant must match the curriculum area tenant."})
+            if not self.tenant_id:
+                self.tenant_id = area_tenant
         if self.cycle not in {1, 2}:
             raise ValidationError({"cycle": "The subject cycle must be 1 or 2."})
 
@@ -45,7 +56,7 @@ class Subject(models.Model):
         ordering = ["name"]
 
 
-class Competency(models.Model):
+class Competency(BaseNamedCodeModel):
     AREA_CHOICES = [
         ("language_communication", "Linguagem e comunicação"),
         ("scientific_technological_knowledge", "Saber científico e tecnológico"),
@@ -65,7 +76,6 @@ class Competency(models.Model):
         "sensibilidade_estetica_artistica": "aesthetic_artistic_sensitivity",
     }
 
-    name = models.CharField(max_length=200, verbose_name="Nome")
     description = models.TextField(blank=True, verbose_name="Descrição")
     area = models.CharField(max_length=50, choices=AREA_CHOICES, verbose_name="Área")
     cycle = models.IntegerField(verbose_name="Ciclo")
@@ -80,6 +90,12 @@ class Competency(models.Model):
 
     def clean(self):
         self.area = self.LEGACY_AREA_MAP.get(self.area, self.area)
+        subject_tenant = (self.subject.tenant_id or "").strip() if self.subject_id else ""
+        if subject_tenant:
+            if self.tenant_id and self.tenant_id != subject_tenant:
+                raise ValidationError({"tenant_id": "Competency tenant must match the subject tenant."})
+            if not self.tenant_id:
+                self.tenant_id = subject_tenant
         if self.cycle not in {1, 2}:
             raise ValidationError({"cycle": "The competency cycle must be 1 or 2."})
         if self.subject and self.subject.cycle != self.cycle:
@@ -101,7 +117,8 @@ class Competency(models.Model):
         ordering = ["name"]
 
 
-class LearningOutcome(TenantModel):
+class LearningOutcome(BaseCodeModel):
+    AUTO_CODE = False
     TAXONOMY_LEVEL_CHOICES = [
         ("remember", "Recordar"),
         ("understand", "Compreender"),
@@ -166,10 +183,16 @@ class LearningOutcome(TenantModel):
         verbose_name = "Resultado de aprendizagem"
         verbose_name_plural = "Resultados de aprendizagem"
         ordering = ["code"]
-        unique_together = ("tenant_id", "code", "subject", "grade")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant_id", "code", "subject", "grade"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_learning_outcome_active",
+            ),
+        ]
 
 
-class CompetencyOutcome(TenantModel):
+class CompetencyOutcome(BaseCodeModel):
     competency = models.ForeignKey(Competency, on_delete=models.CASCADE, verbose_name="Competência")
     outcome = models.ForeignKey(LearningOutcome, on_delete=models.CASCADE, verbose_name="Resultado de aprendizagem")
     weight = models.DecimalField(max_digits=5, decimal_places=2, default=100, verbose_name="Peso")
@@ -206,10 +229,16 @@ class CompetencyOutcome(TenantModel):
         verbose_name = "Alinhamento competência-resultado"
         verbose_name_plural = "Alinhamentos competência-resultado"
         ordering = ["outcome__code", "competency__name"]
-        unique_together = ("tenant_id", "competency", "outcome")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant_id", "competency", "outcome"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_competency_outcome_active",
+            ),
+        ]
 
 
-class BaseCurriculum(models.Model):
+class BaseCurriculum(BaseCodeModel):
     cycle = models.IntegerField(verbose_name="Ciclo")
     competencies = models.ManyToManyField(Competency, verbose_name="Competências")
 
@@ -230,8 +259,7 @@ class BaseCurriculum(models.Model):
         ordering = ["cycle"]
 
 
-class LocalCurriculum(TenantModel):
-    tenant_id = models.CharField(max_length=50, verbose_name="Identificador do tenant")
+class LocalCurriculum(BaseCodeModel):
     cycle = models.IntegerField(verbose_name="Ciclo")
     additional_competencies = models.ManyToManyField(Competency, blank=True, verbose_name="Competências adicionais")
 
@@ -254,7 +282,7 @@ class LocalCurriculum(TenantModel):
         ordering = ["tenant_id", "cycle"]
 
 
-class SubjectCurriculumPlan(TenantModel):
+class SubjectCurriculumPlan(BaseCodeModel):
     grade_subject = models.OneToOneField(
         "school.GradeSubject",
         on_delete=models.CASCADE,

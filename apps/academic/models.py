@@ -4,10 +4,11 @@ from django.conf import settings
 from django.db import models
 from django.core.exceptions import ValidationError
 
-from core.models import TenantModel
+from core.models import BaseCodeModel, BaseNamedCodeModel
 
 
-class Student(TenantModel):
+class Student(BaseNamedCodeModel):
+    CODE_PREFIX = "STD"
     CICLO_CHOICES = [
         (1, '1º Ciclo'),
         (2, '2º Ciclo'),
@@ -27,7 +28,6 @@ class Student(TenantModel):
         blank=True,
         verbose_name="Usuário",
     )
-    name = models.CharField(max_length=100, verbose_name="Nome")
     birth_date = models.DateField(verbose_name="Data de nascimento")
     grade = models.IntegerField(verbose_name="Classe")
     cycle = models.IntegerField(choices=CICLO_CHOICES, verbose_name="Ciclo")
@@ -80,12 +80,11 @@ class Student(TenantModel):
         ordering = ['name']
 
 
-class StudentCompetency(TenantModel):
+class StudentCompetency(BaseCodeModel):
+    CODE_PREFIX = "STC"
     student = models.ForeignKey(Student, on_delete=models.CASCADE, verbose_name="Aluno")
     competency = models.ForeignKey('curriculum.Competency', on_delete=models.CASCADE, verbose_name="Competência")
     nivel = models.DecimalField(max_digits=3, decimal_places=1, default=0.0, verbose_name="Nível")  # e.g., 0.0 to 5.0
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de atualização")
-
     def clean(self):
         student_tenant = (self.student.tenant_id or "").strip() if self.student_id else ""
         if student_tenant:
@@ -103,12 +102,19 @@ class StudentCompetency(TenantModel):
         return super().save(*args, **kwargs)
 
     class Meta:
-        unique_together = ('student', 'competency')
+        constraints = [
+            models.UniqueConstraint(
+                fields=["student", "competency"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_student_competency_active",
+            ),
+        ]
         verbose_name = "Competência do aluno"
         verbose_name_plural = "Competências dos Alunos"
 
 
-class Guardian(TenantModel):
+class Guardian(BaseNamedCodeModel):
+    CODE_PREFIX = "GRD"
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -116,7 +122,6 @@ class Guardian(TenantModel):
         blank=True,
         verbose_name="Usuário",
     )
-    name = models.CharField(max_length=100, verbose_name="Nome")
     phone = models.CharField(max_length=30, blank=True, verbose_name="Telefone")
     email = models.EmailField(blank=True, verbose_name="E-mail")
     relationship = models.CharField(max_length=60, blank=True, verbose_name="Parentesco")
@@ -145,7 +150,8 @@ class Guardian(TenantModel):
         ordering = ["name"]
 
 
-class StudentGuardian(TenantModel):
+class StudentGuardian(BaseCodeModel):
+    CODE_PREFIX = "STG"
     student = models.ForeignKey(Student, on_delete=models.CASCADE, verbose_name="Aluno")
     guardian = models.ForeignKey(Guardian, on_delete=models.CASCADE, verbose_name="Encarregado")
     primary_contact = models.BooleanField(default=False, verbose_name="Contato principal")
@@ -173,12 +179,19 @@ class StudentGuardian(TenantModel):
         return f"{self.guardian} - {self.student}"
 
     class Meta:
-        unique_together = ("tenant_id", "student", "guardian")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant_id", "student", "guardian"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_student_guardian_active",
+            ),
+        ]
         verbose_name = "Relação aluno-encarregado"
         verbose_name_plural = "Relações aluno-encarregado"
 
 
-class StudentOutcome(TenantModel):
+class StudentOutcome(BaseCodeModel):
+    CODE_PREFIX = "STO"
     MASTERY_CHOICES = [
         ("not_started", "Não iniciado"),
         ("developing", "Em desenvolvimento"),
@@ -191,8 +204,6 @@ class StudentOutcome(TenantModel):
     mastery_level = models.DecimalField(max_digits=3, decimal_places=1, default=0.0, verbose_name="Nível")
     status = models.CharField(max_length=20, choices=MASTERY_CHOICES, default="not_started", verbose_name="Estado")
     evidence_count = models.PositiveIntegerField(default=0, verbose_name="Evidências")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de atualização")
-
     def clean(self):
         student_tenant = (self.student.tenant_id or "").strip() if self.student_id else ""
         outcome_tenant = (self.outcome.tenant_id or "").strip() if self.outcome_id else ""
@@ -280,10 +291,11 @@ class StudentOutcome(TenantModel):
                     evidence_count += 1
 
             if total_weight <= 0:
-                cls.objects.filter(student=student, outcome_id=outcome_id).update(
+                cls.all_objects.filter(student=student, outcome_id=outcome_id).update(
                     mastery_level=Decimal("0.0"),
                     status="not_started",
                     evidence_count=0,
+                    deleted_at=None,
                 )
                 continue
 
@@ -293,7 +305,7 @@ class StudentOutcome(TenantModel):
             status = cls._status_for_mastery(mastery)
             tenant_id = (student.tenant_id or "").strip()
 
-            cls.objects.update_or_create(
+            cls.all_objects.update_or_create(
                 student=student,
                 outcome_id=outcome_id,
                 defaults={
@@ -301,6 +313,7 @@ class StudentOutcome(TenantModel):
                     "mastery_level": mastery,
                     "status": status,
                     "evidence_count": evidence_count,
+                    "deleted_at": None,
                 },
             )
 
@@ -312,7 +325,13 @@ class StudentOutcome(TenantModel):
         return f"{self.student} - {self.outcome.code}"
 
     class Meta:
-        unique_together = ("tenant_id", "student", "outcome")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant_id", "student", "outcome"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_student_outcome_active",
+            ),
+        ]
         verbose_name = "Resultado do aluno"
         verbose_name_plural = "Resultados do aluno"
         ordering = ["-updated_at"]

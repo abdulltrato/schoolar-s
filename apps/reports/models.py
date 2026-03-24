@@ -8,10 +8,10 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
-from core.models import TenantModel
+from core.models import BaseCodeModel
 
 
-class Report(TenantModel):
+class Report(BaseCodeModel):
     TYPE_CHOICES = [
         ("student", "Relatório do aluno"),
         ("school", "Relatório da escola"),

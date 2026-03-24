@@ -3,14 +3,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-
-function resolveApiBaseUrl() {
-  return (
-    process.env.API_BASE_URL ||
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    "http://localhost:8000"
-  ).replace(/\/$/, "");
-}
+import { apiPath, resolveApiBaseUrl } from "@/lib/api-path";
 
 function useSecureCookies() {
   return process.env.NODE_ENV === "production" || process.env.COOKIE_SECURE === "true";
@@ -44,7 +37,7 @@ export async function loginAction(formData: FormData) {
   const password = String(formData.get("password") || "");
   const nextPath = String(formData.get("next") || "/");
 
-  const response = await fetch(`${resolveApiBaseUrl()}/api/v1/auth/login/`, {
+  const response = await fetch(`${resolveApiBaseUrl()}${apiPath("/auth/login/")}`, {
     method: "POST",
     cache: "no-store",
     headers: {
@@ -92,7 +85,7 @@ export async function logoutAction() {
   const csrfToken = cookieStore.get("schoolar_csrftoken")?.value;
 
   if (sessionId) {
-    await fetch(`${resolveApiBaseUrl()}/api/v1/auth/logout/`, {
+    await fetch(`${resolveApiBaseUrl()}${apiPath("/auth/logout/")}`, {
       method: "POST",
       cache: "no-store",
       headers: {

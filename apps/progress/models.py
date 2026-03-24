@@ -3,10 +3,10 @@ import re
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from core.models import TenantModel
+from core.models import BaseCodeModel
 
 
-class Progression(TenantModel):
+class Progression(BaseCodeModel):
     DECISION_CHOICES = [
         ("approved", "Aprovado"),
         ("retained", "Retido"),

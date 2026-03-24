@@ -1,9 +1,10 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
-from core.models import TenantModel
+from core.models import BaseCodeModel
 
 
-class Event(TenantModel):
+class Event(BaseCodeModel):
     TYPE_CHOICES = [
         ("student_registered", "Aluno registado"),
         ("assessment_recorded", "Avaliação registada"),
@@ -33,7 +34,9 @@ class Event(TenantModel):
 
     def clean(self):
         self.type = self.LEGACY_TYPE_MAP.get(self.type, self.type)
-        super().clean()
+        self.tenant_id = (self.tenant_id or "").strip()
+        if not self.tenant_id:
+            raise ValidationError({"tenant_id": "tenant_id is required."})
 
     def save(self, *args, **kwargs):
         self.type = self.LEGACY_TYPE_MAP.get(self.type, self.type)
@@ -41,9 +44,7 @@ class Event(TenantModel):
         return super().save(*args, **kwargs)
 
     type = models.CharField(max_length=50, choices=TYPE_CHOICES, verbose_name="Tipo de evento")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data do evento")
     payload = models.JSONField(verbose_name="Dados")
-    tenant_id = models.CharField(max_length=50, verbose_name="Identificador do tenant")
 
     def __str__(self):
         return f"{self.type} at {self.created_at}"

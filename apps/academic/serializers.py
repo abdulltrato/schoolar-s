@@ -9,7 +9,7 @@ class StudentCompetencySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StudentCompetency
-        fields = ["id", "competency", "competency_name", "level", "updated_at"]
+        fields = ["id", "code", "competency", "competency_name", "level", "updated_at"]
 
 
 class StudentOutcomeSerializer(serializers.ModelSerializer):
@@ -34,6 +34,7 @@ class StudentSerializer(serializers.ModelSerializer):
         model = Student
         fields = [
             "id",
+            "code",
             "user",
             "name",
             "tenant_id",
@@ -44,6 +45,9 @@ class StudentSerializer(serializers.ModelSerializer):
             "status",
             "competencies",
             "outcomes",
+            "created_at",
+            "updated_at",
+            "deleted_at",
         ]
 
 

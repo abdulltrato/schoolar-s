@@ -12,7 +12,7 @@ import {
   filterManagementAssignments,
   formatRole,
   readParam,
-} from "./filters";
+} from "./filters.ts";
 
 function createCollection<T>(items: T[]) {
   return {

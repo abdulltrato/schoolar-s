@@ -45,7 +45,17 @@ class GradeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Grade
-        fields = ["id", "number", "cycle", "education_level", "name"]
+        fields = [
+            "id",
+            "code",
+            "number",
+            "cycle",
+            "education_level",
+            "name",
+            "created_at",
+            "updated_at",
+            "deleted_at",
+        ]
 
 
 class SchoolSerializer(serializers.ModelSerializer):

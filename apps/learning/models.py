@@ -2,10 +2,10 @@ from django.apps import apps
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from core.models import TenantModel
+from core.models import BaseCodeModel
 
 
-class Course(TenantModel):
+class Course(BaseCodeModel):
     MODALITY_CHOICES = [
         ("online", "Online"),
         ("blended", "Híbrido"),
@@ -42,7 +42,7 @@ class Course(TenantModel):
         ordering = ["title"]
 
 
-class CourseOffering(TenantModel):
+class CourseOffering(BaseCodeModel):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="offerings", verbose_name="Curso")
     classroom = models.ForeignKey("school.Classroom", on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Turma")
     teacher = models.ForeignKey("school.Teacher", on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Professor")
@@ -95,7 +95,7 @@ class CourseOffering(TenantModel):
         ordering = ["-academic_year__code", "course__title"]
 
 
-class Lesson(TenantModel):
+class Lesson(BaseCodeModel):
     offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name="lessons", verbose_name="Oferta")
     title = models.CharField(max_length=180, verbose_name="Título")
     description = models.TextField(blank=True, verbose_name="Descrição")
@@ -127,7 +127,7 @@ class Lesson(TenantModel):
         ordering = ["scheduled_at"]
 
 
-class LessonMaterial(models.Model):
+class LessonMaterial(BaseCodeModel):
     TYPE_CHOICES = [
         ("link", "Link"),
         ("document", "Documento"),
@@ -142,6 +142,20 @@ class LessonMaterial(models.Model):
     url = models.URLField(verbose_name="Endereço do recurso")
     required = models.BooleanField(default=False, verbose_name="Obrigatório")
 
+    def clean(self):
+        lesson_tenant = (self.lesson.tenant_id or "").strip() if self.lesson_id else ""
+        if lesson_tenant:
+            if self.tenant_id and self.tenant_id != lesson_tenant:
+                raise ValidationError({"tenant_id": "Lesson material tenant must match the lesson tenant."})
+            if not self.tenant_id:
+                self.tenant_id = lesson_tenant
+        if not (self.tenant_id or "").strip():
+            raise ValidationError({"tenant_id": "tenant_id is required."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
     def __str__(self):
         return self.title
 
@@ -151,7 +165,7 @@ class LessonMaterial(models.Model):
         ordering = ["lesson__scheduled_at", "title"]
 
 
-class Assignment(TenantModel):
+class Assignment(BaseCodeModel):
     offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name="assignments", verbose_name="Oferta")
     title = models.CharField(max_length=180, verbose_name="Título")
     instructions = models.TextField(blank=True, verbose_name="Instruções")
@@ -184,7 +198,7 @@ class Assignment(TenantModel):
         ordering = ["-due_at"]
 
 
-class Submission(TenantModel):
+class Submission(BaseCodeModel):
     STATUS_CHOICES = [
         ("draft", "Rascunho"),
         ("submitted", "Submetida"),
@@ -230,7 +244,13 @@ class Submission(TenantModel):
         return f"{self.assignment} - {self.student}"
 
     class Meta:
-        unique_together = ("assignment", "student")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["assignment", "student"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_submission_active",
+            ),
+        ]
         verbose_name = "Submissão"
         verbose_name_plural = "Submissões"
         ordering = ["-submitted_at"]

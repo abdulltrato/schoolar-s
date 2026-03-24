@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { apiPath, resolveApiBaseUrl } from "@/lib/api-path";
 
 type HealthPayload = {
   status?: string;
@@ -19,6 +20,7 @@ type PaginatedResponse<T> = {
 
 export type StudentCompetency = {
   id: number;
+  code: string;
   competency: number;
   competency_name: string;
   level: string;
@@ -27,6 +29,7 @@ export type StudentCompetency = {
 
 export type Student = {
   id: number;
+  code: string;
   user: number | null;
   name: string;
   tenant_id: string;
@@ -36,6 +39,9 @@ export type Student = {
   education_level: string;
   status: string;
   competencies: StudentCompetency[];
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string | null;
 };
 
 export type AcademicYear = {
@@ -48,10 +54,14 @@ export type AcademicYear = {
 
 export type Grade = {
   id: number;
+  code: string;
   number: number;
   cycle: number;
   education_level: string;
   name: string;
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string | null;
 };
 
 export type School = {
@@ -598,14 +608,6 @@ export type ReportVerification = {
   verification_version: number;
 };
 
-function resolveApiBaseUrl() {
-  return (
-    process.env.API_BASE_URL ||
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    "http://localhost:8000"
-  ).replace(/\/$/, "");
-}
-
 function resolveTenantId() {
   return process.env.API_TENANT_ID || process.env.NEXT_PUBLIC_TENANT_ID || null;
 }
@@ -946,7 +948,7 @@ async function getPlatformMeta(): Promise<PlatformMeta> {
 }
 
 export async function getAuthSession(): Promise<{ authenticated: boolean; user: AuthUser | null }> {
-  const response = await readJsonWithRetry<AuthPayload>("/api/v1/auth/me/");
+  const response = await readJsonWithRetry<AuthPayload>(apiPath("/auth/me/"));
   if (!response.ok || !response.data?.user) {
     return { authenticated: false, user: null };
   }
@@ -997,12 +999,12 @@ export async function handleMutationRedirectTo(
 export async function getHomeSnapshot(): Promise<HomeSnapshot> {
   const meta = await getPlatformMeta();
   const [schools, managementAssignments, subjectPlans, periods, components, periodResults] = await Promise.all([
-    readCollection<School>("/api/v1/school/schools/"),
-    readCollection<ManagementAssignment>("/api/v1/school/management-assignments/"),
-    readCollection<SubjectCurriculumPlan>("/api/v1/curriculum/subject-plans/"),
-    readCollection<AssessmentPeriod>("/api/v1/assessment/periods/"),
-    readCollection<AssessmentComponent>("/api/v1/assessment/components/"),
-    readCollection<SubjectPeriodResult>("/api/v1/assessment/subject-period-results/"),
+    readCollection<School>(apiPath("/school/schools/")),
+    readCollection<ManagementAssignment>(apiPath("/school/management-assignments/")),
+    readCollection<SubjectCurriculumPlan>(apiPath("/curriculum/subject-plans/")),
+    readCollection<AssessmentPeriod>(apiPath("/assessment/periods/")),
+    readCollection<AssessmentComponent>(apiPath("/assessment/components/")),
+    readCollection<SubjectPeriodResult>(apiPath("/assessment/subject-period-results/")),
   ]);
 
   return {
@@ -1019,11 +1021,11 @@ export async function getHomeSnapshot(): Promise<HomeSnapshot> {
 export async function getManagementSnapshot(): Promise<ManagementSnapshot> {
   const meta = await getPlatformMeta();
   const [academicYears, schools, classrooms, enrollments, managementAssignments] = await Promise.all([
-    readCollection<AcademicYear>("/api/v1/school/academic-years/"),
-    readCollection<School>("/api/v1/school/schools/"),
-    readCollection<Classroom>("/api/v1/school/classrooms/"),
-    readCollection<Enrollment>("/api/v1/school/enrollments/"),
-    readCollection<ManagementAssignment>("/api/v1/school/management-assignments/"),
+    readCollection<AcademicYear>(apiPath("/school/academic-years/")),
+    readCollection<School>(apiPath("/school/schools/")),
+    readCollection<Classroom>(apiPath("/school/classrooms/")),
+    readCollection<Enrollment>(apiPath("/school/enrollments/")),
+    readCollection<ManagementAssignment>(apiPath("/school/management-assignments/")),
   ]);
 
   return {
@@ -1039,10 +1041,10 @@ export async function getManagementSnapshot(): Promise<ManagementSnapshot> {
 export async function getCurriculumSnapshot(): Promise<CurriculumSnapshot> {
   const meta = await getPlatformMeta();
   const [academicYears, grades, gradeSubjects, subjectPlans] = await Promise.all([
-    readCollection<AcademicYear>("/api/v1/school/academic-years/"),
-    readCollection<Grade>("/api/v1/school/grades/"),
-    readCollection<GradeSubject>("/api/v1/school/grade-subjects/"),
-    readCollection<SubjectCurriculumPlan>("/api/v1/curriculum/subject-plans/"),
+    readCollection<AcademicYear>(apiPath("/school/academic-years/")),
+    readCollection<Grade>(apiPath("/school/grades/")),
+    readCollection<GradeSubject>(apiPath("/school/grade-subjects/")),
+    readCollection<SubjectCurriculumPlan>(apiPath("/curriculum/subject-plans/")),
   ]);
 
   return {
@@ -1057,12 +1059,12 @@ export async function getCurriculumSnapshot(): Promise<CurriculumSnapshot> {
 export async function getAssessmentSnapshot(): Promise<AssessmentSnapshot> {
   const meta = await getPlatformMeta();
   const [academicYears, classrooms, periods, components, assessments, periodResults] = await Promise.all([
-    readCollection<AcademicYear>("/api/v1/school/academic-years/"),
-    readCollection<Classroom>("/api/v1/school/classrooms/"),
-    readCollection<AssessmentPeriod>("/api/v1/assessment/periods/"),
-    readCollection<AssessmentComponent>("/api/v1/assessment/components/"),
-    readCollection<Assessment>("/api/v1/assessment/assessments/"),
-    readCollection<SubjectPeriodResult>("/api/v1/assessment/subject-period-results/"),
+    readCollection<AcademicYear>(apiPath("/school/academic-years/")),
+    readCollection<Classroom>(apiPath("/school/classrooms/")),
+    readCollection<AssessmentPeriod>(apiPath("/assessment/periods/")),
+    readCollection<AssessmentComponent>(apiPath("/assessment/components/")),
+    readCollection<Assessment>(apiPath("/assessment/assessments/")),
+    readCollection<SubjectPeriodResult>(apiPath("/assessment/subject-period-results/")),
   ]);
 
   return {
@@ -1079,17 +1081,17 @@ export async function getAssessmentSnapshot(): Promise<AssessmentSnapshot> {
 export async function getStudentPortalSnapshot(): Promise<StudentPortalSnapshot> {
   const meta = await getPlatformMeta();
   const [students, enrollments, attendance, assessments, periodResults, invoices, announcements, courses, lessons, assignments, submissions] = await Promise.all([
-    readCollection<Student>("/api/v1/academic/students/"),
-    readCollection<Enrollment>("/api/v1/school/enrollments/"),
-    readCollection<AttendanceRecord>("/api/v1/school/attendance-records/"),
-    readCollection<Assessment>("/api/v1/assessment/assessments/"),
-    readCollection<SubjectPeriodResult>("/api/v1/assessment/subject-period-results/"),
-    readCollection<Invoice>("/api/v1/school/invoices/"),
-    readCollection<Announcement>("/api/v1/school/announcements/"),
-    readCollection<Course>("/api/v1/learning/courses/"),
-    readCollection<Lesson>("/api/v1/learning/lessons/"),
-    readCollection<Assignment>("/api/v1/learning/assignments/"),
-    readCollection<Submission>("/api/v1/learning/submissions/"),
+    readCollection<Student>(apiPath("/academic/students/")),
+    readCollection<Enrollment>(apiPath("/school/enrollments/")),
+    readCollection<AttendanceRecord>(apiPath("/school/attendance-records/")),
+    readCollection<Assessment>(apiPath("/assessment/assessments/")),
+    readCollection<SubjectPeriodResult>(apiPath("/assessment/subject-period-results/")),
+    readCollection<Invoice>(apiPath("/school/invoices/")),
+    readCollection<Announcement>(apiPath("/school/announcements/")),
+    readCollection<Course>(apiPath("/learning/courses/")),
+    readCollection<Lesson>(apiPath("/learning/lessons/")),
+    readCollection<Assignment>(apiPath("/learning/assignments/")),
+    readCollection<Submission>(apiPath("/learning/submissions/")),
   ]);
 
   return {
@@ -1111,17 +1113,17 @@ export async function getStudentPortalSnapshot(): Promise<StudentPortalSnapshot>
 export async function getTeacherPortalSnapshot(): Promise<TeacherPortalSnapshot> {
   const meta = await getPlatformMeta();
   const [teachers, classrooms, enrollments, teachingAssignments, attendance, assessments, announcements, offerings, lessons, assignments, submissions] = await Promise.all([
-    readCollection<Teacher>("/api/v1/school/teachers/"),
-    readCollection<Classroom>("/api/v1/school/classrooms/"),
-    readCollection<Enrollment>("/api/v1/school/enrollments/"),
-    readCollection<TeachingAssignment>("/api/v1/school/teaching-assignments/"),
-    readCollection<AttendanceRecord>("/api/v1/school/attendance-records/"),
-    readCollection<Assessment>("/api/v1/assessment/assessments/"),
-    readCollection<Announcement>("/api/v1/school/announcements/"),
-    readCollection<CourseOffering>("/api/v1/learning/offerings/"),
-    readCollection<Lesson>("/api/v1/learning/lessons/"),
-    readCollection<Assignment>("/api/v1/learning/assignments/"),
-    readCollection<Submission>("/api/v1/learning/submissions/"),
+    readCollection<Teacher>(apiPath("/school/teachers/")),
+    readCollection<Classroom>(apiPath("/school/classrooms/")),
+    readCollection<Enrollment>(apiPath("/school/enrollments/")),
+    readCollection<TeachingAssignment>(apiPath("/school/teaching-assignments/")),
+    readCollection<AttendanceRecord>(apiPath("/school/attendance-records/")),
+    readCollection<Assessment>(apiPath("/assessment/assessments/")),
+    readCollection<Announcement>(apiPath("/school/announcements/")),
+    readCollection<CourseOffering>(apiPath("/learning/offerings/")),
+    readCollection<Lesson>(apiPath("/learning/lessons/")),
+    readCollection<Assignment>(apiPath("/learning/assignments/")),
+    readCollection<Submission>(apiPath("/learning/submissions/")),
   ]);
 
   return {
@@ -1143,11 +1145,11 @@ export async function getTeacherPortalSnapshot(): Promise<TeacherPortalSnapshot>
 export async function getFinanceSnapshot(): Promise<FinanceSnapshot> {
   const meta = await getPlatformMeta();
   const [schools, students, guardians, invoices, payments] = await Promise.all([
-    readCollection<School>("/api/v1/school/schools/"),
-    readCollection<Student>("/api/v1/academic/students/"),
-    readCollection<Guardian>("/api/v1/academic/guardians/"),
-    readCollection<Invoice>("/api/v1/school/invoices/"),
-    readCollection<Payment>("/api/v1/school/payments/"),
+    readCollection<School>(apiPath("/school/schools/")),
+    readCollection<Student>(apiPath("/academic/students/")),
+    readCollection<Guardian>(apiPath("/academic/guardians/")),
+    readCollection<Invoice>(apiPath("/school/invoices/")),
+    readCollection<Payment>(apiPath("/school/payments/")),
   ]);
 
   return {
@@ -1163,11 +1165,11 @@ export async function getFinanceSnapshot(): Promise<FinanceSnapshot> {
 export async function getCommunicationSnapshot(): Promise<CommunicationSnapshot> {
   const meta = await getPlatformMeta();
   const [announcements, guardians, studentGuardians, classrooms, teachers] = await Promise.all([
-    readCollection<Announcement>("/api/v1/school/announcements/"),
-    readCollection<Guardian>("/api/v1/academic/guardians/"),
-    readCollection<StudentGuardian>("/api/v1/academic/student-guardians/"),
-    readCollection<Classroom>("/api/v1/school/classrooms/"),
-    readCollection<Teacher>("/api/v1/school/teachers/"),
+    readCollection<Announcement>(apiPath("/school/announcements/")),
+    readCollection<Guardian>(apiPath("/academic/guardians/")),
+    readCollection<StudentGuardian>(apiPath("/academic/student-guardians/")),
+    readCollection<Classroom>(apiPath("/school/classrooms/")),
+    readCollection<Teacher>(apiPath("/school/teachers/")),
   ]);
 
   return {
@@ -1183,12 +1185,12 @@ export async function getCommunicationSnapshot(): Promise<CommunicationSnapshot>
 export async function getLearningSnapshot(): Promise<LearningSnapshot> {
   const meta = await getPlatformMeta();
   const [courses, offerings, lessons, materials, assignments, submissions] = await Promise.all([
-    readCollection<Course>("/api/v1/learning/courses/"),
-    readCollection<CourseOffering>("/api/v1/learning/offerings/"),
-    readCollection<Lesson>("/api/v1/learning/lessons/"),
-    readCollection<LessonMaterial>("/api/v1/learning/lesson-materials/"),
-    readCollection<Assignment>("/api/v1/learning/assignments/"),
-    readCollection<Submission>("/api/v1/learning/submissions/"),
+    readCollection<Course>(apiPath("/learning/courses/")),
+    readCollection<CourseOffering>(apiPath("/learning/offerings/")),
+    readCollection<Lesson>(apiPath("/learning/lessons/")),
+    readCollection<LessonMaterial>(apiPath("/learning/lesson-materials/")),
+    readCollection<Assignment>(apiPath("/learning/assignments/")),
+    readCollection<Submission>(apiPath("/learning/submissions/")),
   ]);
 
   return {
@@ -1224,8 +1226,12 @@ export async function getAuditSnapshot(filters?: {
   if (filters?.tenant_id) query.set("tenant_id", filters.tenant_id);
   if (filters?.date_from) query.set("date_from", filters.date_from);
   if (filters?.date_to) query.set("date_to", filters.date_to);
-  const auditEvents = await readCollection<AuditEvent>(`/api/v1/school/audit-events/${query.toString() ? `?${query}` : ""}`);
-  const auditAlerts = await readCollection<AuditAlert>(`/api/v1/school/audit-alerts/${query.toString() ? `?${query}` : ""}`);
+  const auditEvents = await readCollection<AuditEvent>(
+    apiPath(`/school/audit-events/${query.toString() ? `?${query}` : ""}`),
+  );
+  const auditAlerts = await readCollection<AuditAlert>(
+    apiPath(`/school/audit-alerts/${query.toString() ? `?${query}` : ""}`),
+  );
 
   return {
     ...meta,
@@ -1237,14 +1243,14 @@ export async function getAuditSnapshot(filters?: {
 export async function getReportsSnapshot(): Promise<ReportsSnapshot> {
   const meta = await getPlatformMeta();
   const [reports, catalogResponse, students, academicYears, grades, classrooms, teachers, managementAssignments] = await Promise.all([
-    readCollection<ReportRecord>("/api/v1/reports/reports/"),
-    readJsonWithRetry<{ results: ReportCatalogItem[] }>("/api/v1/reports/reports/catalog/"),
-    readCollection<Student>("/api/v1/academic/students/"),
-    readCollection<AcademicYear>("/api/v1/school/academic-years/"),
-    readCollection<Grade>("/api/v1/school/grades/"),
-    readCollection<Classroom>("/api/v1/school/classrooms/"),
-    readCollection<Teacher>("/api/v1/school/teachers/"),
-    readCollection<ManagementAssignment>("/api/v1/school/management-assignments/"),
+    readCollection<ReportRecord>(apiPath("/reports/reports/")),
+    readJsonWithRetry<{ results: ReportCatalogItem[] }>(apiPath("/reports/reports/catalog/")),
+    readCollection<Student>(apiPath("/academic/students/")),
+    readCollection<AcademicYear>(apiPath("/school/academic-years/")),
+    readCollection<Grade>(apiPath("/school/grades/")),
+    readCollection<Classroom>(apiPath("/school/classrooms/")),
+    readCollection<Teacher>(apiPath("/school/teachers/")),
+    readCollection<ManagementAssignment>(apiPath("/school/management-assignments/")),
   ]);
 
   const catalogItems = catalogResponse.data?.results || [];
@@ -1278,7 +1284,7 @@ export async function getReportsSnapshot(): Promise<ReportsSnapshot> {
 }
 
 export async function getReportDetail(id: number) {
-  return readRecord<ReportRecord>(`/api/v1/reports/reports/${id}/`);
+  return readRecord<ReportRecord>(apiPath(`/reports/reports/${id}/`));
 }
 
 export async function getReportVerification(code: string, hash?: string) {
@@ -1287,7 +1293,7 @@ export async function getReportVerification(code: string, hash?: string) {
   if (hash) {
     query.set("hash", hash);
   }
-  return readRecord<ReportVerification>(`/api/v1/reports/reports/verify/?${query.toString()}`);
+  return readRecord<ReportVerification>(apiPath(`/reports/reports/verify/?${query.toString()}`));
 }
 
 export async function createAnnouncement(payload: {
@@ -1298,11 +1304,11 @@ export async function createAnnouncement(payload: {
   audience: string;
   author?: number | null;
 }) {
-  return writeJson<Announcement>("/api/v1/school/announcements/", "POST", payload);
+  return writeJson<Announcement>(apiPath("/school/announcements/"), "POST", payload);
 }
 
 export async function updateAnnouncement(id: number, payload: Partial<Announcement>) {
-  return writeJson<Announcement>(`/api/v1/school/announcements/${id}/`, "PATCH", payload);
+  return writeJson<Announcement>(apiPath(`/school/announcements/${id}/`), "PATCH", payload);
 }
 
 export async function createAttendanceRecord(payload: {
@@ -1311,7 +1317,7 @@ export async function createAttendanceRecord(payload: {
   status: string;
   notes?: string;
 }) {
-  return writeJson<AttendanceRecord>("/api/v1/school/attendance-records/", "POST", payload);
+  return writeJson<AttendanceRecord>(apiPath("/school/attendance-records/"), "POST", payload);
 }
 
 export async function createLesson(payload: {
@@ -1324,11 +1330,11 @@ export async function createLesson(payload: {
   recording_url?: string;
   published?: boolean;
 }) {
-  return writeJson<Lesson>("/api/v1/learning/lessons/", "POST", payload);
+  return writeJson<Lesson>(apiPath("/learning/lessons/"), "POST", payload);
 }
 
 export async function updateLesson(id: number, payload: Partial<Lesson>) {
-  return writeJson<Lesson>(`/api/v1/learning/lessons/${id}/`, "PATCH", payload);
+  return writeJson<Lesson>(apiPath(`/learning/lessons/${id}/`), "PATCH", payload);
 }
 
 export async function createAssignment(payload: {
@@ -1340,11 +1346,11 @@ export async function createAssignment(payload: {
   max_score: number;
   published?: boolean;
 }) {
-  return writeJson<Assignment>("/api/v1/learning/assignments/", "POST", payload);
+  return writeJson<Assignment>(apiPath("/learning/assignments/"), "POST", payload);
 }
 
 export async function updateAssignment(id: number, payload: Partial<Assignment>) {
-  return writeJson<Assignment>(`/api/v1/learning/assignments/${id}/`, "PATCH", payload);
+  return writeJson<Assignment>(apiPath(`/learning/assignments/${id}/`), "PATCH", payload);
 }
 
 export async function createLessonMaterial(payload: {
@@ -1354,7 +1360,7 @@ export async function createLessonMaterial(payload: {
   url: string;
   required?: boolean;
 }) {
-  return writeJson<LessonMaterial>("/api/v1/learning/lesson-materials/", "POST", payload);
+  return writeJson<LessonMaterial>(apiPath("/learning/lesson-materials/"), "POST", payload);
 }
 
 export async function createInvoice(payload: {
@@ -1366,11 +1372,11 @@ export async function createInvoice(payload: {
   due_date: string;
   status?: string;
 }) {
-  return writeJson<Invoice>("/api/v1/school/invoices/", "POST", payload);
+  return writeJson<Invoice>(apiPath("/school/invoices/"), "POST", payload);
 }
 
 export async function updateInvoice(id: number, payload: Partial<Invoice>) {
-  return writeJson<Invoice>(`/api/v1/school/invoices/${id}/`, "PATCH", payload);
+  return writeJson<Invoice>(apiPath(`/school/invoices/${id}/`), "PATCH", payload);
 }
 
 export async function createPayment(payload: {
@@ -1381,7 +1387,7 @@ export async function createPayment(payload: {
   reference?: string;
   notes?: string;
 }) {
-  return writeJson<Payment>("/api/v1/school/payments/", "POST", payload);
+  return writeJson<Payment>(apiPath("/school/payments/"), "POST", payload);
 }
 
 export async function createSubmission(payload: {
@@ -1392,11 +1398,11 @@ export async function createSubmission(payload: {
   attachment_url?: string;
   status?: string;
 }) {
-  return writeJson<Submission>("/api/v1/learning/submissions/", "POST", payload);
+  return writeJson<Submission>(apiPath("/learning/submissions/"), "POST", payload);
 }
 
 export async function acknowledgeAuditAlert(id: number) {
-  return writeJson<AuditAlert>(`/api/v1/school/audit-alerts/${id}/acknowledge/`, "POST", {});
+  return writeJson<AuditAlert>(apiPath(`/school/audit-alerts/${id}/acknowledge/`), "POST", {});
 }
 
 export async function generateReport(payload: {
@@ -1410,5 +1416,5 @@ export async function generateReport(payload: {
   persist?: boolean;
   title?: string;
 }) {
-  return writeJson<ReportRecord | GeneratedReportPayload>("/api/v1/reports/reports/generate/", "POST", payload);
+  return writeJson<ReportRecord | GeneratedReportPayload>(apiPath("/reports/reports/generate/"), "POST", payload);
 }

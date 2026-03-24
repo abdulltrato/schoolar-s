@@ -1,3 +1,5 @@
+import { apiPath } from "@/lib/api-path";
+
 export type CrudResource = {
   key: string;
   label: string;
@@ -10,7 +12,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "students",
     label: "Alunos",
-    endpoint: "/api/v1/academic/students/",
+    endpoint: apiPath("/academic/students/"),
     description: "Registos principais de alunos e respetivo ciclo.",
     template: {
       name: "",
@@ -23,7 +25,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "guardians",
     label: "Encarregados",
-    endpoint: "/api/v1/academic/guardians/",
+    endpoint: apiPath("/academic/guardians/"),
     description: "Contactos familiares associados aos alunos.",
     template: {
       name: "",
@@ -37,7 +39,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "student_guardians",
     label: "Relacoes aluno-encarregado",
-    endpoint: "/api/v1/academic/student-guardians/",
+    endpoint: apiPath("/academic/student-guardians/"),
     description: "Liga alunos e encarregados com permissoes de contacto.",
     template: {
       student: 1,
@@ -50,7 +52,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "student_outcomes",
     label: "Resultados por aluno",
-    endpoint: "/api/v1/academic/student-outcomes/",
+    endpoint: apiPath("/academic/student-outcomes/"),
     description: "Niveis de dominio por resultado de aprendizagem.",
     template: {
       student: 1,
@@ -64,7 +66,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "academic_years",
     label: "Anos letivos",
-    endpoint: "/api/v1/school/academic-years/",
+    endpoint: apiPath("/school/academic-years/"),
     description: "Calendario oficial de cada ano letivo.",
     template: {
       code: "2026-2027",
@@ -77,7 +79,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "grades",
     label: "Classes",
-    endpoint: "/api/v1/school/grades/",
+    endpoint: apiPath("/school/grades/"),
     description: "Estrutura de classes e ciclos do ensino.",
     template: {
       number: 1,
@@ -88,7 +90,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "schools",
     label: "Escolas",
-    endpoint: "/api/v1/school/schools/",
+    endpoint: apiPath("/school/schools/"),
     description: "Unidades escolares e localizacao.",
     template: {
       code: "ESC-001",
@@ -101,7 +103,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "teachers",
     label: "Professores",
-    endpoint: "/api/v1/school/teachers/",
+    endpoint: apiPath("/school/teachers/"),
     description: "Docentes ligados as escolas.",
     template: {
       user: 1,
@@ -113,7 +115,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "classrooms",
     label: "Turmas",
-    endpoint: "/api/v1/school/classrooms/",
+    endpoint: apiPath("/school/classrooms/"),
     description: "Turmas e respetivos anos letivos.",
     template: {
       name: "1A",
@@ -128,7 +130,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "grade_subjects",
     label: "Disciplinas da classe",
-    endpoint: "/api/v1/school/grade-subjects/",
+    endpoint: apiPath("/school/grade-subjects/"),
     description: "Carga horaria por disciplina e classe.",
     template: {
       academic_year: "2026-2027",
@@ -141,7 +143,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "teaching_assignments",
     label: "Alocacoes docentes",
-    endpoint: "/api/v1/school/teaching-assignments/",
+    endpoint: apiPath("/school/teaching-assignments/"),
     description: "Professor ligado a turma e disciplina.",
     template: {
       teacher: 1,
@@ -152,7 +154,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "enrollments",
     label: "Matriculas",
-    endpoint: "/api/v1/school/enrollments/",
+    endpoint: apiPath("/school/enrollments/"),
     description: "Ligacao de alunos a turmas.",
     template: {
       student: 1,
@@ -162,7 +164,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "management_assignments",
     label: "Cargos de gestao",
-    endpoint: "/api/v1/school/management-assignments/",
+    endpoint: apiPath("/school/management-assignments/"),
     description: "Direcao e cargos administrativos.",
     template: {
       teacher: 1,
@@ -175,7 +177,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "attendance_records",
     label: "Presencas",
-    endpoint: "/api/v1/school/attendance-records/",
+    endpoint: apiPath("/school/attendance-records/"),
     description: "Registos diarios de presenca.",
     template: {
       enrollment: 1,
@@ -187,7 +189,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "announcements",
     label: "Comunicados",
-    endpoint: "/api/v1/school/announcements/",
+    endpoint: apiPath("/school/announcements/"),
     description: "Mensagens internas para escolas e turmas.",
     template: {
       school: 1,
@@ -201,7 +203,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "invoices",
     label: "Faturas",
-    endpoint: "/api/v1/school/invoices/",
+    endpoint: apiPath("/school/invoices/"),
     description: "Cobrancas e faturas escolares.",
     template: {
       student: 1,
@@ -216,7 +218,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "payments",
     label: "Pagamentos",
-    endpoint: "/api/v1/school/payments/",
+    endpoint: apiPath("/school/payments/"),
     description: "Registo de pagamentos de faturas.",
     template: {
       invoice: 1,
@@ -230,7 +232,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "curriculum_areas",
     label: "Areas curriculares",
-    endpoint: "/api/v1/curriculum/areas/",
+    endpoint: apiPath("/curriculum/areas/"),
     description: "Areas macro do curriculo.",
     template: {
       name: "",
@@ -239,7 +241,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "subjects",
     label: "Disciplinas",
-    endpoint: "/api/v1/curriculum/subjects/",
+    endpoint: apiPath("/curriculum/subjects/"),
     description: "Disciplinas e ciclos associados.",
     template: {
       name: "",
@@ -250,7 +252,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "competencies",
     label: "Competencias",
-    endpoint: "/api/v1/curriculum/competencies/",
+    endpoint: apiPath("/curriculum/competencies/"),
     description: "Competencias curriculares por disciplina.",
     template: {
       name: "",
@@ -263,7 +265,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "base_curricula",
     label: "Curriculo base",
-    endpoint: "/api/v1/curriculum/base-curricula/",
+    endpoint: apiPath("/curriculum/base-curricula/"),
     description: "Curriculo nacional por ciclo.",
     template: {
       cycle: 1,
@@ -273,7 +275,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "local_curricula",
     label: "Curriculo local",
-    endpoint: "/api/v1/curriculum/local-curricula/",
+    endpoint: apiPath("/curriculum/local-curricula/"),
     description: "Adaptacoes curriculares por tenant.",
     template: {
       tenant_id: "",
@@ -284,7 +286,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "learning_outcomes",
     label: "Resultados de aprendizagem",
-    endpoint: "/api/v1/curriculum/learning-outcomes/",
+    endpoint: apiPath("/curriculum/learning-outcomes/"),
     description: "Resultados por disciplina e classe.",
     template: {
       tenant_id: "",
@@ -301,7 +303,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "competency_outcomes",
     label: "Alinhamentos competencia-resultado",
-    endpoint: "/api/v1/curriculum/competency-outcomes/",
+    endpoint: apiPath("/curriculum/competency-outcomes/"),
     description: "Mapeamento entre competencias e resultados.",
     template: {
       competency: 1,
@@ -313,7 +315,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "subject_plans",
     label: "Planos curriculares",
-    endpoint: "/api/v1/curriculum/subject-plans/",
+    endpoint: apiPath("/curriculum/subject-plans/"),
     description: "Planos por disciplina e classe.",
     template: {
       grade_subject: 1,
@@ -327,7 +329,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "assessment_periods",
     label: "Periodos avaliativos",
-    endpoint: "/api/v1/assessment/periods/",
+    endpoint: apiPath("/assessment/periods/"),
     description: "Periodos de avaliacao e calendario.",
     template: {
       academic_year: "2026-2027",
@@ -341,7 +343,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "assessment_components",
     label: "Componentes avaliativos",
-    endpoint: "/api/v1/assessment/components/",
+    endpoint: apiPath("/assessment/components/"),
     description: "Componentes e pesos avaliativos.",
     template: {
       period: 1,
@@ -356,7 +358,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "assessment_component_outcomes",
     label: "Mapas componente-resultado",
-    endpoint: "/api/v1/assessment/component-outcomes/",
+    endpoint: apiPath("/assessment/component-outcomes/"),
     description: "Peso de resultados por componente.",
     template: {
       component: 1,
@@ -368,7 +370,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "assessments",
     label: "Avaliacoes",
-    endpoint: "/api/v1/assessment/assessments/",
+    endpoint: apiPath("/assessment/assessments/"),
     description: "Registos individuais de avaliacao.",
     template: {
       student: 1,
@@ -383,7 +385,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "subject_period_results",
     label: "Resultados finais",
-    endpoint: "/api/v1/assessment/subject-period-results/",
+    endpoint: apiPath("/assessment/subject-period-results/"),
     description: "Resultados finais por periodo.",
     template: {
       student: 1,
@@ -396,7 +398,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "courses",
     label: "Cursos",
-    endpoint: "/api/v1/learning/courses/",
+    endpoint: apiPath("/learning/courses/"),
     description: "Cursos online e presenciais.",
     template: {
       school: 1,
@@ -409,7 +411,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "offerings",
     label: "Ofertas de curso",
-    endpoint: "/api/v1/learning/offerings/",
+    endpoint: apiPath("/learning/offerings/"),
     description: "Cursos ligados a turmas e professores.",
     template: {
       course: 1,
@@ -424,7 +426,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "lessons",
     label: "Aulas online",
-    endpoint: "/api/v1/learning/lessons/",
+    endpoint: apiPath("/learning/lessons/"),
     description: "Aulas e encontros virtuais.",
     template: {
       offering: 1,
@@ -439,7 +441,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "lesson_materials",
     label: "Materiais de aula",
-    endpoint: "/api/v1/learning/lesson-materials/",
+    endpoint: apiPath("/learning/lesson-materials/"),
     description: "Recursos e links associados as aulas.",
     template: {
       lesson: 1,
@@ -452,7 +454,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "assignments",
     label: "Tarefas",
-    endpoint: "/api/v1/learning/assignments/",
+    endpoint: apiPath("/learning/assignments/"),
     description: "Tarefas online e instrucoes.",
     template: {
       offering: 1,
@@ -467,7 +469,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "submissions",
     label: "Submissoes",
-    endpoint: "/api/v1/learning/submissions/",
+    endpoint: apiPath("/learning/submissions/"),
     description: "Respostas e entregas dos alunos.",
     template: {
       assignment: 1,
@@ -480,7 +482,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "progressions",
     label: "Progresso",
-    endpoint: "/api/v1/progress/progressions/",
+    endpoint: apiPath("/progress/progressions/"),
     description: "Decisoes de transicao por ciclo.",
     template: {
       student: 1,
@@ -494,7 +496,7 @@ export const crudResources: CrudResource[] = [
   {
     key: "events",
     label: "Eventos",
-    endpoint: "/api/v1/events/events/",
+    endpoint: apiPath("/events/events/"),
     description: "Eventos gerados pelo sistema.",
     template: {
       type: "student_registered",
