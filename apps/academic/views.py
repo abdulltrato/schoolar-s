@@ -113,7 +113,12 @@ class StudentGuardianViewSet(RobustModelViewSet):
 class StudentOutcomeViewSet(RobustModelViewSet):
     queryset = StudentOutcome.objects.select_related("student", "outcome").all()
     serializer_class = StudentOutcomeSerializer
-    search_fields = ("student__name", "outcome__code", "outcome__description", "tenant_id")
+    search_fields = (
+        "student__name",
+        "outcome__code",
+        "outcome__description",
+        "tenant_id",
+    )
     ordering_fields = ("id", "updated_at", "mastery_level", "evidence_count")
     ordering = ("-updated_at",)
     allowed_roles = {
