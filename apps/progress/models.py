@@ -3,8 +3,10 @@ import re
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from core.models import TenantModel
 
-class Progression(models.Model):
+
+class Progression(TenantModel):
     DECISION_CHOICES = [
         ("approved", "Aprovado"),
         ("retained", "Retido"),
@@ -12,7 +14,6 @@ class Progression(models.Model):
     ]
 
     student = models.ForeignKey("academic.Student", on_delete=models.CASCADE, verbose_name="Aluno")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     cycle = models.IntegerField(verbose_name="Ciclo")
     academic_year = models.CharField(max_length=10, verbose_name="Ano letivo")
     decision_date = models.DateField(verbose_name="Data da decisão")

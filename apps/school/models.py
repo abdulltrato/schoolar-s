@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from core.models import TenantAuditModel, TenantModel
+
 
 def validate_academic_year_code(code: str):
     if not re.fullmatch(r"\d{4}-\d{4}", code):
@@ -14,9 +16,8 @@ def validate_academic_year_code(code: str):
         raise ValidationError("The academic year must end in the following calendar year.")
 
 
-class AcademicYear(models.Model):
+class AcademicYear(TenantModel):
     code = models.CharField(max_length=9, verbose_name="Ano letivo")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     start_date = models.DateField(verbose_name="Data de início")
     end_date = models.DateField(verbose_name="Data de fim")
     active = models.BooleanField(default=False, verbose_name="Ativo")
@@ -84,7 +85,7 @@ class Grade(models.Model):
         ordering = ["number"]
 
 
-class School(models.Model):
+class School(TenantModel):
     code = models.CharField(max_length=30, unique=True, verbose_name="Código")
     tenant_id = models.CharField(max_length=50, unique=True, blank=True, verbose_name="Identificador do tenant")
     name = models.CharField(max_length=150, verbose_name="Nome")
@@ -110,9 +111,8 @@ class School(models.Model):
         ordering = ["name"]
 
 
-class Teacher(models.Model):
+class Teacher(TenantModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="Usuário")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     school = models.ForeignKey(
         School,
         on_delete=models.SET_NULL,
@@ -153,9 +153,8 @@ class Teacher(models.Model):
         ordering = ["name"]
 
 
-class Classroom(models.Model):
+class Classroom(TenantModel):
     name = models.CharField(max_length=50, verbose_name="Nome")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     school = models.ForeignKey(
         School,
         on_delete=models.SET_NULL,
@@ -231,8 +230,7 @@ class Classroom(models.Model):
         unique_together = ("tenant_id", "name", "grade", "academic_year")
 
 
-class GradeSubject(models.Model):
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
+class GradeSubject(TenantModel):
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, verbose_name="Ano letivo")
     grade = models.ForeignKey(Grade, on_delete=models.CASCADE, verbose_name="Classe")
     subject = models.ForeignKey("curriculum.Subject", on_delete=models.CASCADE, verbose_name="Disciplina")
@@ -264,10 +262,9 @@ class GradeSubject(models.Model):
         unique_together = ("tenant_id", "academic_year", "grade", "subject")
 
 
-class TeachingAssignment(models.Model):
+class TeachingAssignment(TenantModel):
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, verbose_name="Professor")
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, verbose_name="Turma")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     grade_subject = models.ForeignKey(
         GradeSubject,
         on_delete=models.CASCADE,
@@ -315,10 +312,9 @@ class TeachingAssignment(models.Model):
         unique_together = ("classroom", "grade_subject")
 
 
-class Enrollment(models.Model):
+class Enrollment(TenantModel):
     student = models.ForeignKey("academic.Student", on_delete=models.CASCADE, verbose_name="Aluno")
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, verbose_name="Turma")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     enrollment_date = models.DateField(auto_now_add=True, verbose_name="Data de matrícula")
 
     def clean(self):
@@ -351,7 +347,7 @@ class Enrollment(models.Model):
         ordering = ["-enrollment_date"]
 
 
-class ManagementAssignment(models.Model):
+class ManagementAssignment(TenantModel):
     ROLE_CHOICES = [
         ("homeroom_director", "Diretor de turma"),
         ("grade_coordinator", "Coordenador de classe"),
@@ -373,7 +369,6 @@ class ManagementAssignment(models.Model):
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, verbose_name="Professor")
     school = models.ForeignKey(School, on_delete=models.CASCADE, verbose_name="Escola")
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, verbose_name="Ano letivo")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     role = models.CharField(max_length=40, choices=ROLE_CHOICES, verbose_name="Cargo")
     grade = models.ForeignKey(Grade, null=True, blank=True, on_delete=models.CASCADE, verbose_name="Classe")
     classroom = models.ForeignKey(Classroom, null=True, blank=True, on_delete=models.CASCADE, verbose_name="Turma")
@@ -446,7 +441,7 @@ class ManagementAssignment(models.Model):
         ordering = ["academic_year__code", "school__name", "role", "teacher__name"]
 
 
-class UserProfile(models.Model):
+class UserProfile(TenantModel):
     ROLE_CHOICES = [
         ("national_admin", "Administrador nacional"),
         ("provincial_admin", "Administrador provincial"),
@@ -462,7 +457,6 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="school_profile", verbose_name="Usuário")
     role = models.CharField(max_length=40, choices=ROLE_CHOICES, verbose_name="Papel")
     school = models.ForeignKey(School, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Escola")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     province = models.CharField(max_length=100, blank=True, verbose_name="Província")
     district = models.CharField(max_length=100, blank=True, verbose_name="Distrito")
     active = models.BooleanField(default=True, verbose_name="Ativo")
@@ -488,7 +482,7 @@ class UserProfile(models.Model):
         ordering = ["user__username"]
 
 
-class AttendanceRecord(models.Model):
+class AttendanceRecord(TenantModel):
     STATUS_CHOICES = [
         ("present", "Presente"),
         ("late", "Atrasado"),
@@ -497,7 +491,6 @@ class AttendanceRecord(models.Model):
     ]
 
     enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE, verbose_name="Matrícula")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     lesson_date = models.DateField(verbose_name="Data da aula")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, verbose_name="Estado")
     notes = models.CharField(max_length=255, blank=True, verbose_name="Observações")
@@ -525,7 +518,7 @@ class AttendanceRecord(models.Model):
         ordering = ["-lesson_date"]
 
 
-class Announcement(models.Model):
+class Announcement(TenantModel):
     AUDIENCE_CHOICES = [
         ("school", "Escola"),
         ("classroom", "Turma"),
@@ -537,7 +530,6 @@ class Announcement(models.Model):
     school = models.ForeignKey(School, on_delete=models.CASCADE, verbose_name="Escola")
     classroom = models.ForeignKey(Classroom, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Turma")
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Autor")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     title = models.CharField(max_length=180, verbose_name="Título")
     message = models.TextField(verbose_name="Mensagem")
     audience = models.CharField(max_length=20, choices=AUDIENCE_CHOICES, verbose_name="Audiência")
@@ -579,7 +571,7 @@ class Announcement(models.Model):
         ordering = ["-published_at"]
 
 
-class Invoice(models.Model):
+class Invoice(TenantModel):
     STATUS_CHOICES = [
         ("draft", "Rascunho"),
         ("issued", "Emitida"),
@@ -590,7 +582,6 @@ class Invoice(models.Model):
 
     student = models.ForeignKey("academic.Student", on_delete=models.CASCADE, verbose_name="Aluno")
     school = models.ForeignKey(School, on_delete=models.CASCADE, verbose_name="Escola")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     reference = models.CharField(max_length=40, unique=True, verbose_name="Referência")
     description = models.CharField(max_length=180, verbose_name="Descrição")
     amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Valor")
@@ -624,7 +615,7 @@ class Invoice(models.Model):
         ordering = ["-issued_at"]
 
 
-class Payment(models.Model):
+class Payment(TenantModel):
     METHOD_CHOICES = [
         ("cash", "Numerário"),
         ("bank_transfer", "Transferência"),
@@ -633,7 +624,6 @@ class Payment(models.Model):
     ]
 
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="payments", verbose_name="Fatura")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Valor pago")
     payment_date = models.DateField(verbose_name="Data do pagamento")
     method = models.CharField(max_length=20, choices=METHOD_CHOICES, verbose_name="Método")
@@ -660,7 +650,7 @@ class Payment(models.Model):
         ordering = ["-payment_date"]
 
 
-class AuditEvent(models.Model):
+class AuditEvent(TenantAuditModel):
     ACTION_CHOICES = [
         ("create", "Criação"),
         ("update", "Atualização"),
@@ -670,15 +660,12 @@ class AuditEvent(models.Model):
     action = models.CharField(max_length=20, choices=ACTION_CHOICES, verbose_name="Ação")
     object_id = models.PositiveIntegerField(verbose_name="Identificador do objeto")
     object_repr = models.CharField(max_length=255, blank=True, verbose_name="Representação do objeto")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     request_id = models.CharField(max_length=64, blank=True, verbose_name="Identificador da requisição")
     path = models.CharField(max_length=255, blank=True, verbose_name="Rota")
     method = models.CharField(max_length=10, blank=True, verbose_name="Método")
     role = models.CharField(max_length=40, blank=True, verbose_name="Papel")
     username = models.CharField(max_length=150, blank=True, verbose_name="Nome de utilizador")
     changed_fields = models.JSONField(default=list, blank=True, verbose_name="Campos alterados")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
-
     def clean(self):
         self.tenant_id = (self.tenant_id or "").strip()
         if not self.tenant_id:
@@ -697,7 +684,7 @@ class AuditEvent(models.Model):
         ordering = ["-created_at"]
 
 
-class AuditAlert(models.Model):
+class AuditAlert(TenantAuditModel):
     SEVERITY_CHOICES = [
         ("watch", "Observação"),
         ("elevated", "Elevado"),
@@ -705,14 +692,11 @@ class AuditAlert(models.Model):
 
     alert_type = models.CharField(max_length=80, verbose_name="Tipo de alerta")
     severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES, verbose_name="Severidade")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     resource = models.CharField(max_length=80, blank=True, verbose_name="Recurso")
     username = models.CharField(max_length=150, blank=True, verbose_name="Nome de utilizador")
     summary = models.CharField(max_length=255, verbose_name="Resumo")
     details = models.JSONField(default=dict, blank=True, verbose_name="Detalhes")
     acknowledged = models.BooleanField(default=False, verbose_name="Reconhecido")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
-
     def clean(self):
         self.tenant_id = (self.tenant_id or "").strip()
         if not self.tenant_id:

@@ -4,8 +4,10 @@ from django.conf import settings
 from django.db import models
 from django.core.exceptions import ValidationError
 
+from core.models import TenantModel
 
-class Student(models.Model):
+
+class Student(TenantModel):
     CICLO_CHOICES = [
         (1, '1º Ciclo'),
         (2, '2º Ciclo'),
@@ -26,7 +28,6 @@ class Student(models.Model):
         verbose_name="Usuário",
     )
     name = models.CharField(max_length=100, verbose_name="Nome")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     birth_date = models.DateField(verbose_name="Data de nascimento")
     grade = models.IntegerField(verbose_name="Classe")
     cycle = models.IntegerField(choices=CICLO_CHOICES, verbose_name="Ciclo")
@@ -79,10 +80,9 @@ class Student(models.Model):
         ordering = ['name']
 
 
-class StudentCompetency(models.Model):
+class StudentCompetency(TenantModel):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, verbose_name="Aluno")
     competency = models.ForeignKey('curriculum.Competency', on_delete=models.CASCADE, verbose_name="Competência")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     nivel = models.DecimalField(max_digits=3, decimal_places=1, default=0.0, verbose_name="Nível")  # e.g., 0.0 to 5.0
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Data de atualização")
 
@@ -108,7 +108,7 @@ class StudentCompetency(models.Model):
         verbose_name_plural = "Competências dos Alunos"
 
 
-class Guardian(models.Model):
+class Guardian(TenantModel):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -117,7 +117,6 @@ class Guardian(models.Model):
         verbose_name="Usuário",
     )
     name = models.CharField(max_length=100, verbose_name="Nome")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     phone = models.CharField(max_length=30, blank=True, verbose_name="Telefone")
     email = models.EmailField(blank=True, verbose_name="E-mail")
     relationship = models.CharField(max_length=60, blank=True, verbose_name="Parentesco")
@@ -146,10 +145,9 @@ class Guardian(models.Model):
         ordering = ["name"]
 
 
-class StudentGuardian(models.Model):
+class StudentGuardian(TenantModel):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, verbose_name="Aluno")
     guardian = models.ForeignKey(Guardian, on_delete=models.CASCADE, verbose_name="Encarregado")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     primary_contact = models.BooleanField(default=False, verbose_name="Contato principal")
     receives_notifications = models.BooleanField(default=True, verbose_name="Recebe notificações")
 
@@ -180,7 +178,7 @@ class StudentGuardian(models.Model):
         verbose_name_plural = "Relações aluno-encarregado"
 
 
-class StudentOutcome(models.Model):
+class StudentOutcome(TenantModel):
     MASTERY_CHOICES = [
         ("not_started", "Não iniciado"),
         ("developing", "Em desenvolvimento"),
@@ -190,7 +188,6 @@ class StudentOutcome(models.Model):
 
     student = models.ForeignKey(Student, on_delete=models.CASCADE, verbose_name="Aluno")
     outcome = models.ForeignKey("curriculum.LearningOutcome", on_delete=models.CASCADE, verbose_name="Resultado de aprendizagem")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     mastery_level = models.DecimalField(max_digits=3, decimal_places=1, default=0.0, verbose_name="Nível")
     status = models.CharField(max_length=20, choices=MASTERY_CHOICES, default="not_started", verbose_name="Estado")
     evidence_count = models.PositiveIntegerField(default=0, verbose_name="Evidências")

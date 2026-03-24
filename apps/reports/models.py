@@ -8,8 +8,10 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
+from core.models import TenantModel
 
-class Report(models.Model):
+
+class Report(TenantModel):
     TYPE_CHOICES = [
         ("student", "Relatório do aluno"),
         ("school", "Relatório da escola"),
@@ -39,7 +41,6 @@ class Report(models.Model):
     period = models.CharField(max_length=50, blank=True, verbose_name="Período")
     content = models.JSONField(verbose_name="Conteúdo")
     student = models.ForeignKey("academic.Student", on_delete=models.CASCADE, null=True, blank=True, verbose_name="Aluno")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     serial_number = models.CharField(max_length=40, unique=True, blank=True, editable=False, verbose_name="Número de série")
     verification_code = models.CharField(max_length=32, unique=True, blank=True, editable=False, verbose_name="Código de verificação")
     verification_hash = models.CharField(max_length=64, blank=True, editable=False, verbose_name="Assinatura de verificação")

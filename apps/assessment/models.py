@@ -3,10 +3,11 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from core.models import TenantModel
 
-class AssessmentPeriod(models.Model):
+
+class AssessmentPeriod(TenantModel):
     academic_year = models.ForeignKey("school.AcademicYear", on_delete=models.CASCADE, verbose_name="Ano letivo")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     name = models.CharField(max_length=50, verbose_name="Nome")
     order = models.PositiveSmallIntegerField(verbose_name="Ordem")
     start_date = models.DateField(verbose_name="Data de início")
@@ -49,7 +50,7 @@ class AssessmentPeriod(models.Model):
         unique_together = ("academic_year", "order")
 
 
-class AssessmentComponent(models.Model):
+class AssessmentComponent(TenantModel):
     TYPE_CHOICES = [
         ("acs", "ACS"),
         ("acp", "ACP"),
@@ -82,7 +83,6 @@ class AssessmentComponent(models.Model):
 
     period = models.ForeignKey(AssessmentPeriod, on_delete=models.CASCADE, verbose_name="Período")
     grade_subject = models.ForeignKey("school.GradeSubject", on_delete=models.CASCADE, verbose_name="Disciplina da classe")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     type = models.CharField(max_length=30, choices=TYPE_CHOICES, verbose_name="Tipo")
     name = models.CharField(max_length=80, verbose_name="Nome")
     weight = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Peso")
@@ -124,10 +124,9 @@ class AssessmentComponent(models.Model):
         unique_together = ("period", "grade_subject", "name")
 
 
-class AssessmentOutcomeMap(models.Model):
+class AssessmentOutcomeMap(TenantModel):
     component = models.ForeignKey(AssessmentComponent, on_delete=models.CASCADE, verbose_name="Componente")
     outcome = models.ForeignKey("curriculum.LearningOutcome", on_delete=models.CASCADE, verbose_name="Resultado de aprendizagem")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     weight = models.DecimalField(max_digits=5, decimal_places=2, default=100, verbose_name="Peso")
     active = models.BooleanField(default=True, verbose_name="Ativo")
 
@@ -178,7 +177,7 @@ class AssessmentOutcomeMap(models.Model):
         unique_together = ("tenant_id", "component", "outcome")
 
 
-class Assessment(models.Model):
+class Assessment(TenantModel):
     TYPE_CHOICES = AssessmentComponent.TYPE_CHOICES
 
     def __init__(self, *args, **kwargs):
@@ -194,7 +193,6 @@ class Assessment(models.Model):
         super().__init__(*args, **kwargs)
 
     student = models.ForeignKey("academic.Student", on_delete=models.CASCADE, verbose_name="Aluno")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     teaching_assignment = models.ForeignKey(
         "school.TeachingAssignment",
         on_delete=models.CASCADE,
@@ -338,11 +336,10 @@ class Assessment(models.Model):
         ordering = ["-date"]
 
 
-class SubjectPeriodResult(models.Model):
+class SubjectPeriodResult(TenantModel):
     student = models.ForeignKey("academic.Student", on_delete=models.CASCADE, verbose_name="Aluno")
     teaching_assignment = models.ForeignKey("school.TeachingAssignment", on_delete=models.CASCADE, verbose_name="Alocação docente")
     period = models.ForeignKey(AssessmentPeriod, on_delete=models.CASCADE, verbose_name="Período")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     final_average = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name="Média final")
     assessments_counted = models.PositiveSmallIntegerField(default=0, verbose_name="Avaliações consideradas")
 

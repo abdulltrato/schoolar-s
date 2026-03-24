@@ -3,6 +3,8 @@ from django.db import models
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 
+from core.models import TenantModel
+
 from apps.school.models import Grade
 
 
@@ -99,7 +101,7 @@ class Competency(models.Model):
         ordering = ["name"]
 
 
-class LearningOutcome(models.Model):
+class LearningOutcome(TenantModel):
     TAXONOMY_LEVEL_CHOICES = [
         ("remember", "Recordar"),
         ("understand", "Compreender"),
@@ -115,7 +117,6 @@ class LearningOutcome(models.Model):
         ("metacognitive", "Metacognitivo"),
     ]
 
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     code = models.CharField(max_length=60, verbose_name="Código")
     description = models.TextField(verbose_name="Descrição")
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Disciplina")
@@ -168,10 +169,9 @@ class LearningOutcome(models.Model):
         unique_together = ("tenant_id", "code", "subject", "grade")
 
 
-class CompetencyOutcome(models.Model):
+class CompetencyOutcome(TenantModel):
     competency = models.ForeignKey(Competency, on_delete=models.CASCADE, verbose_name="Competência")
     outcome = models.ForeignKey(LearningOutcome, on_delete=models.CASCADE, verbose_name="Resultado de aprendizagem")
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     weight = models.DecimalField(max_digits=5, decimal_places=2, default=100, verbose_name="Peso")
     notes = models.CharField(max_length=255, blank=True, verbose_name="Observações")
 
@@ -230,7 +230,7 @@ class BaseCurriculum(models.Model):
         ordering = ["cycle"]
 
 
-class LocalCurriculum(models.Model):
+class LocalCurriculum(TenantModel):
     tenant_id = models.CharField(max_length=50, verbose_name="Identificador do tenant")
     cycle = models.IntegerField(verbose_name="Ciclo")
     additional_competencies = models.ManyToManyField(Competency, blank=True, verbose_name="Competências adicionais")
@@ -254,14 +254,13 @@ class LocalCurriculum(models.Model):
         ordering = ["tenant_id", "cycle"]
 
 
-class SubjectCurriculumPlan(models.Model):
+class SubjectCurriculumPlan(TenantModel):
     grade_subject = models.OneToOneField(
         "school.GradeSubject",
         on_delete=models.CASCADE,
         related_name="curriculum_plan",
         verbose_name="Disciplina da classe",
     )
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     objectives = models.TextField(blank=True, verbose_name="Objetivos")
     planned_competencies = models.ManyToManyField(
         Competency,

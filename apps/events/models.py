@@ -1,7 +1,9 @@
 from django.db import models
 
+from core.models import TenantModel
 
-class Event(models.Model):
+
+class Event(TenantModel):
     TYPE_CHOICES = [
         ("student_registered", "Aluno registado"),
         ("assessment_recorded", "Avaliação registada"),

@@ -2,15 +2,16 @@ from django.apps import apps
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from core.models import TenantModel
 
-class Course(models.Model):
+
+class Course(TenantModel):
     MODALITY_CHOICES = [
         ("online", "Online"),
         ("blended", "Híbrido"),
         ("offline", "Presencial"),
     ]
 
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     school = models.ForeignKey("school.School", on_delete=models.CASCADE, verbose_name="Escola")
     title = models.CharField(max_length=180, verbose_name="Título")
     description = models.TextField(blank=True, verbose_name="Descrição")
@@ -41,8 +42,7 @@ class Course(models.Model):
         ordering = ["title"]
 
 
-class CourseOffering(models.Model):
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
+class CourseOffering(TenantModel):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="offerings", verbose_name="Curso")
     classroom = models.ForeignKey("school.Classroom", on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Turma")
     teacher = models.ForeignKey("school.Teacher", on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Professor")
@@ -95,8 +95,7 @@ class CourseOffering(models.Model):
         ordering = ["-academic_year__code", "course__title"]
 
 
-class Lesson(models.Model):
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
+class Lesson(TenantModel):
     offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name="lessons", verbose_name="Oferta")
     title = models.CharField(max_length=180, verbose_name="Título")
     description = models.TextField(blank=True, verbose_name="Descrição")
@@ -152,8 +151,7 @@ class LessonMaterial(models.Model):
         ordering = ["lesson__scheduled_at", "title"]
 
 
-class Assignment(models.Model):
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
+class Assignment(TenantModel):
     offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name="assignments", verbose_name="Oferta")
     title = models.CharField(max_length=180, verbose_name="Título")
     instructions = models.TextField(blank=True, verbose_name="Instruções")
@@ -186,14 +184,13 @@ class Assignment(models.Model):
         ordering = ["-due_at"]
 
 
-class Submission(models.Model):
+class Submission(TenantModel):
     STATUS_CHOICES = [
         ("draft", "Rascunho"),
         ("submitted", "Submetida"),
         ("graded", "Corrigida"),
     ]
 
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name="submissions", verbose_name="Tarefa")
     student = models.ForeignKey("academic.Student", on_delete=models.CASCADE, verbose_name="Aluno")
     submitted_at = models.DateTimeField(null=True, blank=True, verbose_name="Submetida em")
