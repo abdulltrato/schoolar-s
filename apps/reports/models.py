@@ -12,6 +12,7 @@ from core.models import BaseCodeModel
 
 
 class Report(BaseCodeModel):
+    CODE_PREFIX = "RPT"
     TYPE_CHOICES = [
         ("student", "Relatório do aluno"),
         ("school", "Relatório da escola"),

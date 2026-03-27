@@ -6,6 +6,7 @@ from core.models import BaseCodeModel
 
 
 class Course(BaseCodeModel):
+    CODE_PREFIX = "CRS"
     MODALITY_CHOICES = [
         ("online", "Online"),
         ("blended", "Híbrido"),
@@ -43,6 +44,7 @@ class Course(BaseCodeModel):
 
 
 class CourseOffering(BaseCodeModel):
+    CODE_PREFIX = "COF"
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="offerings", verbose_name="Curso")
     classroom = models.ForeignKey("school.Classroom", on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Turma")
     teacher = models.ForeignKey("school.Teacher", on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Professor")
@@ -96,6 +98,7 @@ class CourseOffering(BaseCodeModel):
 
 
 class Lesson(BaseCodeModel):
+    CODE_PREFIX = "LES"
     offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name="lessons", verbose_name="Oferta")
     title = models.CharField(max_length=180, verbose_name="Título")
     description = models.TextField(blank=True, verbose_name="Descrição")
@@ -128,6 +131,7 @@ class Lesson(BaseCodeModel):
 
 
 class LessonMaterial(BaseCodeModel):
+    CODE_PREFIX = "LMT"
     TYPE_CHOICES = [
         ("link", "Link"),
         ("document", "Documento"),
@@ -166,6 +170,7 @@ class LessonMaterial(BaseCodeModel):
 
 
 class Assignment(BaseCodeModel):
+    CODE_PREFIX = "ASN"
     offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name="assignments", verbose_name="Oferta")
     title = models.CharField(max_length=180, verbose_name="Título")
     instructions = models.TextField(blank=True, verbose_name="Instruções")
@@ -199,6 +204,7 @@ class Assignment(BaseCodeModel):
 
 
 class Submission(BaseCodeModel):
+    CODE_PREFIX = "SBM"
     STATUS_CHOICES = [
         ("draft", "Rascunho"),
         ("submitted", "Submetida"),

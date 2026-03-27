@@ -3,12 +3,14 @@ from decimal import Decimal
 from django.conf import settings
 from django.db import models
 from django.core.exceptions import ValidationError
-
 from core.models import BaseCodeModel, BaseNamedCodeModel, tenant_id_from_user
 
 
 class Student(BaseNamedCodeModel):
+
     CODE_PREFIX = "STD"
+    TENANT_INHERIT_USER_FIELDS = ("user",)
+
     CICLO_CHOICES = [
         (1, '1º Ciclo'),
         (2, '2º Ciclo'),
@@ -28,6 +30,7 @@ class Student(BaseNamedCodeModel):
         blank=True,
         verbose_name="Usuário",
     )
+
     birth_date = models.DateField(verbose_name="Data de nascimento")
     grade = models.IntegerField(verbose_name="Classe")
     cycle = models.IntegerField(choices=CICLO_CHOICES, verbose_name="Ciclo")
@@ -115,6 +118,7 @@ class StudentCompetency(BaseCodeModel):
 
 class Guardian(BaseNamedCodeModel):
     CODE_PREFIX = "GRD"
+    TENANT_INHERIT_USER_FIELDS = ("user",)
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

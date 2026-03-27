@@ -7,6 +7,8 @@ from core.models import BaseCodeModel, BaseNamedCodeModel
 
 
 class AssessmentPeriod(BaseNamedCodeModel):
+    CODE_PREFIX = "APR"
+
     academic_year = models.ForeignKey("school.AcademicYear", on_delete=models.CASCADE, verbose_name="Ano letivo")
     order = models.PositiveSmallIntegerField(verbose_name="Ordem")
     start_date = models.DateField(verbose_name="Data de início")
@@ -56,6 +58,7 @@ class AssessmentPeriod(BaseNamedCodeModel):
 
 
 class AssessmentComponent(BaseNamedCodeModel):
+    CODE_PREFIX = "CMP"
     TYPE_CHOICES = [
         ("acs", "ACS"),
         ("acp", "ACP"),
@@ -135,6 +138,7 @@ class AssessmentComponent(BaseNamedCodeModel):
 
 
 class AssessmentOutcomeMap(BaseCodeModel):
+    CODE_PREFIX = "AOM"
     component = models.ForeignKey(AssessmentComponent, on_delete=models.CASCADE, verbose_name="Componente")
     outcome = models.ForeignKey("curriculum.LearningOutcome", on_delete=models.CASCADE, verbose_name="Resultado de aprendizagem")
     weight = models.DecimalField(max_digits=5, decimal_places=2, default=100, verbose_name="Peso")
@@ -194,6 +198,7 @@ class AssessmentOutcomeMap(BaseCodeModel):
 
 
 class Assessment(BaseCodeModel):
+    CODE_PREFIX = "ASM"
     TYPE_CHOICES = AssessmentComponent.TYPE_CHOICES
 
     def __init__(self, *args, **kwargs):
@@ -353,6 +358,7 @@ class Assessment(BaseCodeModel):
 
 
 class SubjectPeriodResult(BaseCodeModel):
+    CODE_PREFIX = "SPR"
     student = models.ForeignKey("academic.Student", on_delete=models.CASCADE, verbose_name="Aluno")
     teaching_assignment = models.ForeignKey("school.TeachingAssignment", on_delete=models.CASCADE, verbose_name="Alocação docente")
     period = models.ForeignKey(AssessmentPeriod, on_delete=models.CASCADE, verbose_name="Período")

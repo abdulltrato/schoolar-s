@@ -7,6 +7,7 @@ from core.models import BaseCodeModel
 
 
 class Progression(BaseCodeModel):
+    CODE_PREFIX = "PRG"
     DECISION_CHOICES = [
         ("approved", "Aprovado"),
         ("retained", "Retido"),

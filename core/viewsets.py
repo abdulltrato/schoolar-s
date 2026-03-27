@@ -7,6 +7,8 @@ from django.db.models import Q
 from rest_framework import filters, viewsets
 from rest_framework.exceptions import PermissionDenied
 
+from core.models import tenant_id_from_user
+
 from .permissions import RoleBasedAccessPermission
 
 audit_logger = logging.getLogger("schoolar.audit")
@@ -65,18 +67,33 @@ class TenantScopedQuerysetMixin:
         user = getattr(self.request, "user", None)
         if not user or not getattr(user, "is_authenticated", False):
             return None
-        return getattr(user, "school_profile", None)
+        profile = getattr(user, "school_profile", None)
+        if profile is not None and getattr(profile, "deleted_at", None) is not None:
+            return None
+        return profile
 
     def _resolve_tenant_id(self):
+        profile = self._get_profile()
         header_tenant = getattr(self.request, "tenant_id", None)
+        header_tenant = (header_tenant or "").strip() or None
+
+        user = getattr(self.request, "user", None)
+        user_tenant = tenant_id_from_user(user) if user and getattr(user, "is_authenticated", False) else ""
+        user_tenant = (user_tenant or "").strip() or None
+        if user_tenant:
+            if header_tenant and header_tenant != user_tenant:
+                raise PermissionDenied("Tenant header must match the authenticated user's tenant.")
+            return user_tenant
+
+        if not profile:
+            return header_tenant
+
         if header_tenant:
             return header_tenant
-        profile = self._get_profile()
-        if not profile:
-            return None
+
         if profile.role in self.ADMIN_ROLES:
             return None
-        return (profile.tenant_id or "").strip() or None
+        return None
 
     def _get_model(self):
         queryset = super().get_queryset()

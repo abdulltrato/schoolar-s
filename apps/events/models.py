@@ -5,6 +5,7 @@ from core.models import BaseCodeModel
 
 
 class Event(BaseCodeModel):
+    CODE_PREFIX = "EVT"
     TYPE_CHOICES = [
         ("student_registered", "Aluno registado"),
         ("assessment_recorded", "Avaliação registada"),

@@ -23,6 +23,8 @@ class RoleBasedAccessPermission(BasePermission):
             return True
 
         profile = getattr(user, "school_profile", None)
+        if profile is not None and getattr(profile, "deleted_at", None) is not None:
+            profile = None
         if profile is None:
             return not getattr(settings, "REQUIRE_USER_PROFILE", False)
         if not profile.active:

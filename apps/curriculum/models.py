@@ -9,6 +9,7 @@ from apps.school.models import Grade
 
 
 class CurriculumArea(BaseNamedCodeModel):
+    CODE_PREFIX = "CAR"
 
     def __str__(self):
         return self.name
@@ -26,6 +27,7 @@ class CurriculumArea(BaseNamedCodeModel):
 
 
 class Subject(BaseNamedCodeModel):
+    CODE_PREFIX = "SUB"
     area = models.ForeignKey(CurriculumArea, on_delete=models.CASCADE, verbose_name="Área")
     cycle = models.IntegerField(verbose_name="Ciclo")
 
@@ -57,6 +59,7 @@ class Subject(BaseNamedCodeModel):
 
 
 class Competency(BaseNamedCodeModel):
+    CODE_PREFIX = "COM"
     AREA_CHOICES = [
         ("language_communication", "Linguagem e comunicação"),
         ("scientific_technological_knowledge", "Saber científico e tecnológico"),
@@ -118,6 +121,7 @@ class Competency(BaseNamedCodeModel):
 
 
 class LearningOutcome(BaseCodeModel):
+    CODE_PREFIX = "OUT"
     AUTO_CODE = False
     TAXONOMY_LEVEL_CHOICES = [
         ("remember", "Recordar"),
@@ -193,6 +197,7 @@ class LearningOutcome(BaseCodeModel):
 
 
 class CompetencyOutcome(BaseCodeModel):
+    CODE_PREFIX = "COT"
     competency = models.ForeignKey(Competency, on_delete=models.CASCADE, verbose_name="Competência")
     outcome = models.ForeignKey(LearningOutcome, on_delete=models.CASCADE, verbose_name="Resultado de aprendizagem")
     weight = models.DecimalField(max_digits=5, decimal_places=2, default=100, verbose_name="Peso")
@@ -239,6 +244,7 @@ class CompetencyOutcome(BaseCodeModel):
 
 
 class BaseCurriculum(BaseCodeModel):
+    CODE_PREFIX = "BCU"
     cycle = models.IntegerField(verbose_name="Ciclo")
     competencies = models.ManyToManyField(Competency, verbose_name="Competências")
 
@@ -260,6 +266,7 @@ class BaseCurriculum(BaseCodeModel):
 
 
 class LocalCurriculum(BaseCodeModel):
+    CODE_PREFIX = "LCU"
     cycle = models.IntegerField(verbose_name="Ciclo")
     additional_competencies = models.ManyToManyField(Competency, blank=True, verbose_name="Competências adicionais")
 
@@ -283,6 +290,7 @@ class LocalCurriculum(BaseCodeModel):
 
 
 class SubjectCurriculumPlan(BaseCodeModel):
+    CODE_PREFIX = "SCP"
     grade_subject = models.OneToOneField(
         "school.GradeSubject",
         on_delete=models.CASCADE,

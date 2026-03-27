@@ -17,6 +17,7 @@ def validate_academic_year_code(code: str):
 
 
 class AcademicYear(BaseCodeModel):
+    CODE_PREFIX = "ACY"
     AUTO_CODE = False
     code = models.CharField(max_length=9, verbose_name="Ano letivo")
     start_date = models.DateField(verbose_name="Data de início")
@@ -52,6 +53,7 @@ class AcademicYear(BaseCodeModel):
 
 
 class Grade(BaseNamedCodeModel):
+    CODE_PREFIX = "GRA"
     number = models.PositiveSmallIntegerField(unique=True, verbose_name="Classe")
     cycle = models.PositiveSmallIntegerField(verbose_name="Ciclo")
     name = models.CharField(max_length=50, blank=True, verbose_name="Nome")
@@ -119,6 +121,8 @@ class School(BaseNamedCodeModel):
 
 
 class Teacher(BaseNamedCodeModel):
+    CODE_PREFIX = "TCH"
+    TENANT_INHERIT_USER_FIELDS = ("user",)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Usuário")
     school = models.ForeignKey(
         School,
@@ -160,6 +164,7 @@ class Teacher(BaseNamedCodeModel):
 
 
 class Classroom(BaseNamedCodeModel):
+    CODE_PREFIX = "CLS"
     school = models.ForeignKey(
         School,
         on_delete=models.SET_NULL,
@@ -242,6 +247,7 @@ class Classroom(BaseNamedCodeModel):
 
 
 class GradeSubject(BaseCodeModel):
+    CODE_PREFIX = "GDS"
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, verbose_name="Ano letivo")
     grade = models.ForeignKey(Grade, on_delete=models.CASCADE, verbose_name="Classe")
     subject = models.ForeignKey("curriculum.Subject", on_delete=models.CASCADE, verbose_name="Disciplina")
@@ -280,6 +286,7 @@ class GradeSubject(BaseCodeModel):
 
 
 class TeachingAssignment(BaseCodeModel):
+    CODE_PREFIX = "TAS"
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, verbose_name="Professor")
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, verbose_name="Turma")
     grade_subject = models.ForeignKey(
@@ -336,6 +343,7 @@ class TeachingAssignment(BaseCodeModel):
 
 
 class Enrollment(BaseCodeModel):
+    CODE_PREFIX = "MAT"
     student = models.ForeignKey("academic.Student", on_delete=models.CASCADE, verbose_name="Aluno")
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, verbose_name="Turma")
     enrollment_date = models.DateField(auto_now_add=True, verbose_name="Data de matrícula")
@@ -377,6 +385,7 @@ class Enrollment(BaseCodeModel):
 
 
 class ManagementAssignment(BaseCodeModel):
+    CODE_PREFIX = "MAS"
     ROLE_CHOICES = [
         ("homeroom_director", "Diretor de turma"),
         ("grade_coordinator", "Coordenador de classe"),
@@ -471,6 +480,7 @@ class ManagementAssignment(BaseCodeModel):
 
 
 class UserProfile(BaseCodeModel):
+    CODE_PREFIX = "UPR"
     ROLE_CHOICES = [
         ("national_admin", "Administrador nacional"),
         ("provincial_admin", "Administrador provincial"),
@@ -517,6 +527,7 @@ class UserProfile(BaseCodeModel):
 
 
 class AttendanceRecord(BaseCodeModel):
+    CODE_PREFIX = "ATT"
     STATUS_CHOICES = [
         ("present", "Presente"),
         ("late", "Atrasado"),
@@ -553,6 +564,8 @@ class AttendanceRecord(BaseCodeModel):
 
 
 class Announcement(BaseCodeModel):
+    CODE_PREFIX = "ANN"
+    TENANT_INHERIT_USER_FIELDS = ("author",)
     AUDIENCE_CHOICES = [
         ("school", "Escola"),
         ("classroom", "Turma"),
@@ -610,6 +623,7 @@ class Announcement(BaseCodeModel):
 
 
 class Invoice(BaseCodeModel):
+    CODE_PREFIX = "INV"
     STATUS_CHOICES = [
         ("draft", "Rascunho"),
         ("issued", "Emitida"),
@@ -654,6 +668,7 @@ class Invoice(BaseCodeModel):
 
 
 class Payment(BaseCodeModel):
+    CODE_PREFIX = "PGT"
     METHOD_CHOICES = [
         ("cash", "Numerário"),
         ("bank_transfer", "Transferência"),
@@ -689,6 +704,7 @@ class Payment(BaseCodeModel):
 
 
 class AuditEvent(BaseCodeModel):
+    CODE_PREFIX = "AUD"
     ACTION_CHOICES = [
         ("create", "Criação"),
         ("update", "Atualização"),
@@ -723,6 +739,7 @@ class AuditEvent(BaseCodeModel):
 
 
 class AuditAlert(BaseCodeModel):
+    CODE_PREFIX = "AAL"
     SEVERITY_CHOICES = [
         ("watch", "Observação"),
         ("elevated", "Elevado"),

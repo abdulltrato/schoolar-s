@@ -1,4 +1,6 @@
 from django.core.exceptions import ValidationError
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
 
@@ -24,6 +26,67 @@ class TenantModel(models.Model):
             self.tenant_id = tenant_id
         return tenant_id
 
+    def _infer_user_relation_fields(self):
+        try:
+            user_model = get_user_model()
+        except Exception:
+            user_model = None
+
+        inferred = []
+        for field in self._meta.get_fields():
+            if getattr(field, "auto_created", False):
+                continue
+            if not getattr(field, "is_relation", False):
+                continue
+            if not (getattr(field, "many_to_one", False) or getattr(field, "one_to_one", False)):
+                continue
+
+            remote_model = getattr(getattr(field, "remote_field", None), "model", None)
+            if remote_model is None:
+                continue
+
+            if user_model is not None and remote_model is user_model:
+                inferred.append(field.name)
+                continue
+            if isinstance(remote_model, str) and remote_model == getattr(settings, "AUTH_USER_MODEL", ""):
+                inferred.append(field.name)
+                continue
+            if user_model is not None and hasattr(remote_model, "_meta") and remote_model._meta.label == user_model._meta.label:
+                inferred.append(field.name)
+                continue
+
+        return tuple(inferred)
+
+    def _inherit_tenant_from_related_users(self) -> str:
+        field_names = getattr(self, "TENANT_INHERIT_USER_FIELDS", None)
+        if field_names is None:
+            field_name = getattr(self, "TENANT_INHERIT_USER_FIELD", None)
+            if field_name:
+                field_names = (field_name,)
+            else:
+                field_names = self._infer_user_relation_fields()
+
+        for field_name in field_names or ():
+            try:
+                related_user = getattr(self, field_name, None)
+            except Exception:
+                related_user = None
+            if not related_user:
+                continue
+
+            related_tenant = tenant_id_from_user(related_user)
+            if not related_tenant:
+                continue
+
+            current = (self.tenant_id or "").strip()
+            if current and current != related_tenant:
+                raise ValidationError({"tenant_id": "tenant_id must match the related user's tenant."})
+            if not current:
+                self.tenant_id = related_tenant
+            return related_tenant
+
+        return ""
+
     def _resolve_request_tenant_id(self) -> str:
         try:
             from core.request_context import get_current_request
@@ -34,21 +97,26 @@ class TenantModel(models.Model):
         if not request:
             return ""
 
-        tenant_id = getattr(request, "tenant_id", None)
-        if not tenant_id:
-            headers = getattr(request, "headers", None)
-            if headers:
-                tenant_id = headers.get("X-Tenant-ID")
-            if not tenant_id:
-                tenant_id = request.META.get("HTTP_X_TENANT_ID")
-        tenant_id = (tenant_id or "").strip()
-        if tenant_id:
-            return tenant_id
-
         user = getattr(request, "user", None)
         if user and getattr(user, "is_authenticated", False):
-            return tenant_id_from_user(user)
-        return ""
+            user_tenant_id = tenant_id_from_user(user)
+        else:
+            user_tenant_id = ""
+
+        header_tenant_id = getattr(request, "tenant_id", None)
+        if not header_tenant_id:
+            headers = getattr(request, "headers", None)
+            if headers:
+                header_tenant_id = headers.get("X-Tenant-ID")
+            if not header_tenant_id:
+                header_tenant_id = request.META.get("HTTP_X_TENANT_ID")
+        header_tenant_id = (header_tenant_id or "").strip()
+
+        if user_tenant_id:
+            if header_tenant_id and header_tenant_id != user_tenant_id:
+                raise ValidationError({"tenant_id": "tenant_id must match the current user's tenant."})
+            return user_tenant_id
+        return header_tenant_id
 
     def _sync_tenant_with_request(self) -> str:
         tenant_id = self._resolve_request_tenant_id()
@@ -57,7 +125,12 @@ class TenantModel(models.Model):
             if current and current != tenant_id:
                 raise ValidationError({"tenant_id": "tenant_id must match the current user's tenant."})
             self.tenant_id = tenant_id
-        return tenant_id
+            return tenant_id
+
+        if not (self.tenant_id or "").strip():
+            return self._inherit_tenant_from_related_users()
+        self._inherit_tenant_from_related_users()
+        return (self.tenant_id or "").strip()
 
     def full_clean(self, *args, **kwargs):
         self._sync_tenant_with_request()
@@ -71,7 +144,12 @@ class TenantModel(models.Model):
 def tenant_id_from_user(user) -> str:
     if not user:
         return ""
+    direct = (getattr(user, "tenant_id", "") or "").strip()
+    if direct:
+        return direct
     profile = getattr(user, "school_profile", None)
+    if profile is not None and getattr(profile, "deleted_at", None) is not None:
+        return ""
     return (getattr(profile, "tenant_id", "") or "").strip()
 
 
