@@ -1,12 +1,19 @@
-from django.core.exceptions import ValidationError
+import secrets
+
+from django.core.exceptions import FieldDoesNotExist, ValidationError
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db import models
+from django.db import connection, models
 from django.utils import timezone
 
 
 class TenantModel(models.Model):
     tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
+
+    REQUEST_USER_CREATE_FIELD = None
+    REQUEST_USER_CREATE_FIELDS: tuple[str, ...] = ()
+    REQUEST_USER_UPDATE_FIELD = None
+    REQUEST_USER_UPDATE_FIELDS: tuple[str, ...] = ()
 
     class Meta:
         abstract = True
@@ -14,6 +21,114 @@ class TenantModel(models.Model):
     def normalize_tenant_id(self):
         self.tenant_id = (self.tenant_id or "").strip()
         return self.tenant_id
+
+    def _resolve_request_user(self):
+        try:
+            from core.request_context import get_current_request
+        except Exception:
+            return None
+
+        request = get_current_request()
+        if not request:
+            return None
+
+        user = getattr(request, "user", None)
+        if user and getattr(user, "is_authenticated", False):
+            return user
+        return None
+
+    def _configured_request_user_field_names(self):
+        configured = []
+        single_create = getattr(self.__class__, "REQUEST_USER_CREATE_FIELD", None)
+        if single_create:
+            configured.append(single_create)
+        single_update = getattr(self.__class__, "REQUEST_USER_UPDATE_FIELD", None)
+        if single_update:
+            configured.append(single_update)
+
+        plural_create = getattr(self.__class__, "REQUEST_USER_CREATE_FIELDS", None) or ()
+        configured.extend(list(plural_create))
+        plural_update = getattr(self.__class__, "REQUEST_USER_UPDATE_FIELDS", None) or ()
+        configured.extend(list(plural_update))
+
+        seen = set()
+        normalized = []
+        for name in configured:
+            name = (name or "").strip()
+            if not name or name in seen:
+                continue
+            seen.add(name)
+            normalized.append(name)
+        return tuple(normalized)
+
+    def _sync_request_user_fields(self) -> None:
+        request_user = self._resolve_request_user()
+        if not request_user:
+            return
+
+        def set_user(field_name: str) -> None:
+            try:
+                field = self._meta.get_field(field_name)
+            except FieldDoesNotExist as exc:
+                raise ValidationError({field_name: "Invalid REQUEST_USER_* configuration."}) from exc
+
+            if not getattr(field, "is_relation", False) or not (
+                getattr(field, "many_to_one", False) or getattr(field, "one_to_one", False)
+            ):
+                raise ValidationError({field_name: "REQUEST_USER_* fields must be a FK/O2O to the user model."})
+
+            try:
+                user_model = get_user_model()
+            except Exception:
+                user_model = None
+
+            remote_model = getattr(getattr(field, "remote_field", None), "model", None)
+            if user_model is not None:
+                if isinstance(remote_model, str):
+                    if remote_model != getattr(settings, "AUTH_USER_MODEL", ""):
+                        raise ValidationError({field_name: "REQUEST_USER_* fields must point to AUTH_USER_MODEL."})
+                else:
+                    if not (hasattr(remote_model, "_meta") and remote_model._meta.label == user_model._meta.label):
+                        raise ValidationError({field_name: "REQUEST_USER_* fields must point to AUTH_USER_MODEL."})
+
+            setattr(self, field_name, request_user)
+
+        create_field = getattr(self.__class__, "REQUEST_USER_CREATE_FIELD", None)
+        create_fields = getattr(self.__class__, "REQUEST_USER_CREATE_FIELDS", None) or ()
+        create_names = [*( [create_field] if create_field else [] ), *list(create_fields)]
+
+        update_field = getattr(self.__class__, "REQUEST_USER_UPDATE_FIELD", None)
+        update_fields = getattr(self.__class__, "REQUEST_USER_UPDATE_FIELDS", None) or ()
+        update_names = [*( [update_field] if update_field else [] ), *list(update_fields)]
+
+        normalized_create_names = []
+        for field_name in create_names:
+            field_name = (field_name or "").strip()
+            if field_name:
+                normalized_create_names.append(field_name)
+
+        normalized_update_names = []
+        for field_name in update_names:
+            field_name = (field_name or "").strip()
+            if field_name:
+                normalized_update_names.append(field_name)
+
+        if not self.pk:
+            for field_name in normalized_create_names:
+                set_user(field_name)
+        else:
+            manager = getattr(self.__class__, "all_objects", None) or self.__class__._default_manager
+            for field_name in normalized_create_names:
+                stored_id = manager.filter(pk=self.pk).values_list(f"{field_name}_id", flat=True).first()
+                current_id = getattr(self, f"{field_name}_id", None)
+                if stored_id is None:
+                    set_user(field_name)
+                    continue
+                if current_id != stored_id:
+                    raise ValidationError({field_name: "Este campo é definido automaticamente e não pode ser alterado."})
+
+        for field_name in normalized_update_names:
+            set_user(field_name)
 
     def require_tenant_id(self):
         if not self.normalize_tenant_id():
@@ -133,10 +248,12 @@ class TenantModel(models.Model):
         return (self.tenant_id or "").strip()
 
     def full_clean(self, *args, **kwargs):
+        self._sync_request_user_fields()
         self._sync_tenant_with_request()
         return super().full_clean(*args, **kwargs)
 
     def save(self, *args, **kwargs):
+        self._sync_request_user_fields()
         self._sync_tenant_with_request()
         return super().save(*args, **kwargs)
 
@@ -180,6 +297,83 @@ class AuditModel(models.Model):
 class TenantAuditModel(TenantModel, AuditModel):
     class Meta:
         abstract = True
+
+
+class CustomIdentifierMixin(models.Model):
+    """
+    Generates a predictable identifier composed of a prefix, the current year, a global sequence, and a random suffix.
+
+    The sequence is backed by a PostgreSQL sequence named after the model table (``{table}_custom_id_seq``).
+    """
+
+    custom_id = models.CharField(
+        db_column="custom_id",
+        max_length=48,
+        unique=True,
+        db_index=True,
+        editable=False,
+        blank=True,
+        null=True,
+        verbose_name="Código personalizado",
+    )
+
+    CUSTOM_ID_PREFIX = None
+    CUSTOM_ID_DATE_FORMAT = "%Y"
+    CUSTOM_ID_SEQUENCE_WIDTH = 6
+    CUSTOM_ID_RANDOM_WIDTH = 6
+
+    class Meta:
+        abstract = True
+
+    # -----------------------------------------------------
+
+    @classmethod
+    def _custom_sequence_name(cls):
+        return f"{cls._meta.db_table}_custom_id_seq"
+
+    @classmethod
+    def _next_sequence(cls):
+        sequence_name = cls._custom_sequence_name()
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT nextval(%s)", [sequence_name])
+            return cursor.fetchone()[0]
+
+    @classmethod
+    def _custom_id_prefix(cls):
+        prefix = getattr(cls, "CUSTOM_ID_PREFIX", None) or getattr(cls, "prefix", None)
+        if prefix:
+            return str(prefix).upper()
+        return cls.__name__[:3].upper()
+
+    # -----------------------------------------------------
+
+    def _random_suffix(self) -> str:
+        width = getattr(self, "CUSTOM_ID_RANDOM_WIDTH", 0) or 0
+        if width <= 0:
+            return ""
+        upper = 10 ** width
+        return f"{secrets.randbelow(upper):0{width}d}"
+
+    def generate_identifier(self):
+        if self.custom_id:
+            return
+
+        prefix = self._custom_id_prefix()
+        if not prefix:
+            return
+
+        date_label = timezone.localtime(timezone.now()).strftime(self.CUSTOM_ID_DATE_FORMAT)
+        sequence_number = self.__class__._next_sequence()
+        sequence_label = f"{sequence_number:0{self.CUSTOM_ID_SEQUENCE_WIDTH}d}"
+        random_label = self._random_suffix()
+
+        self.custom_id = f"{prefix}{date_label}{sequence_label}{random_label}"
+
+    def save(self, *args, **kwargs):
+        if not self.custom_id:
+            self.generate_identifier()
+
+        return super().save(*args, **kwargs)
 
 
 class SoftDeleteQuerySet(models.QuerySet):
@@ -279,6 +473,11 @@ class CodeModel(models.Model):
         if self.AUTO_CODE and not (self.code or "").strip():
             self.code = self._generate_code()
         return super().save(*args, **kwargs)
+
+    def full_clean(self, *args, **kwargs):
+        if self.AUTO_CODE and not (self.code or "").strip():
+            self.code = self._generate_code()
+        return super().full_clean(*args, **kwargs)
 
 
 class NamedModel(models.Model):

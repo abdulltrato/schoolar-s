@@ -566,6 +566,7 @@ class AttendanceRecord(BaseCodeModel):
 class Announcement(BaseCodeModel):
     CODE_PREFIX = "ANN"
     TENANT_INHERIT_USER_FIELDS = ("author",)
+    REQUEST_USER_CREATE_FIELDS = ("author",)
     AUDIENCE_CHOICES = [
         ("school", "Escola"),
         ("classroom", "Turma"),

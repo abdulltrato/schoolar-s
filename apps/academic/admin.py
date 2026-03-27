@@ -1,5 +1,8 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.auth import get_user_model
+
+from core.admin_utils import TenantAwareAdmin, resolve_request_tenant
 
 from .models import Student, StudentCompetency
 
@@ -12,12 +15,20 @@ class StudentAdminForm(forms.ModelForm):
     def __init__(self, *args, request=None, **kwargs):
         self.request = request
         super().__init__(*args, **kwargs)
+        user_field = self.fields.get("user")
+        if user_field is not None:
+            user_field.queryset = get_user_model().objects.filter(
+                school_profile__tenant_id__isnull=False,
+            ).exclude(
+                school_profile__tenant_id=""
+            ).distinct()
 
     def clean(self):
         cleaned_data = super().clean()
         tenant_id = self._resolve_tenant_id(cleaned_data)
         if tenant_id:
             self.instance.tenant_id = tenant_id
+            cleaned_data["tenant_id"] = tenant_id
         return cleaned_data
 
     def add_error(self, field, error):
@@ -56,23 +67,22 @@ class StudentAdminForm(forms.ModelForm):
 
 
 @admin.register(Student)
-class AlunoAdmin(admin.ModelAdmin):
+class AlunoAdmin(TenantAwareAdmin):
     form = StudentAdminForm
     list_display = ("name", "grade", "education_level", "cycle", "estado")
     list_filter = ("cycle", "estado", "grade")
     search_fields = ("name",)
-    readonly_fields = ("education_level", "cycle",)
-    fields = ("name", "birth_date", "grade", "education_level", "cycle", "estado")
-
-    def get_form(self, request, obj=None, change=False, **kwargs):
-        form_class = super().get_form(request, obj, change=change, **kwargs)
-
-        class RequestAwareStudentAdminForm(form_class):
-            def __init__(self, *args, **inner_kwargs):
-                inner_kwargs["request"] = request
-                super().__init__(*args, **inner_kwargs)
-
-        return RequestAwareStudentAdminForm
+    readonly_fields = ("tenant_id", "education_level", "cycle")
+    fields = (
+        "tenant_id",
+        "user",
+        "name",
+        "birth_date",
+        "grade",
+        "education_level",
+        "cycle",
+        "estado",
+    )
 
     @admin.display(description="Nível de Ensino")
     def education_level(self, obj):
@@ -81,4 +91,35 @@ class AlunoAdmin(admin.ModelAdmin):
         return obj.education_level.title()
 
 
-admin.site.register(StudentCompetency)
+class StudentCompetencyAdminForm(forms.ModelForm):
+    class Meta:
+        model = StudentCompetency
+        fields = "__all__"
+
+    def __init__(self, *args, request=None, **kwargs):
+        self.request = request
+        super().__init__(*args, **kwargs)
+        tenant_id = self._resolve_request_tenant()
+        student_field = self.fields.get("student")
+        if student_field is not None and tenant_id:
+            student_field.queryset = student_field.queryset.filter(tenant_id=tenant_id)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        student = cleaned_data.get("student") or getattr(self.instance, "student", None)
+        tenant_id = (getattr(student, "tenant_id", "") or "").strip()
+        if tenant_id:
+            self.instance.tenant_id = tenant_id
+            cleaned_data["tenant_id"] = tenant_id
+        return cleaned_data
+
+    def _resolve_request_tenant(self):
+        return resolve_request_tenant(self.request)
+
+
+@admin.register(StudentCompetency)
+class StudentCompetencyAdmin(TenantAwareAdmin):
+    form = StudentCompetencyAdminForm
+    list_display = ("student", "competency", "nivel", "tenant_id")
+    readonly_fields = ("tenant_id",)
+    fields = ("student", "competency", "nivel", "tenant_id")
