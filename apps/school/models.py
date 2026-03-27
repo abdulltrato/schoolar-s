@@ -1,10 +1,10 @@
 import re
 
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from core.models import BaseCodeModel, BaseNamedCodeModel
+from core.models import BaseCodeModel, BaseNamedCodeModel, tenant_id_from_user
 
 
 def validate_academic_year_code(code: str):
@@ -119,7 +119,7 @@ class School(BaseNamedCodeModel):
 
 
 class Teacher(BaseNamedCodeModel):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="Usuário")
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Usuário")
     school = models.ForeignKey(
         School,
         on_delete=models.SET_NULL,
@@ -131,11 +131,11 @@ class Teacher(BaseNamedCodeModel):
     specialty = models.CharField(max_length=100, blank=True, verbose_name="Especialidade")
 
     def clean(self):
-        if self.user_id and hasattr(self.user, "school_profile"):
-            profile_tenant_id = (self.user.school_profile.tenant_id or "").strip()
-            if profile_tenant_id and self.tenant_id and self.tenant_id != profile_tenant_id:
+        profile_tenant_id = tenant_id_from_user(self.user)
+        if profile_tenant_id:
+            if self.tenant_id and self.tenant_id != profile_tenant_id:
                 raise ValidationError({"tenant_id": "Teacher tenant must match the linked user profile tenant."})
-            if profile_tenant_id and not self.tenant_id:
+            if not self.tenant_id:
                 self.tenant_id = profile_tenant_id
         school_tenant = (self.school.tenant_id or "").strip() if self.school_id else ""
         if school_tenant:
@@ -483,7 +483,12 @@ class UserProfile(BaseCodeModel):
         ("support", "Suporte"),
     ]
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="school_profile", verbose_name="Usuário")
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="school_profile",
+        verbose_name="Usuário",
+    )
     role = models.CharField(max_length=40, choices=ROLE_CHOICES, verbose_name="Papel")
     school = models.ForeignKey(School, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Escola")
     province = models.CharField(max_length=100, blank=True, verbose_name="Província")
@@ -558,7 +563,13 @@ class Announcement(BaseCodeModel):
 
     school = models.ForeignKey(School, on_delete=models.CASCADE, verbose_name="Escola")
     classroom = models.ForeignKey(Classroom, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Turma")
-    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Autor")
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Autor",
+    )
     title = models.CharField(max_length=180, verbose_name="Título")
     message = models.TextField(verbose_name="Mensagem")
     audience = models.CharField(max_length=20, choices=AUDIENCE_CHOICES, verbose_name="Audiência")
@@ -568,9 +579,7 @@ class Announcement(BaseCodeModel):
     def clean(self):
         classroom_tenant = (self.classroom.tenant_id or "").strip() if self.classroom_id else ""
         school_tenant = (self.school.tenant_id or "").strip() if self.school_id else ""
-        author_tenant = ""
-        if self.author_id and hasattr(self.author, "school_profile"):
-            author_tenant = (self.author.school_profile.tenant_id or "").strip()
+        author_tenant = tenant_id_from_user(self.author)
         if self.tenant_id and classroom_tenant and self.tenant_id != classroom_tenant:
             raise ValidationError({"tenant_id": "Announcement tenant must match the classroom tenant."})
         if self.tenant_id and school_tenant and self.tenant_id != school_tenant:

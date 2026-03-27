@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db import models
 from django.core.exceptions import ValidationError
 
-from core.models import BaseCodeModel, BaseNamedCodeModel
+from core.models import BaseCodeModel, BaseNamedCodeModel, tenant_id_from_user
 
 
 class Student(BaseNamedCodeModel):
@@ -53,11 +53,11 @@ class Student(BaseNamedCodeModel):
         return self.education_level_for_grade(self.grade)
 
     def clean(self):
-        if self.user_id and hasattr(self.user, "school_profile"):
-            profile_tenant_id = (self.user.school_profile.tenant_id or "").strip()
-            if profile_tenant_id and self.tenant_id and self.tenant_id != profile_tenant_id:
+        profile_tenant_id = tenant_id_from_user(self.user)
+        if profile_tenant_id:
+            if self.tenant_id and self.tenant_id != profile_tenant_id:
                 raise ValidationError({"tenant_id": "Student tenant must match the linked user profile tenant."})
-            if profile_tenant_id and not self.tenant_id:
+            if not self.tenant_id:
                 self.tenant_id = profile_tenant_id
         if not (self.tenant_id or "").strip():
             raise ValidationError({"tenant_id": "tenant_id is required."})
@@ -128,11 +128,11 @@ class Guardian(BaseNamedCodeModel):
     active = models.BooleanField(default=True, verbose_name="Ativo")
 
     def clean(self):
-        if self.user_id and hasattr(self.user, "school_profile"):
-            profile_tenant_id = (self.user.school_profile.tenant_id or "").strip()
-            if profile_tenant_id and self.tenant_id and self.tenant_id != profile_tenant_id:
+        profile_tenant_id = tenant_id_from_user(self.user)
+        if profile_tenant_id:
+            if self.tenant_id and self.tenant_id != profile_tenant_id:
                 raise ValidationError({"tenant_id": "Guardian tenant must match the linked user profile tenant."})
-            if profile_tenant_id and not self.tenant_id:
+            if not self.tenant_id:
                 self.tenant_id = profile_tenant_id
         if not (self.tenant_id or "").strip():
             raise ValidationError({"tenant_id": "tenant_id is required."})

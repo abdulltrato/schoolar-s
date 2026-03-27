@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
-from django.db.models.signals import post_save
+from django.db import connection
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
 from apps.academic.models import Guardian, Student
@@ -70,6 +71,23 @@ def ensure_user_profile(sender, instance, created, **kwargs):
             "active": True,
         },
     )
+
+
+@receiver(pre_delete, sender=get_user_model())
+def hard_delete_user_dependents(sender, instance, **kwargs):
+    # Ensure soft-deletable dependents are removed before the user to avoid FK violations.
+    Teacher.all_objects.filter(user=instance).hard_delete()
+    UserProfile.all_objects.filter(user=instance).hard_delete()
+    # Clean up legacy tables that still reference auth_user but are no longer managed by models.
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='escola_professor';"
+        )
+        if cursor.fetchone():
+            cursor.execute(
+                "DELETE FROM escola_professor WHERE user_id = %s;",
+                [instance.pk],
+            )
 
 
 @receiver(post_save, sender=Teacher)

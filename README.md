@@ -51,8 +51,14 @@ Digitalizar e operacionalizar o ensino básico com base em:
 
 ## 🎓 Estrutura do Ensino
 
+* Ensino Basico
 * 1º Ciclo → 1ª a 3ª grade
 * 2º Ciclo → 4ª a 6ª grade
+
+* Ensino Medio
+
+* 1º Ciclo → 7ª a 9ª grade
+* 2º Ciclo → 10ª a 11ª grade
 
 Progressão:
 

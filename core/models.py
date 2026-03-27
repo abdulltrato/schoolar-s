@@ -18,6 +18,62 @@ class TenantModel(models.Model):
             raise ValidationError({"tenant_id": "tenant_id is required."})
         return self.tenant_id
 
+    def inherit_tenant_from_user(self, user, *, overwrite: bool = False) -> str:
+        tenant_id = tenant_id_from_user(user)
+        if tenant_id and (overwrite or not (self.tenant_id or "").strip()):
+            self.tenant_id = tenant_id
+        return tenant_id
+
+    def _resolve_request_tenant_id(self) -> str:
+        try:
+            from core.request_context import get_current_request
+        except Exception:
+            return ""
+
+        request = get_current_request()
+        if not request:
+            return ""
+
+        tenant_id = getattr(request, "tenant_id", None)
+        if not tenant_id:
+            headers = getattr(request, "headers", None)
+            if headers:
+                tenant_id = headers.get("X-Tenant-ID")
+            if not tenant_id:
+                tenant_id = request.META.get("HTTP_X_TENANT_ID")
+        tenant_id = (tenant_id or "").strip()
+        if tenant_id:
+            return tenant_id
+
+        user = getattr(request, "user", None)
+        if user and getattr(user, "is_authenticated", False):
+            return tenant_id_from_user(user)
+        return ""
+
+    def _sync_tenant_with_request(self) -> str:
+        tenant_id = self._resolve_request_tenant_id()
+        if tenant_id:
+            current = (self.tenant_id or "").strip()
+            if current and current != tenant_id:
+                raise ValidationError({"tenant_id": "tenant_id must match the current user's tenant."})
+            self.tenant_id = tenant_id
+        return tenant_id
+
+    def full_clean(self, *args, **kwargs):
+        self._sync_tenant_with_request()
+        return super().full_clean(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        self._sync_tenant_with_request()
+        return super().save(*args, **kwargs)
+
+
+def tenant_id_from_user(user) -> str:
+    if not user:
+        return ""
+    profile = getattr(user, "school_profile", None)
+    return (getattr(profile, "tenant_id", "") or "").strip()
+
 
 class AuditModel(models.Model):
     created_at = models.DateTimeField(default=timezone.now, editable=False, verbose_name="Criado em")

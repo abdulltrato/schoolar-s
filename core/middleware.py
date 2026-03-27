@@ -2,6 +2,8 @@ import logging
 import time
 import uuid
 
+from core.request_context import clear_current_request, set_current_request
+
 logger = logging.getLogger("schoolar.request")
 SLOW_REQUEST_THRESHOLD_MS = 800
 
@@ -14,6 +16,7 @@ class RequestContextMiddleware:
         request.request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
         request.tenant_id = request.headers.get("X-Tenant-ID")
         request.started_at = time.perf_counter()
+        set_current_request(request)
 
         status_code = 500
         try:
@@ -21,6 +24,7 @@ class RequestContextMiddleware:
             status_code = response.status_code
             return response
         finally:
+            clear_current_request()
             duration_ms = round((time.perf_counter() - request.started_at) * 1000, 2)
             log_payload = {
                 "request_id": request.request_id,

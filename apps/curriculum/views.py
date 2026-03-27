@@ -62,12 +62,16 @@ class LocalCurriculumViewSet(RobustModelViewSet):
 
 
 class SubjectCurriculumPlanViewSet(RobustModelViewSet):
-    queryset = SubjectCurriculumPlan.objects.select_related(
-        "grade_subject",
-        "grade_subject__academic_year",
-        "grade_subject__grade",
-        "grade_subject__subject",
-    ).prefetch_related("planned_competencies").all()
+    queryset = (
+        SubjectCurriculumPlan.objects.select_related(
+            "grade_subject",
+            "grade_subject__academic_year",
+            "grade_subject__grade",
+            "grade_subject__subject",
+        )
+        .prefetch_related("planned_competencies")
+        .all()
+    )
     serializer_class = SubjectCurriculumPlanSerializer
     search_fields = (
         "grade_subject__academic_year__code",
