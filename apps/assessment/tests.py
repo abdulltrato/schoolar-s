@@ -79,13 +79,11 @@ class AvaliacaoModelTests(TestCase):
         )
         self.competency = Competency.objects.create(
             name="Resolver operacoes basicas",
-            area="saber_cientifico_tecnologico",
             cycle=1,
             subject=self.subject,
         )
         self.competencia_outra_disciplina = Competency.objects.create(
             name="Interpretar factos historicos",
-            area="linguagem_comunicacao",
             cycle=1,
             subject=self.outra_disciplina,
         )

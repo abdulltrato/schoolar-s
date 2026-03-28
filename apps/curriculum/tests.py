@@ -33,7 +33,6 @@ class CurriculoApiTests(TestCase):
         subject = Subject.objects.create(name="Português", area=area, cycle=1)
         competency = subject.competencia_set.create(
             name="Ler textos curtos",
-            area="linguagem_comunicacao",
             cycle=1,
         )
 
@@ -103,7 +102,6 @@ class CurriculoApiTests(TestCase):
         plano = SubjectCurriculumPlan.objects.create(grade_subject=grade_subject)
         competencia_invalida = Competency.objects.create(
             name="Interpretar contextos históricos",
-            area="linguagem_comunicacao",
             cycle=1,
             subject=outra_disciplina,
         )

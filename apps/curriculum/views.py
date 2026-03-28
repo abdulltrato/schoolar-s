@@ -49,10 +49,10 @@ class SubjectSpecialtyViewSet(RobustModelViewSet):
 
 
 class CompetencyViewSet(RobustModelViewSet):
-    queryset = Competency.objects.select_related("subject", "subject__area").all()
+    queryset = Competency.objects.select_related("area", "subject", "subject__area").all()
     serializer_class = CompetencySerializer
-    search_fields = ("name", "area", "subject__name")
-    ordering_fields = ("id", "name", "cycle", "area")
+    search_fields = ("name", "area__name", "subject__name")
+    ordering_fields = ("id", "name", "cycle", "area__name")
     ordering = ("name",)
 
 

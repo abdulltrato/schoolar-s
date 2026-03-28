@@ -9,6 +9,7 @@ from core.models import BaseCodeModel, BaseNamedCodeModel, tenant_id_from_user
 class Student(BaseNamedCodeModel):
 
     CODE_PREFIX = "STD"
+    TENANT_INHERIT_USER_FIELDS: tuple[str, ...] = ()
 
     CICLO_CHOICES = [
         (1, '1º Ciclo'),
@@ -59,8 +60,6 @@ class Student(BaseNamedCodeModel):
         if profile_tenant_id:
             if self.tenant_id and self.tenant_id != profile_tenant_id:
                 raise ValidationError({"tenant_id": "Student tenant must match the linked user profile tenant."})
-            if not self.tenant_id:
-                self.tenant_id = profile_tenant_id
         if not (self.tenant_id or "").strip():
             raise ValidationError({"tenant_id": "tenant_id is required."})
         if not 1 <= self.grade <= 12:

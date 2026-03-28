@@ -15,18 +15,17 @@ class StudentAdminForm(forms.ModelForm):
     def __init__(self, *args, request=None, **kwargs):
         self.request = request
         super().__init__(*args, **kwargs)
-        user_field = self.fields.get("user")
-        if user_field is not None:
-            user_field.label = "Usuário (login do aluno)"
-            user_field.queryset = get_user_model().objects.filter(
-                school_profile__tenant_id__isnull=False,
-            ).exclude(
-                school_profile__tenant_id=""
-            ).distinct()
+        # The Student model has two user-related fields:
+        # - `user`: the student's login account (optional).
+        # - `usuario`: audit actor (auto-filled from the logged-in user).
+        # To avoid confusion and tenant validation issues on creation, keep `user` out of the add form.
+        self.fields.pop("user", None)
 
     def clean(self):
         cleaned_data = super().clean()
-        tenant_id = self._resolve_tenant_id(cleaned_data)
+        tenant_id = (getattr(self.instance, "tenant_id", "") or "").strip()
+        if not tenant_id:
+            tenant_id = (resolve_request_tenant(self.request) or "").strip()
         if tenant_id:
             self.instance.tenant_id = tenant_id
             cleaned_data["tenant_id"] = tenant_id
@@ -48,23 +47,8 @@ class StudentAdminForm(forms.ModelForm):
             super().add_error(None, tenant_error)
 
     def _resolve_tenant_id(self, cleaned_data):
-        tenant_id = (getattr(self.instance, "tenant_id", "") or "").strip()
-        if tenant_id:
-            return tenant_id
-
-        request_tenant_id = (getattr(self.request, "tenant_id", "") or "").strip()
-        if request_tenant_id:
-            return request_tenant_id
-
-        request_user = getattr(self.request, "user", None)
-        profile = getattr(request_user, "school_profile", None) if request_user and request_user.is_authenticated else None
-        profile_tenant_id = (getattr(profile, "tenant_id", "") or "").strip()
-        if profile_tenant_id:
-            return profile_tenant_id
-
-        linked_user = cleaned_data.get("user") or getattr(self.instance, "user", None)
-        linked_profile = getattr(linked_user, "school_profile", None) if linked_user else None
-        return (getattr(linked_profile, "tenant_id", "") or "").strip()
+        # Backwards-compat alias for older code paths (kept to minimize churn).
+        return (resolve_request_tenant(self.request) or "").strip()
 
 
 @admin.register(Student)
@@ -89,10 +73,9 @@ class AlunoAdmin(TenantAwareAdmin):
             },
         ),
         (
-            "Usuário e auditoria",
+            "Auditoria",
             {
                 "fields": (
-                    "user",
                     "tenant_id",
                     "code",
                     "usuario",

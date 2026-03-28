@@ -279,7 +279,11 @@ def tenant_id_from_user(user) -> str:
     profile = getattr(user, "school_profile", None)
     if profile is not None and getattr(profile, "deleted_at", None) is not None:
         return ""
-    return (getattr(profile, "tenant_id", "") or "").strip()
+    profile_tenant = (getattr(profile, "tenant_id", "") or "").strip()
+    if profile_tenant:
+        return profile_tenant
+    school = getattr(profile, "school", None) if profile is not None else None
+    return (getattr(school, "tenant_id", "") or "").strip()
 
 
 class AuditModel(models.Model):

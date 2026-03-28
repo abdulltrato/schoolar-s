@@ -19,9 +19,9 @@ class CurriculumArea(BaseNamedCodeModel):
         verbose_name_plural = "Áreas curriculares"
         constraints = [
             models.UniqueConstraint(
-                fields=["name"],
+                fields=["tenant_id", "name"],
                 condition=models.Q(deleted_at__isnull=True),
-                name="unique_curriculumarea_name",
+                name="unique_curriculumarea_name_per_tenant",
             ),
         ]
 
@@ -92,45 +92,47 @@ class SubjectSpecialty(BaseNamedCodeModel):
 
 class Competency(BaseNamedCodeModel):
     CODE_PREFIX = "COM"
-    AREA_CHOICES = [
-        ("language_communication", "Linguagem e comunicação"),
-        ("scientific_technological_knowledge", "Saber científico e tecnológico"),
-        ("reasoning_problem_solving", "Raciocínio e resolução de problemas"),
-        ("personal_development_autonomy", "Desenvolvimento pessoal e autonomia"),
-        ("interpersonal_relationship", "Relacionamento interpessoal"),
-        ("wellbeing_health_environment", "Bem-estar, saúde e ambiente"),
-        ("aesthetic_artistic_sensitivity", "Sensibilidade estética e artística"),
-    ]
-    LEGACY_AREA_MAP = {
-        "linguagem_comunicacao": "language_communication",
-        "saber_cientifico_tecnologico": "scientific_technological_knowledge",
-        "raciocinio_resolucao_problemas": "reasoning_problem_solving",
-        "desenvolvimento_pessoal_autonomia": "personal_development_autonomy",
-        "relacionamento_interpessoal": "interpersonal_relationship",
-        "bem_estar_saude_ambiente": "wellbeing_health_environment",
-        "sensibilidade_estetica_artistica": "aesthetic_artistic_sensitivity",
-    }
 
     description = models.TextField(blank=True, verbose_name="Descrição")
-    area = models.CharField(max_length=50, choices=AREA_CHOICES, verbose_name="Área")
+    area = models.ForeignKey(
+        CurriculumArea,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        verbose_name="Área",
+    )
     cycle = models.IntegerField(verbose_name="Ciclo")
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Disciplina")
     grade = models.ForeignKey(Grade, null=True, blank=True, on_delete=models.PROTECT, verbose_name="Classe")
 
-    def __init__(self, *args, **kwargs):
-        area = kwargs.get("area")
-        if area is not None:
-            kwargs["area"] = self.LEGACY_AREA_MAP.get(area, area)
-        super().__init__(*args, **kwargs)
-
     def clean(self):
-        self.area = self.LEGACY_AREA_MAP.get(self.area, self.area)
         subject_tenant = (self.subject.tenant_id or "").strip() if self.subject_id else ""
+        area_tenant = (self.area.tenant_id or "").strip() if self.area_id else ""
+
+        if self.subject_id and not self.area_id:
+            self.area = self.subject.area
+            area_tenant = (self.area.tenant_id or "").strip() if self.area_id else ""
+
+        if self.subject_id and self.area_id and self.subject.area_id != self.area_id:
+            raise ValidationError({"area": "A área deve coincidir com a área da disciplina."})
+
+        if not self.area_id:
+            raise ValidationError({"area": "Informe uma área para a competência."})
+
+        if subject_tenant and area_tenant and subject_tenant != area_tenant:
+            raise ValidationError({"tenant_id": "A disciplina e a área devem pertencer ao mesmo tenant."})
+
         if subject_tenant:
             if self.tenant_id and self.tenant_id != subject_tenant:
                 raise ValidationError({"tenant_id": "Competency tenant must match the subject tenant."})
             if not self.tenant_id:
                 self.tenant_id = subject_tenant
+        if area_tenant:
+            if self.tenant_id and self.tenant_id != area_tenant:
+                raise ValidationError({"tenant_id": "Competency tenant must match the area tenant."})
+            if not self.tenant_id:
+                self.tenant_id = area_tenant
+
         if self.cycle not in {1, 2}:
             raise ValidationError({"cycle": "The competency cycle must be 1 or 2."})
         if self.subject and self.subject.cycle != self.cycle:
@@ -139,7 +141,6 @@ class Competency(BaseNamedCodeModel):
             self.cycle = self.grade.cycle
 
     def save(self, *args, **kwargs):
-        self.area = self.LEGACY_AREA_MAP.get(self.area, self.area)
         self.full_clean()
         return super().save(*args, **kwargs)
 

@@ -39,6 +39,14 @@ class SubjectSpecialtySerializer(serializers.ModelSerializer):
 
 
 class CompetencySerializer(serializers.ModelSerializer):
+    area = CurriculumAreaSerializer(read_only=True)
+    area_id = serializers.PrimaryKeyRelatedField(
+        source="area",
+        queryset=CurriculumArea.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
     subject = SubjectSerializer(read_only=True)
     subject_id = serializers.PrimaryKeyRelatedField(
         source="subject",
