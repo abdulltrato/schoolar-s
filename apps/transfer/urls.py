@@ -10,4 +10,3 @@ router.register(r"transferencias", TransferViewSet, basename="legacy-transfers")
 urlpatterns = [
     path("", include(router.urls)),
 ]
-

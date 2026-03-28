@@ -80,12 +80,12 @@ class TransferApiTests(TestCase):
             "to_classroom": self.class_a2.id,
             "reason": "Mudança de turma",
         }
-        resp = self.client.post("/api/v1/transferencia/transfers/", create_payload, format="json")
-        self.assertEqual(resp.status_code, 201)
+        resp = self.client.post("/api/v1/transfer/transfers/", create_payload, format="json")
+        self.assertEqual(resp.status_code, 201, resp.json())
         transfer_id = self._unwrap(resp).get("id")
         self.assertIsNotNone(transfer_id)
 
-        apply_resp = self.client.post(f"/api/v1/transferencia/transfers/{transfer_id}/apply/", {}, format="json")
+        apply_resp = self.client.post(f"/api/v1/transfer/transfers/{transfer_id}/apply/", {}, format="json")
         self.assertEqual(apply_resp.status_code, 200)
 
         active_enrollments = Enrollment.objects.filter(student=student, deleted_at__isnull=True).select_related("classroom")
@@ -111,11 +111,11 @@ class TransferApiTests(TestCase):
             "to_classroom": self.class_b1.id,
             "reason": "Transferência de escola/tenant",
         }
-        resp = self.client.post("/api/v1/transferencia/transfers/", create_payload, format="json")
-        self.assertEqual(resp.status_code, 201)
+        resp = self.client.post("/api/v1/transfer/transfers/", create_payload, format="json")
+        self.assertEqual(resp.status_code, 201, resp.json())
         transfer_id = self._unwrap(resp).get("id")
 
-        apply_resp = self.client.post(f"/api/v1/transferencia/transfers/{transfer_id}/apply/", {}, format="json")
+        apply_resp = self.client.post(f"/api/v1/transfer/transfers/{transfer_id}/apply/", {}, format="json")
         self.assertEqual(apply_resp.status_code, 200)
 
         student.refresh_from_db()
@@ -178,11 +178,11 @@ class TransferApiTests(TestCase):
             "new_specialty": spec_b.id,
             "reason": "Transferência de professor",
         }
-        resp = self.client.post("/api/v1/transferencia/transfers/", create_payload, format="json")
-        self.assertEqual(resp.status_code, 201)
+        resp = self.client.post("/api/v1/transfer/transfers/", create_payload, format="json")
+        self.assertEqual(resp.status_code, 201, resp.json())
         transfer_id = self._unwrap(resp).get("id")
 
-        apply_resp = self.client.post(f"/api/v1/transferencia/transfers/{transfer_id}/apply/", {}, format="json")
+        apply_resp = self.client.post(f"/api/v1/transfer/transfers/{transfer_id}/apply/", {}, format="json")
         self.assertEqual(apply_resp.status_code, 200)
 
         teacher.refresh_from_db()
@@ -195,4 +195,3 @@ class TransferApiTests(TestCase):
 
         assignment.refresh_from_db()
         self.assertIsNotNone(assignment.deleted_at)
-

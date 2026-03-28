@@ -83,7 +83,7 @@ class TenantScopedQuerysetMixin:
         user_tenant = (user_tenant or "").strip() or None
         if user_tenant:
             if header_tenant and header_tenant != user_tenant:
-                raise PermissionDenied("Tenant header must match the authenticated user's tenant.")
+                raise PermissionDenied("O header X-Tenant-ID deve coincidir com o tenant do usuário autenticado.")
             return user_tenant
 
         if not profile:

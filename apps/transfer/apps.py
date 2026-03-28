@@ -1,8 +1,7 @@
 from django.apps import AppConfig
 
 
-class TransferenciaConfig(AppConfig):
+class TransferConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "apps.transferencia"
+    name = "apps.transfer"
     verbose_name = "Transferências"
-

@@ -67,4 +67,3 @@ class TransferAdmin(TenantAwareAdmin):
         self.message_user(request, f"Aplicadas: {applied}. Falhas: {failed}.")
 
     apply_transfers.short_description = "Aplicar transferências selecionadas"
-

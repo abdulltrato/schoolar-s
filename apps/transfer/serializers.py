@@ -8,4 +8,3 @@ class TransferSerializer(serializers.ModelSerializer):
         model = Transfer
         fields = "__all__"
         read_only_fields = ("status", "applied_at", "error_message", "tenant_id", "code", "custom_id", "usuario")
-

@@ -100,6 +100,10 @@ class Transfer(BaseCodeModel):
         subject = self.student or self.teacher
         return f"{self.get_kind_display()} - {subject or self.pk}"
 
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
     def _resolve_actor(self):
         request = get_current_request()
         user = getattr(request, "user", None) if request else None

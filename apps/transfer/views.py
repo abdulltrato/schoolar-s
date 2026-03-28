@@ -46,4 +46,3 @@ class TransferViewSet(RobustModelViewSet):
         transfer.apply()
         serializer = self.get_serializer(transfer)
         return Response(serializer.data)
-

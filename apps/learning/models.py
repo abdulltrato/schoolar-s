@@ -24,7 +24,7 @@ class Course(BaseCodeModel):
         if self.school_id and hasattr(self.school, "tenant_id"):
             school_tenant = (self.school.tenant_id or "").strip()
         if self.tenant_id and school_tenant and self.tenant_id != school_tenant:
-            raise ValidationError({"tenant_id": "Course tenant must match the school tenant."})
+            raise ValidationError({"tenant_id": "O tenant do curso deve coincidir com o tenant da escola."})
         if school_tenant and not self.tenant_id:
             self.tenant_id = school_tenant
         if not (self.tenant_id or "").strip():
@@ -60,29 +60,29 @@ class CourseOffering(BaseCodeModel):
         academic_year_tenant = (self.academic_year.tenant_id or "").strip() if self.academic_year_id else ""
         for related_tenant in [classroom_tenant, teacher_tenant]:
             if course_tenant and related_tenant and course_tenant != related_tenant:
-                raise ValidationError({"tenant_id": "Course offering relations must belong to the same tenant."})
+                raise ValidationError({"tenant_id": "As relações da oferta do curso devem pertencer ao mesmo tenant."})
         if academic_year_tenant and course_tenant and academic_year_tenant != course_tenant:
-            raise ValidationError({"academic_year": "Academic year must belong to the same tenant as the course."})
+            raise ValidationError({"academic_year": "O ano letivo deve pertencer ao mesmo tenant do curso."})
         if self.tenant_id and course_tenant and self.tenant_id != course_tenant:
-            raise ValidationError({"tenant_id": "Course offering tenant must match the course tenant."})
+            raise ValidationError({"tenant_id": "O tenant da oferta do curso deve coincidir com o tenant do curso."})
         self.tenant_id = self.tenant_id or course_tenant or classroom_tenant or teacher_tenant or academic_year_tenant
         if self.start_date and self.end_date and self.end_date <= self.start_date:
-            raise ValidationError({"end_date": "End date must be later than the start date."})
+            raise ValidationError({"end_date": "A data de fim deve ser posterior à data de início."})
         if self.classroom_id and self.course_id:
             course_school_id = self.course.school_id
             classroom_school_id = self.classroom.school_id
             if course_school_id and classroom_school_id and course_school_id != classroom_school_id:
-                raise ValidationError({"classroom": "The classroom must belong to the same school as the course."})
+                raise ValidationError({"classroom": "A turma deve pertencer à mesma escola do curso."})
         if self.teacher_id and self.course_id:
             course_school_id = self.course.school_id
             teacher_school_id = self.teacher.school_id
             if course_school_id and teacher_school_id and course_school_id != teacher_school_id:
-                raise ValidationError({"teacher": "The teacher must belong to the same school as the course."})
+                raise ValidationError({"teacher": "O professor deve pertencer à mesma escola do curso."})
         if self.teacher_id and self.classroom_id:
             teacher_school_id = self.teacher.school_id
             classroom_school_id = self.classroom.school_id
             if teacher_school_id and classroom_school_id and teacher_school_id != classroom_school_id:
-                raise ValidationError({"teacher": "The teacher must belong to the same school as the classroom."})
+                raise ValidationError({"teacher": "O professor deve pertencer à mesma escola da turma."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -111,11 +111,11 @@ class Lesson(BaseCodeModel):
     def clean(self):
         offering_tenant = (self.offering.tenant_id or "").strip() if self.offering_id else ""
         if self.tenant_id and offering_tenant and self.tenant_id != offering_tenant:
-            raise ValidationError({"tenant_id": "Lesson tenant must match the offering tenant."})
+            raise ValidationError({"tenant_id": "O tenant da aula deve coincidir com o tenant da oferta."})
         if offering_tenant and not self.tenant_id:
             self.tenant_id = offering_tenant
         if not (self.tenant_id or "").strip():
-            raise ValidationError({"tenant_id": "tenant_id is required."})
+            raise ValidationError({"tenant_id": "tenant_id é obrigatório. Envie o header X-Tenant-ID ou configure tenant_id no seu perfil (UserProfile)."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -150,11 +150,11 @@ class LessonMaterial(BaseCodeModel):
         lesson_tenant = (self.lesson.tenant_id or "").strip() if self.lesson_id else ""
         if lesson_tenant:
             if self.tenant_id and self.tenant_id != lesson_tenant:
-                raise ValidationError({"tenant_id": "Lesson material tenant must match the lesson tenant."})
+                raise ValidationError({"tenant_id": "O tenant do material deve coincidir com o tenant da aula."})
             if not self.tenant_id:
                 self.tenant_id = lesson_tenant
         if not (self.tenant_id or "").strip():
-            raise ValidationError({"tenant_id": "tenant_id is required."})
+            raise ValidationError({"tenant_id": "tenant_id é obrigatório. Envie o header X-Tenant-ID ou configure tenant_id no seu perfil (UserProfile)."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -182,13 +182,13 @@ class Assignment(BaseCodeModel):
     def clean(self):
         offering_tenant = (self.offering.tenant_id or "").strip() if self.offering_id else ""
         if self.tenant_id and offering_tenant and self.tenant_id != offering_tenant:
-            raise ValidationError({"tenant_id": "Assignment tenant must match the offering tenant."})
+            raise ValidationError({"tenant_id": "O tenant da tarefa deve coincidir com o tenant da oferta."})
         if offering_tenant and not self.tenant_id:
             self.tenant_id = offering_tenant
         if not (self.tenant_id or "").strip():
-            raise ValidationError({"tenant_id": "tenant_id is required."})
+            raise ValidationError({"tenant_id": "tenant_id é obrigatório. Envie o header X-Tenant-ID ou configure tenant_id no seu perfil (UserProfile)."})
         if self.opens_at and self.due_at and self.due_at <= self.opens_at:
-            raise ValidationError({"due_at": "Due date must be later than the opening date."})
+            raise ValidationError({"due_at": "O prazo deve ser posterior à data de abertura."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -224,23 +224,23 @@ class Submission(BaseCodeModel):
         assignment_tenant = (self.assignment.tenant_id or "").strip() if self.assignment_id else ""
         student_tenant = (self.student.tenant_id or "").strip() if self.student_id else ""
         if assignment_tenant and student_tenant and assignment_tenant != student_tenant:
-            raise ValidationError({"tenant_id": "Submission assignment and student must belong to the same tenant."})
+            raise ValidationError({"tenant_id": "A tarefa e o aluno devem pertencer ao mesmo tenant."})
         if self.tenant_id and assignment_tenant and self.tenant_id != assignment_tenant:
-            raise ValidationError({"tenant_id": "Submission tenant must match the assignment tenant."})
+            raise ValidationError({"tenant_id": "O tenant da submissão deve coincidir com o tenant da tarefa."})
         if self.tenant_id and student_tenant and self.tenant_id != student_tenant:
-            raise ValidationError({"tenant_id": "Submission tenant must match the student tenant."})
+            raise ValidationError({"tenant_id": "O tenant da submissão deve coincidir com o tenant do aluno."})
         self.tenant_id = self.tenant_id or assignment_tenant or student_tenant
         if not (self.tenant_id or "").strip():
-            raise ValidationError({"tenant_id": "tenant_id is required."})
+            raise ValidationError({"tenant_id": "tenant_id é obrigatório. Envie o header X-Tenant-ID ou configure tenant_id no seu perfil (UserProfile)."})
         if self.score is not None and self.score > self.assignment.max_score:
-            raise ValidationError({"score": "The score cannot exceed the assignment maximum score."})
+            raise ValidationError({"score": "A nota não pode exceder a nota máxima da tarefa."})
         if self.assignment_id and self.student_id:
             offering = self.assignment.offering
             if offering.classroom_id:
                 Enrollment = apps.get_model("school", "Enrollment")
                 enrolled = Enrollment.objects.filter(student=self.student, classroom=offering.classroom).exists()
                 if not enrolled:
-                    raise ValidationError({"student": "Student must be enrolled in the offering classroom."})
+                    raise ValidationError({"student": "O aluno deve estar matriculado na turma da oferta."})
 
     def save(self, *args, **kwargs):
         self.full_clean()

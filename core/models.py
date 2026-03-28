@@ -70,12 +70,12 @@ class TenantModel(models.Model):
             try:
                 field = self._meta.get_field(field_name)
             except FieldDoesNotExist as exc:
-                raise ValidationError({field_name: "Invalid REQUEST_USER_* configuration."}) from exc
+                raise ValidationError({field_name: "Configuração REQUEST_USER_* inválida."}) from exc
 
             if not getattr(field, "is_relation", False) or not (
                 getattr(field, "many_to_one", False) or getattr(field, "one_to_one", False)
             ):
-                raise ValidationError({field_name: "REQUEST_USER_* fields must be a FK/O2O to the user model."})
+                raise ValidationError({field_name: "Campos REQUEST_USER_* devem ser FK/O2O para o modelo de usuário."})
 
             try:
                 user_model = get_user_model()
@@ -86,10 +86,10 @@ class TenantModel(models.Model):
             if user_model is not None:
                 if isinstance(remote_model, str):
                     if remote_model != getattr(settings, "AUTH_USER_MODEL", ""):
-                        raise ValidationError({field_name: "REQUEST_USER_* fields must point to AUTH_USER_MODEL."})
+                        raise ValidationError({field_name: "Campos REQUEST_USER_* devem apontar para AUTH_USER_MODEL."})
                 else:
                     if not (hasattr(remote_model, "_meta") and remote_model._meta.label == user_model._meta.label):
-                        raise ValidationError({field_name: "REQUEST_USER_* fields must point to AUTH_USER_MODEL."})
+                        raise ValidationError({field_name: "Campos REQUEST_USER_* devem apontar para AUTH_USER_MODEL."})
 
             current_id = getattr(self, f"{field_name}_id", None)
             if enforce_match_if_set and current_id is not None and current_id != getattr(request_user, "pk", None):
@@ -140,7 +140,7 @@ class TenantModel(models.Model):
 
     def require_tenant_id(self):
         if not self.normalize_tenant_id():
-            raise ValidationError({"tenant_id": "tenant_id is required."})
+            raise ValidationError({"tenant_id": "tenant_id é obrigatório. Envie o header X-Tenant-ID ou configure tenant_id no seu perfil (UserProfile)."})
         return self.tenant_id
 
     def inherit_tenant_from_user(self, user, *, overwrite: bool = False) -> str:
@@ -207,7 +207,7 @@ class TenantModel(models.Model):
 
             current = (self.tenant_id or "").strip()
             if current and current != related_tenant:
-                raise ValidationError({"tenant_id": "tenant_id must match the related user's tenant."})
+                raise ValidationError({"tenant_id": "O tenant_id deve coincidir com o tenant do usuário relacionado."})
             if not current:
                 self.tenant_id = related_tenant
             return related_tenant
@@ -241,7 +241,7 @@ class TenantModel(models.Model):
 
         if user_tenant_id:
             if header_tenant_id and header_tenant_id != user_tenant_id:
-                raise ValidationError({"tenant_id": "tenant_id must match the current user's tenant."})
+                raise ValidationError({"tenant_id": "O tenant_id deve coincidir com o tenant do usuário logado."})
             return user_tenant_id
         return header_tenant_id
 
@@ -250,7 +250,7 @@ class TenantModel(models.Model):
         if tenant_id:
             current = (self.tenant_id or "").strip()
             if current and current != tenant_id:
-                raise ValidationError({"tenant_id": "tenant_id must match the current user's tenant."})
+                raise ValidationError({"tenant_id": "O tenant_id deve coincidir com o tenant do usuário logado."})
             self.tenant_id = tenant_id
             return tenant_id
 
