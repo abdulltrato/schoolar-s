@@ -17,6 +17,7 @@ class StudentAdminForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         user_field = self.fields.get("user")
         if user_field is not None:
+            user_field.label = "Usuário (login do aluno)"
             user_field.queryset = get_user_model().objects.filter(
                 school_profile__tenant_id__isnull=False,
             ).exclude(
@@ -73,15 +74,34 @@ class AlunoAdmin(TenantAwareAdmin):
     list_filter = ("cycle", "estado", "grade")
     search_fields = ("name",)
     readonly_fields = ("tenant_id", "education_level", "cycle")
-    fields = (
-        "tenant_id",
-        "user",
-        "name",
-        "birth_date",
-        "grade",
-        "education_level",
-        "cycle",
-        "estado",
+    fieldsets = (
+        (
+            "Dados do aluno",
+            {
+                "fields": (
+                    "name",
+                    "birth_date",
+                    "grade",
+                    "education_level",
+                    "cycle",
+                    "estado",
+                )
+            },
+        ),
+        (
+            "Usuário e auditoria",
+            {
+                "fields": (
+                    "user",
+                    "tenant_id",
+                    "code",
+                    "usuario",
+                    "created_at",
+                    "updated_at",
+                    "deleted_at",
+                )
+            },
+        ),
     )
 
     @admin.display(description="Nível de Ensino")

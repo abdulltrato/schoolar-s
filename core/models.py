@@ -66,7 +66,7 @@ class TenantModel(models.Model):
         if not request_user:
             return
 
-        def set_user(field_name: str) -> None:
+        def set_user(field_name: str, *, enforce_match_if_set: bool = False) -> None:
             try:
                 field = self._meta.get_field(field_name)
             except FieldDoesNotExist as exc:
@@ -90,6 +90,10 @@ class TenantModel(models.Model):
                 else:
                     if not (hasattr(remote_model, "_meta") and remote_model._meta.label == user_model._meta.label):
                         raise ValidationError({field_name: "REQUEST_USER_* fields must point to AUTH_USER_MODEL."})
+
+            current_id = getattr(self, f"{field_name}_id", None)
+            if enforce_match_if_set and current_id is not None and current_id != getattr(request_user, "pk", None):
+                raise ValidationError({field_name: "Este campo deve corresponder ao usuário logado nesta sessão."})
 
             setattr(self, field_name, request_user)
 
@@ -115,14 +119,18 @@ class TenantModel(models.Model):
 
         if not self.pk:
             for field_name in normalized_create_names:
-                set_user(field_name)
+                set_user(field_name, enforce_match_if_set=True)
         else:
             manager = getattr(self.__class__, "all_objects", None) or self.__class__._default_manager
             for field_name in normalized_create_names:
                 stored_id = manager.filter(pk=self.pk).values_list(f"{field_name}_id", flat=True).first()
                 current_id = getattr(self, f"{field_name}_id", None)
                 if stored_id is None:
-                    set_user(field_name)
+                    # Prevent tampering: if a caller tries to set a different user while a request user exists,
+                    # raise an error instead of silently overriding.
+                    if current_id is not None and current_id != getattr(request_user, "pk", None):
+                        raise ValidationError({field_name: "Este campo deve corresponder ao usuário logado nesta sessão."})
+                    set_user(field_name, enforce_match_if_set=True)
                     continue
                 if current_id != stored_id:
                     raise ValidationError({field_name: "Este campo é definido automaticamente e não pode ser alterado."})
@@ -497,7 +505,7 @@ class BaseModel(TenantModel, AuditModel, SoftDeleteModel):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        editable=False,
+        editable=True,
         related_name="+",
         verbose_name="Usuário",
     )

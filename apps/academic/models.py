@@ -9,7 +9,6 @@ from core.models import BaseCodeModel, BaseNamedCodeModel, tenant_id_from_user
 class Student(BaseNamedCodeModel):
 
     CODE_PREFIX = "STD"
-    TENANT_INHERIT_USER_FIELDS = ("user",)
 
     CICLO_CHOICES = [
         (1, '1º Ciclo'),

@@ -173,6 +173,40 @@ class TenantAwareAdmin(admin.ModelAdmin):
     form = TenantAdminForm
     readonly_fields = ("tenant_id",)
 
+    def _apply_request_user_fields(self, form, request) -> None:
+        request_user = getattr(request, "user", None) if request else None
+        if not request_user or not getattr(request_user, "is_authenticated", False):
+            return
+
+        model = getattr(getattr(form, "_meta", None), "model", None)
+        if model is None:
+            return
+
+        create_field = getattr(model, "REQUEST_USER_CREATE_FIELD", None)
+        create_fields = getattr(model, "REQUEST_USER_CREATE_FIELDS", None) or ()
+        update_field = getattr(model, "REQUEST_USER_UPDATE_FIELD", None)
+        update_fields = getattr(model, "REQUEST_USER_UPDATE_FIELDS", None) or ()
+
+        if not getattr(getattr(form, "instance", None), "pk", None):
+            for field_name in [*([create_field] if create_field else []), *list(create_fields)]:
+                field_name = (field_name or "").strip()
+                if field_name:
+                    setattr(form.instance, field_name, request_user)
+
+        for field_name in [*([update_field] if update_field else []), *list(update_fields)]:
+            field_name = (field_name or "").strip()
+            if field_name:
+                setattr(form.instance, field_name, request_user)
+
+        for field_name in iter_request_user_field_names(model):
+            user_field = getattr(getattr(form, "fields", None), "get", lambda *_: None)(field_name)
+            if user_field is None:
+                continue
+            user_field.disabled = True
+            user_field.initial = request_user
+            if field_name == "usuario":
+                user_field.label = "Usuário (auditoria)"
+
     def get_fields(self, request, obj=None):
         fields = list(super().get_fields(request, obj=obj))
         for field_name in iter_request_user_field_names(self.model):
@@ -203,11 +237,18 @@ class TenantAwareAdmin(admin.ModelAdmin):
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form_class = super().get_form(request, obj, change=change, **kwargs)
+        model_admin = self
 
         class RequestAwareForm(form_class):
             def __init__(self, *args, **inner_kwargs):
-                inner_kwargs["request"] = request
-                super().__init__(*args, **inner_kwargs)
+                if "request" not in inner_kwargs:
+                    inner_kwargs["request"] = request
+                try:
+                    super().__init__(*args, **inner_kwargs)
+                except TypeError:
+                    inner_kwargs.pop("request", None)
+                    super().__init__(*args, **inner_kwargs)
+                model_admin._apply_request_user_fields(self, request)
 
         return RequestAwareForm
 
@@ -215,6 +256,10 @@ class TenantAwareAdmin(admin.ModelAdmin):
 class DerivedTenantAdmin(admin.ModelAdmin):
     form = SafeModelForm
     readonly_fields = ("tenant_id",)
+
+    def _apply_request_user_fields(self, form, request) -> None:
+        # Reuse the same behavior as TenantAwareAdmin, but without depending on TenantAdminForm.
+        TenantAwareAdmin._apply_request_user_fields(self, form, request)
 
     def get_fields(self, request, obj=None):
         fields = list(super().get_fields(request, obj=obj))
@@ -243,3 +288,20 @@ class DerivedTenantAdmin(admin.ModelAdmin):
                 readonly_fields.append("custom_id")
 
         return tuple(readonly_fields)
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        form_class = super().get_form(request, obj, change=change, **kwargs)
+        model_admin = self
+
+        class RequestAwareForm(form_class):
+            def __init__(self, *args, **inner_kwargs):
+                if "request" not in inner_kwargs:
+                    inner_kwargs["request"] = request
+                try:
+                    super().__init__(*args, **inner_kwargs)
+                except TypeError:
+                    inner_kwargs.pop("request", None)
+                    super().__init__(*args, **inner_kwargs)
+                model_admin._apply_request_user_fields(self, request)
+
+        return RequestAwareForm
