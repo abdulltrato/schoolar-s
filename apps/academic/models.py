@@ -59,9 +59,9 @@ class Student(BaseNamedCodeModel):
         profile_tenant_id = tenant_id_from_user(self.user)
         if profile_tenant_id:
             if self.tenant_id and self.tenant_id != profile_tenant_id:
-                raise ValidationError({"tenant_id": "Student tenant must match the linked user profile tenant."})
+                raise ValidationError({"tenant_id": "O tenant do aluno deve coincidir com o tenant do perfil do usuário vinculado."})
         if not (self.tenant_id or "").strip():
-            raise ValidationError({"tenant_id": "tenant_id is required."})
+            raise ValidationError({"tenant_id": "tenant_id é obrigatório. Envie o header X-Tenant-ID ou configure tenant_id no seu perfil (UserProfile)."})
         if not 1 <= self.grade <= 12:
             raise ValidationError({"grade": "A grade deve estar entre 1 e 12."})
         self.cycle = self.cycle_for_grade(self.grade)
@@ -90,11 +90,11 @@ class StudentCompetency(BaseCodeModel):
         student_tenant = (self.student.tenant_id or "").strip() if self.student_id else ""
         if student_tenant:
             if self.tenant_id and self.tenant_id != student_tenant:
-                raise ValidationError({"tenant_id": "Student competency tenant must match the student tenant."})
+                raise ValidationError({"tenant_id": "O tenant da competência do aluno deve coincidir com o tenant do aluno."})
             if not self.tenant_id:
                 self.tenant_id = student_tenant
         if not (self.tenant_id or "").strip():
-            raise ValidationError({"tenant_id": "tenant_id is required."})
+            raise ValidationError({"tenant_id": "tenant_id é obrigatório. Envie o header X-Tenant-ID ou configure tenant_id no seu perfil (UserProfile)."})
         if not 0 <= self.nivel <= 5:
             raise ValidationError({"nivel": "O nível deve estar entre 0.0 e 5.0."})
 
@@ -133,11 +133,11 @@ class Guardian(BaseNamedCodeModel):
         profile_tenant_id = tenant_id_from_user(self.user)
         if profile_tenant_id:
             if self.tenant_id and self.tenant_id != profile_tenant_id:
-                raise ValidationError({"tenant_id": "Guardian tenant must match the linked user profile tenant."})
+                raise ValidationError({"tenant_id": "O tenant do encarregado deve coincidir com o tenant do perfil do usuário vinculado."})
             if not self.tenant_id:
                 self.tenant_id = profile_tenant_id
         if not (self.tenant_id or "").strip():
-            raise ValidationError({"tenant_id": "tenant_id is required."})
+            raise ValidationError({"tenant_id": "tenant_id é obrigatório. Envie o header X-Tenant-ID ou configure tenant_id no seu perfil (UserProfile)."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -164,14 +164,14 @@ class StudentGuardian(BaseCodeModel):
         guardian_tenant = getattr(self.guardian, "tenant_id", "") or ""
         guardian_tenant = guardian_tenant.strip()
         if student_tenant and guardian_tenant and student_tenant != guardian_tenant:
-            raise ValidationError("Student and guardian must belong to the same tenant.")
+            raise ValidationError("Aluno e encarregado devem pertencer ao mesmo tenant.")
         if self.tenant_id and student_tenant and self.tenant_id != student_tenant:
-            raise ValidationError({"tenant_id": "Student guardian tenant must match the student tenant."})
+            raise ValidationError({"tenant_id": "O tenant do vínculo aluno-encarregado deve coincidir com o tenant do aluno."})
         if self.tenant_id and guardian_tenant and self.tenant_id != guardian_tenant:
-            raise ValidationError({"tenant_id": "Student guardian tenant must match the guardian tenant."})
+            raise ValidationError({"tenant_id": "O tenant do vínculo aluno-encarregado deve coincidir com o tenant do encarregado."})
         self.tenant_id = self.tenant_id or student_tenant or guardian_tenant
         if not (self.tenant_id or "").strip():
-            raise ValidationError({"tenant_id": "tenant_id is required."})
+            raise ValidationError({"tenant_id": "tenant_id é obrigatório. Envie o header X-Tenant-ID ou configure tenant_id no seu perfil (UserProfile)."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -217,7 +217,7 @@ class StudentOutcome(BaseCodeModel):
             raise ValidationError({"tenant_id": "O tenant deve coincidir com o do resultado."})
         self.tenant_id = self.tenant_id or student_tenant or outcome_tenant
         if not (self.tenant_id or "").strip():
-            raise ValidationError({"tenant_id": "tenant_id is required."})
+            raise ValidationError({"tenant_id": "tenant_id é obrigatório. Envie o header X-Tenant-ID ou configure tenant_id no seu perfil (UserProfile)."})
         if not 0 <= self.mastery_level <= 5:
             raise ValidationError({"mastery_level": "O nível deve estar entre 0.0 e 5.0."})
 

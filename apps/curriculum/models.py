@@ -35,11 +35,11 @@ class Subject(BaseNamedCodeModel):
         area_tenant = (self.area.tenant_id or "").strip() if self.area_id else ""
         if area_tenant:
             if self.tenant_id and self.tenant_id != area_tenant:
-                raise ValidationError({"tenant_id": "Subject tenant must match the curriculum area tenant."})
+                raise ValidationError({"tenant_id": "O tenant da disciplina deve coincidir com o tenant da área curricular."})
             if not self.tenant_id:
                 self.tenant_id = area_tenant
         if self.cycle not in {1, 2}:
-            raise ValidationError({"cycle": "The subject cycle must be 1 or 2."})
+            raise ValidationError({"cycle": "O ciclo da disciplina deve ser 1 ou 2."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -66,7 +66,7 @@ class SubjectSpecialty(BaseNamedCodeModel):
         subject_tenant = (self.subject.tenant_id or "").strip() if self.subject_id else ""
         if subject_tenant:
             if self.tenant_id and self.tenant_id != subject_tenant:
-                raise ValidationError({"tenant_id": "Specialty tenant must match the subject tenant."})
+                raise ValidationError({"tenant_id": "O tenant da especialidade deve coincidir com o tenant da disciplina."})
             if not self.tenant_id:
                 self.tenant_id = subject_tenant
 
@@ -124,19 +124,19 @@ class Competency(BaseNamedCodeModel):
 
         if subject_tenant:
             if self.tenant_id and self.tenant_id != subject_tenant:
-                raise ValidationError({"tenant_id": "Competency tenant must match the subject tenant."})
+                raise ValidationError({"tenant_id": "O tenant da competência deve coincidir com o tenant da disciplina."})
             if not self.tenant_id:
                 self.tenant_id = subject_tenant
         if area_tenant:
             if self.tenant_id and self.tenant_id != area_tenant:
-                raise ValidationError({"tenant_id": "Competency tenant must match the area tenant."})
+                raise ValidationError({"tenant_id": "O tenant da competência deve coincidir com o tenant da área."})
             if not self.tenant_id:
                 self.tenant_id = area_tenant
 
         if self.cycle not in {1, 2}:
-            raise ValidationError({"cycle": "The competency cycle must be 1 or 2."})
+            raise ValidationError({"cycle": "O ciclo da competência deve ser 1 ou 2."})
         if self.subject and self.subject.cycle != self.cycle:
-            raise ValidationError({"subject": "The subject must belong to the same cycle as the competency."})
+            raise ValidationError({"subject": "A disciplina deve pertencer ao mesmo ciclo da competência."})
         if self.grade_id:
             self.cycle = self.grade.cycle
 
@@ -194,7 +194,7 @@ class LearningOutcome(BaseCodeModel):
     def clean(self):
         self.tenant_id = (self.tenant_id or "").strip()
         if not self.tenant_id:
-            raise ValidationError({"tenant_id": "tenant_id is required."})
+            raise ValidationError({"tenant_id": "tenant_id é obrigatório. Envie o header X-Tenant-ID ou configure tenant_id no seu perfil (UserProfile)."})
         if not self.subject_id and not self.grade_id:
             raise ValidationError({"subject": "Informe uma disciplina ou classe para o resultado de aprendizagem."})
 
@@ -244,7 +244,7 @@ class CompetencyOutcome(BaseCodeModel):
             if not self.tenant_id:
                 self.tenant_id = outcome_tenant
         if not (self.tenant_id or "").strip():
-            raise ValidationError({"tenant_id": "tenant_id is required."})
+            raise ValidationError({"tenant_id": "tenant_id é obrigatório. Envie o header X-Tenant-ID ou configure tenant_id no seu perfil (UserProfile)."})
         if self.weight <= 0 or self.weight > 100:
             raise ValidationError({"weight": "O peso deve estar entre 0 e 100."})
 
@@ -307,7 +307,7 @@ class LocalCurriculum(BaseCodeModel):
         if self.cycle not in {1, 2}:
             raise ValidationError({"cycle": "The local curriculum cycle must be 1 or 2."})
         if not self.tenant_id.strip():
-            raise ValidationError({"tenant_id": "tenant_id is required."})
+            raise ValidationError({"tenant_id": "tenant_id é obrigatório. Envie o header X-Tenant-ID ou configure tenant_id no seu perfil (UserProfile)."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -361,7 +361,7 @@ class SubjectCurriculumPlan(BaseCodeModel):
                 if not self.tenant_id:
                     self.tenant_id = grade_subject_tenant
         if not (self.tenant_id or "").strip():
-            raise ValidationError({"tenant_id": "tenant_id is required."})
+            raise ValidationError({"tenant_id": "tenant_id é obrigatório. Envie o header X-Tenant-ID ou configure tenant_id no seu perfil (UserProfile)."})
         if self.pk:
             self.validate_competencies(self.planned_competencies.all())
 

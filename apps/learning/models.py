@@ -28,7 +28,7 @@ class Course(BaseCodeModel):
         if school_tenant and not self.tenant_id:
             self.tenant_id = school_tenant
         if not (self.tenant_id or "").strip():
-            raise ValidationError({"tenant_id": "tenant_id is required."})
+            raise ValidationError({"tenant_id": "tenant_id é obrigatório. Envie o header X-Tenant-ID ou configure tenant_id no seu perfil (UserProfile)."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
