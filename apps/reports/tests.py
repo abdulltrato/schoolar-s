@@ -95,7 +95,7 @@ class ReportGenerationApiTests(APITestCase):
             tenant_id=self.tenant_id,
             school=self.school,
             name="Prof. Carla",
-            specialty_subject=specialty,
+            specialty=specialty,
         )
         self.classroom = Classroom.objects.create(
             name="2A",

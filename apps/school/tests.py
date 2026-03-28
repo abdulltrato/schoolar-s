@@ -27,7 +27,7 @@ class EscolaModelTests(TestCase):
         subject = Subject.objects.create(name="Matematica", area=area, cycle=1)
         specialty = SubjectSpecialty.objects.create(subject=subject, name="Matematica")
         user = get_user_model().objects.create_user(username="prof", password="secret")
-        self.teacher = Teacher.objects.create(user=user, name="Prof. Carla", school=self.school, specialty_subject=specialty)
+        self.teacher = Teacher.objects.create(user=user, name="Prof. Carla", school=self.school, specialty=specialty)
         self.student = Student.objects.create(
             name="Beto",
             birth_date=date(2015, 5, 20),
@@ -160,7 +160,7 @@ class UserProfileSignalTests(TestCase):
             user=user,
             name="Prof. Joao",
             school=school,
-            specialty_subject=specialty,
+            specialty=specialty,
             tenant_id="tenant-school-02",
         )
 
@@ -209,7 +209,7 @@ class TeacherUsuarioApiTests(TestCase):
             "user": self.teacher_user.id,
             "school": self.school.id,
             "name": "Professor Usuario",
-            "specialty_subject": self.specialty.id,
+            "specialty": self.specialty.id,
             "usuario": self.teacher_user.id,
         }
         response = self.client.post(

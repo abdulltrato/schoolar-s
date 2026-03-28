@@ -497,7 +497,7 @@ class ReportGenerationService:
             {
                 "teacher_id": teacher.id,
                 "name": teacher.name,
-                "specialty": teacher.specialty,
+                "specialty": getattr(teacher.specialty, "name", None),
                 "school": getattr(teacher.school, "name", None),
                 "username": getattr(teacher.user, "username", None),
             }

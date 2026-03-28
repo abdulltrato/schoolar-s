@@ -19,7 +19,7 @@ class AvaliacaoModelTests(TestCase):
         self.outra_disciplina = Subject.objects.create(name="Historia", area=area, cycle=1)
         specialty = SubjectSpecialty.objects.create(subject=self.subject, name="Matematica")
         user = get_user_model().objects.create_user(username="prof", password="secret")
-        self.teacher = Teacher.objects.create(user=user, name="Prof. Ana", school=self.school, specialty_subject=specialty)
+        self.teacher = Teacher.objects.create(user=user, name="Prof. Ana", school=self.school, specialty=specialty)
         self.academic_year = AcademicYear.objects.create(
             code="2026-2027",
             tenant_id=self.school.tenant_id,

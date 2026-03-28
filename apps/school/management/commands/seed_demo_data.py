@@ -81,15 +81,15 @@ class Command(BaseCommand):
             user=professor_user,
             defaults={
                 "name": "Prof. Ana Lemos",
-                "specialty_subject": especialidade_matematica,
+                "specialty": especialidade_matematica,
                 "school": school,
             },
         )
         if teacher.school_id != school.id:
             teacher.school = school
             teacher.save()
-        if teacher.specialty_subject_id != especialidade_matematica.id:
-            teacher.specialty_subject = especialidade_matematica
+        if teacher.specialty_id != especialidade_matematica.id:
+            teacher.specialty = especialidade_matematica
             teacher.save()
 
         turma_a, _ = Classroom.objects.get_or_create(
@@ -126,7 +126,6 @@ class Command(BaseCommand):
         competencia_1, _ = Competency.objects.get_or_create(
             name="Resolver operacoes basicas",
             defaults={
-                "area": "saber_cientifico_tecnologico",
                 "cycle": 1,
                 "subject": matematica_1,
             },
@@ -134,7 +133,6 @@ class Command(BaseCommand):
         competencia_2, _ = Competency.objects.get_or_create(
             name="Resolver problemas fraccionarios",
             defaults={
-                "area": "saber_cientifico_tecnologico",
                 "cycle": 2,
                 "subject": matematica_2,
             },
