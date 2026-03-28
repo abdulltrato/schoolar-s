@@ -173,6 +173,13 @@ class TenantAwareAdmin(admin.ModelAdmin):
     form = TenantAdminForm
     readonly_fields = ("tenant_id",)
 
+    def get_fields(self, request, obj=None):
+        fields = list(super().get_fields(request, obj=obj))
+        for field_name in iter_request_user_field_names(self.model):
+            if model_has_field(self.model, field_name) and field_name not in fields:
+                fields.append(field_name)
+        return tuple(fields)
+
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(super().get_readonly_fields(request, obj=obj))
 
@@ -208,6 +215,13 @@ class TenantAwareAdmin(admin.ModelAdmin):
 class DerivedTenantAdmin(admin.ModelAdmin):
     form = SafeModelForm
     readonly_fields = ("tenant_id",)
+
+    def get_fields(self, request, obj=None):
+        fields = list(super().get_fields(request, obj=obj))
+        for field_name in iter_request_user_field_names(self.model):
+            if model_has_field(self.model, field_name) and field_name not in fields:
+                fields.append(field_name)
+        return tuple(fields)
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(super().get_readonly_fields(request, obj=obj))

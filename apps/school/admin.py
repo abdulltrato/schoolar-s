@@ -117,12 +117,29 @@ class UserProfileInline(admin.StackedInline):
     readonly_fields = ("tenant_id",)
     fields = ("tenant_id", "role", "school", "province", "district", "active")
 
+    def has_add_permission(self, request, obj=None):
+        if obj is None:
+            return False
+        try:
+            getattr(obj, "school_profile")
+            return False
+        except Exception:
+            return True
+
 
 @admin.register(get_user_model())
 class TenantUserAdmin(DefaultUserAdmin):
     inlines = [UserProfileInline]
     list_display = DefaultUserAdmin.list_display + ("tenant_id",)
     list_select_related = ("school_profile",)
+
+    def get_inline_instances(self, request, obj=None):
+        # On user creation (including admin popups), the profile is auto-created by signals.
+        # Avoid rendering/saving an inline profile form during add, which can lead to duplicate
+        # UserProfile creation and uniqueness validation errors.
+        if obj is None:
+            return []
+        return super().get_inline_instances(request, obj=obj)
 
     def tenant_id(self, obj):
         return getattr(getattr(obj, "school_profile", None), "tenant_id", "")
