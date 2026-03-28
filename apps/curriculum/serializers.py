@@ -10,6 +10,7 @@ from .models import (
     LearningOutcome,
     LocalCurriculum,
     Subject,
+    SubjectSpecialty,
     SubjectCurriculumPlan,
 )
 
@@ -26,6 +27,14 @@ class SubjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subject
+        fields = "__all__"
+
+
+class SubjectSpecialtySerializer(serializers.ModelSerializer):
+    subject_name = serializers.CharField(source="subject.name", read_only=True)
+
+    class Meta:
+        model = SubjectSpecialty
         fields = "__all__"
 
 

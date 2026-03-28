@@ -15,6 +15,7 @@ from apps.curriculum.models import (
     CurriculumArea,
     Competency,
     Subject,
+    SubjectSpecialty,
     SubjectCurriculumPlan,
 )
 from apps.school.models import (
@@ -71,16 +72,24 @@ class Command(BaseCommand):
         classe_2, _ = Grade.objects.get_or_create(number=2, defaults={"cycle": 1, "name": "2a Grade"})
         classe_5, _ = Grade.objects.get_or_create(number=5, defaults={"cycle": 2, "name": "5a Grade"})
 
+        area, _ = CurriculumArea.objects.get_or_create(name="Ciencias Naturais e Matematica")
+        matematica_1, _ = Subject.objects.get_or_create(name="Matematica", area=area, cycle=1)
+        matematica_2, _ = Subject.objects.get_or_create(name="Matematica Avancada", area=area, cycle=2)
+        especialidade_matematica, _ = SubjectSpecialty.objects.get_or_create(subject=matematica_1, name="Matematica")
+
         teacher, _ = Teacher.objects.get_or_create(
             user=professor_user,
             defaults={
                 "name": "Prof. Ana Lemos",
-                "specialty": "Matematica",
+                "specialty_subject": especialidade_matematica,
                 "school": school,
             },
         )
-        if teacher.escola_id != school.id:
+        if teacher.school_id != school.id:
             teacher.school = school
+            teacher.save()
+        if teacher.specialty_subject_id != especialidade_matematica.id:
+            teacher.specialty_subject = especialidade_matematica
             teacher.save()
 
         turma_a, _ = Classroom.objects.get_or_create(
@@ -105,18 +114,14 @@ class Command(BaseCommand):
         )
         for classroom in (turma_a, turma_b):
             changed = False
-            if classroom.escola_id != school.id:
+            if classroom.school_id != school.id:
                 classroom.school = school
                 changed = True
-            if classroom.professor_responsavel_id != teacher.id:
+            if classroom.lead_teacher_id != teacher.id:
                 classroom.lead_teacher = teacher
                 changed = True
             if changed:
                 classroom.save()
-
-        area, _ = CurriculumArea.objects.get_or_create(name="Ciencias Naturais e Matematica")
-        matematica_1, _ = Subject.objects.get_or_create(name="Matematica", area=area, cycle=1)
-        matematica_2, _ = Subject.objects.get_or_create(name="Matematica Avancada", area=area, cycle=2)
 
         competencia_1, _ = Competency.objects.get_or_create(
             name="Resolver operacoes basicas",

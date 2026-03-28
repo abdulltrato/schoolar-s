@@ -3,9 +3,10 @@ from datetime import date
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from rest_framework.test import APIClient
 
 from apps.academic.models import Student
-from apps.curriculum.models import CurriculumArea, Subject
+from apps.curriculum.models import CurriculumArea, Subject, SubjectSpecialty
 from .models import (
     TeachingAssignment,
     AcademicYear,
@@ -22,8 +23,11 @@ from .models import (
 class EscolaModelTests(TestCase):
     def setUp(self):
         self.school = School.objects.create(code="ESC-01", name="School Primaria Central", tenant_id="tenant-esc-01")
+        area = CurriculumArea.objects.create(name="Ciencias")
+        subject = Subject.objects.create(name="Matematica", area=area, cycle=1)
+        specialty = SubjectSpecialty.objects.create(subject=subject, name="Matematica")
         user = get_user_model().objects.create_user(username="prof", password="secret")
-        self.teacher = Teacher.objects.create(user=user, name="Prof. Carla", school=self.school)
+        self.teacher = Teacher.objects.create(user=user, name="Prof. Carla", school=self.school, specialty_subject=specialty)
         self.student = Student.objects.create(
             name="Beto",
             birth_date=date(2015, 5, 20),
@@ -47,8 +51,7 @@ class EscolaModelTests(TestCase):
             academic_year=self.academic_year,
             lead_teacher=self.teacher,
         )
-        area = CurriculumArea.objects.create(name="Ciencias")
-        self.subject = Subject.objects.create(name="Matematica", area=area, cycle=1)
+        self.subject = subject
 
     def test_rejeita_ano_letivo_com_codigo_invalido(self):
         with self.assertRaises(ValidationError):
@@ -148,13 +151,16 @@ class UserProfileSignalTests(TestCase):
             district="KaMpfumo",
             tenant_id="tenant-school-02",
         )
+        area = CurriculumArea.objects.create(name="Area Prof")
+        subject = Subject.objects.create(name="Matematica", area=area, cycle=1)
+        specialty = SubjectSpecialty.objects.create(subject=subject, name="Matematica")
         user = get_user_model().objects.create_user(username="teacher-sync", password="secret")
 
         Teacher.objects.create(
             user=user,
             name="Prof. Joao",
             school=school,
-            specialty="Matematica",
+            specialty_subject=specialty,
             tenant_id="tenant-school-02",
         )
 
@@ -180,3 +186,51 @@ class UserProfileSignalTests(TestCase):
         user.refresh_from_db()
         self.assertEqual(user.school_profile.role, "student")
         self.assertEqual(user.school_profile.tenant_id, "tenant-student")
+
+
+class TeacherUsuarioApiTests(TestCase):
+    def setUp(self):
+        self.admin = get_user_model().objects.create_user(username="admin-teacher-usuario", password="secret")
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.admin)
+        self.tenant_id = "tenant-teacher-usuario"
+        self.school = School.objects.create(
+            code="ESC-TU-01",
+            name="Escola Teacher Usuario",
+            tenant_id=self.tenant_id,
+        )
+        area = CurriculumArea.objects.create(name="Area TU")
+        subject = Subject.objects.create(name="Matematica", area=area, cycle=1)
+        self.specialty = SubjectSpecialty.objects.create(subject=subject, name="Matematica")
+        self.teacher_user = get_user_model().objects.create_user(username="teacher-usuario", password="secret")
+
+    def test_teacher_usuario_readonly_e_auto(self):
+        payload = {
+            "user": self.teacher_user.id,
+            "school": self.school.id,
+            "name": "Professor Usuario",
+            "specialty_subject": self.specialty.id,
+            "usuario": self.teacher_user.id,
+        }
+        response = self.client.post(
+            "/api/v1/school/teachers/",
+            payload,
+            format="json",
+            HTTP_X_TENANT_ID=self.tenant_id,
+        )
+        self.assertEqual(response.status_code, 400)
+        error_details = (response.json().get("error") or {}).get("details") or {}
+        self.assertIn("usuario", error_details)
+
+        payload.pop("usuario", None)
+        response = self.client.post(
+            "/api/v1/school/teachers/",
+            payload,
+            format="json",
+            HTTP_X_TENANT_ID=self.tenant_id,
+        )
+        self.assertEqual(response.status_code, 201)
+        body = response.json()
+        if isinstance(body, dict) and "data" in body and (body.get("ok") is True or body.get("ok") is False):
+            body = body.get("data") or {}
+        self.assertEqual(body.get("usuario"), self.admin.id)

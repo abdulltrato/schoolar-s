@@ -8,7 +8,7 @@ from rest_framework.test import APITestCase
 
 from apps.academic.models import Student
 from apps.assessment.models import AssessmentPeriod, SubjectPeriodResult
-from apps.curriculum.models import CurriculumArea, Subject
+from apps.curriculum.models import CurriculumArea, Subject, SubjectSpecialty
 from apps.school.models import (
     AcademicYear,
     AttendanceRecord,
@@ -79,6 +79,9 @@ class ReportGenerationApiTests(APITestCase):
         self.teacher_user = user_model.objects.create_user(username="teacher", password="secret123")
 
         self.school = School.objects.create(code="ESC-01", name="Escola Primaria Central", tenant_id=self.tenant_id)
+        area = CurriculumArea.objects.create(name="Ciencias")
+        self.subject = Subject.objects.create(name="Matematica", area=area, cycle=1)
+        specialty = SubjectSpecialty.objects.create(subject=self.subject, name="Matematica")
         self.academic_year = AcademicYear.objects.create(
             code="2026-2027",
             tenant_id=self.tenant_id,
@@ -92,7 +95,7 @@ class ReportGenerationApiTests(APITestCase):
             tenant_id=self.tenant_id,
             school=self.school,
             name="Prof. Carla",
-            specialty="Matematica",
+            specialty_subject=specialty,
         )
         self.classroom = Classroom.objects.create(
             name="2A",
@@ -121,8 +124,6 @@ class ReportGenerationApiTests(APITestCase):
         self.profile.active = True
         self.profile.save()
 
-        area = CurriculumArea.objects.create(name="Ciencias")
-        self.subject = Subject.objects.create(name="Matematica", area=area, cycle=1)
         self.grade_subject = GradeSubject.objects.create(
             academic_year=self.academic_year,
             grade=self.grade,

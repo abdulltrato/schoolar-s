@@ -7,7 +7,7 @@ from rest_framework.test import APIClient
 
 from apps.academic.models import Student
 from apps.assessment.models import AssessmentComponent
-from apps.curriculum.models import Competency, CurriculumArea, LearningOutcome, Subject
+from apps.curriculum.models import Competency, CurriculumArea, LearningOutcome, Subject, SubjectSpecialty
 from apps.school.models import AcademicYear, Classroom, Enrollment, Grade, GradeSubject, School, Teacher, TeachingAssignment
 
 
@@ -42,6 +42,7 @@ def base_data(db, tenant_header):
     grade = Grade.objects.create(number=1, cycle=1, name="")
     area = CurriculumArea.objects.create(name="Area Smoke")
     subject = Subject.objects.create(name="Disciplina Smoke", area=area, cycle=grade.cycle)
+    teacher_specialty = SubjectSpecialty.objects.create(subject=subject, name=subject.name)
     grade_subject = GradeSubject.objects.create(
         academic_year=academic_year,
         grade=grade,
@@ -50,7 +51,13 @@ def base_data(db, tenant_header):
         tenant_id=tenant_id,
     )
     teacher_user = get_user_model().objects.create_user(username="teacher_smoke", password="pass1234")
-    teacher = Teacher.objects.create(user=teacher_user, school=school, name="Prof. Smoke", tenant_id=tenant_id)
+    teacher = Teacher.objects.create(
+        user=teacher_user,
+        school=school,
+        name="Prof. Smoke",
+        tenant_id=tenant_id,
+        specialty_subject=teacher_specialty,
+    )
     classroom = Classroom.objects.create(
         name="1A",
         tenant_id=tenant_id,
@@ -383,6 +390,7 @@ def test_school_crud(admin_client, tenant_header, base_data):
     )
 
     user = get_user_model().objects.create_user(username="teacher_crud", password="pass1234")
+    specialty = SubjectSpecialty.objects.create(subject=base_data["subject"], name="Especialidade CRUD")
     _crud(
         admin_client,
         "/api/v1/school/teachers/",
@@ -390,9 +398,9 @@ def test_school_crud(admin_client, tenant_header, base_data):
             "user": user.id,
             "school": base_data["school"].id,
             "name": "Professor CRUD",
-            "specialty": "Matematica",
+            "specialty_subject": specialty.id,
         },
-        {"specialty": "Fisica"},
+        {"specialty_subject": specialty.id},
         tenant_header,
     )
 
@@ -401,6 +409,7 @@ def test_school_crud(admin_client, tenant_header, base_data):
         school=base_data["school"],
         name="Professor CRUD 2",
         tenant_id=base_data["tenant_id"],
+        specialty_subject=specialty,
     )
     _crud(
         admin_client,

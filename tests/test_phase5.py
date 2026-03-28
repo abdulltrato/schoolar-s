@@ -6,7 +6,7 @@ from django.core.management import call_command
 
 from apps.academic.models import Student, StudentOutcome
 from apps.assessment.models import Assessment, AssessmentComponent, AssessmentOutcomeMap, AssessmentPeriod
-from apps.curriculum.models import CurriculumArea, LearningOutcome, Subject
+from apps.curriculum.models import CurriculumArea, LearningOutcome, Subject, SubjectSpecialty
 from apps.school.models import AcademicYear, Classroom, Enrollment, Grade, GradeSubject, School, Teacher, TeachingAssignment
 
 
@@ -22,6 +22,7 @@ def _seed_context(tenant_id="tenant-z"):
     grade = Grade.objects.create(number=2, cycle=1, name="")
     area = CurriculumArea.objects.create(name="Humanidades")
     subject = Subject.objects.create(name="Historia", area=area, cycle=1)
+    specialty = SubjectSpecialty.objects.create(subject=subject, name="Historia")
     grade_subject = GradeSubject.objects.create(
         academic_year=academic_year,
         grade=grade,
@@ -31,7 +32,7 @@ def _seed_context(tenant_id="tenant-z"):
     )
 
     user = get_user_model().objects.create_user(username="teacher_z", password="pass1234")
-    teacher = Teacher.objects.create(user=user, school=school, name="Prof. Z", tenant_id=tenant_id)
+    teacher = Teacher.objects.create(user=user, school=school, name="Prof. Z", tenant_id=tenant_id, specialty_subject=specialty)
     classroom = Classroom.objects.create(
         name="2B",
         tenant_id=tenant_id,

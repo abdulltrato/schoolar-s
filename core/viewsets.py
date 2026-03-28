@@ -5,6 +5,7 @@ from django.core.exceptions import FieldDoesNotExist
 from django.utils import timezone
 from django.db.models import Q
 from rest_framework import filters, viewsets
+from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.exceptions import PermissionDenied
 
 from core.models import tenant_id_from_user
@@ -255,6 +256,47 @@ class RobustModelViewSet(ValidatedSearchOrderingMixin, RoleScopedQuerysetMixin, 
     permission_classes = [RoleBasedAccessPermission]
     audit_resource = None
 
+    def _configured_request_user_field_names(self, model) -> tuple[str, ...]:
+        configured: list[str] = []
+        for attr in ("REQUEST_USER_CREATE_FIELD", "REQUEST_USER_UPDATE_FIELD"):
+            name = getattr(model, attr, None)
+            if name:
+                configured.append(name)
+        for attr in ("REQUEST_USER_CREATE_FIELDS", "REQUEST_USER_UPDATE_FIELDS"):
+            names = getattr(model, attr, None) or ()
+            configured.extend(list(names))
+
+        seen = set()
+        normalized = []
+        for name in configured:
+            name = (name or "").strip()
+            if not name or name in seen:
+                continue
+            seen.add(name)
+            normalized.append(name)
+        return tuple(normalized)
+
+    def _assert_request_user_fields_readonly(self, serializer) -> None:
+        initial_data = getattr(serializer, "initial_data", None)
+        if not isinstance(initial_data, dict):
+            return
+
+        model = getattr(getattr(serializer, "Meta", None), "model", None)
+        if model is None:
+            return
+
+        forbidden = set(self._configured_request_user_field_names(model))
+        if not forbidden:
+            return
+
+        errors = {}
+        for field_name in forbidden:
+            if field_name in initial_data:
+                errors[field_name] = "Este campo é definido automaticamente e é somente leitura."
+
+        if errors:
+            raise DRFValidationError(errors)
+
     def _build_audit_payload(self, *, action, instance, changed_fields=None):
         request = getattr(self, "request", None)
         user = getattr(request, "user", None)
@@ -360,10 +402,12 @@ class RobustModelViewSet(ValidatedSearchOrderingMixin, RoleScopedQuerysetMixin, 
                 AuditAlert.objects.create(**alert)
 
     def perform_create(self, serializer):
+        self._assert_request_user_fields_readonly(serializer)
         super().perform_create(serializer)
         self._audit_mutation(action="create", instance=serializer.instance)
 
     def perform_update(self, serializer):
+        self._assert_request_user_fields_readonly(serializer)
         changed_fields = sorted(serializer.validated_data.keys())
         super().perform_update(serializer)
         self._audit_mutation(action="update", instance=serializer.instance, changed_fields=changed_fields)

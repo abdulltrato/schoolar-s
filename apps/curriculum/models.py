@@ -58,6 +58,38 @@ class Subject(BaseNamedCodeModel):
         ordering = ["name"]
 
 
+class SubjectSpecialty(BaseNamedCodeModel):
+    CODE_PREFIX = "SSP"
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name="specialties", verbose_name="Disciplina")
+
+    def clean(self):
+        subject_tenant = (self.subject.tenant_id or "").strip() if self.subject_id else ""
+        if subject_tenant:
+            if self.tenant_id and self.tenant_id != subject_tenant:
+                raise ValidationError({"tenant_id": "Specialty tenant must match the subject tenant."})
+            if not self.tenant_id:
+                self.tenant_id = subject_tenant
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.subject.name} - {self.name}"
+
+    class Meta:
+        verbose_name = "Especialidade por disciplina"
+        verbose_name_plural = "Especialidades por disciplina"
+        ordering = ["subject__name", "name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["subject", "name"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_subject_specialty_active",
+            ),
+        ]
+
+
 class Competency(BaseNamedCodeModel):
     CODE_PREFIX = "COM"
     AREA_CHOICES = [

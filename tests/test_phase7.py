@@ -4,7 +4,7 @@ import pytest
 from django.contrib.auth import get_user_model
 
 from apps.academic.models import Student, StudentOutcome
-from apps.curriculum.models import CurriculumArea, LearningOutcome, Subject
+from apps.curriculum.models import CurriculumArea, LearningOutcome, Subject, SubjectSpecialty
 from apps.reports.services import ReportGenerationService
 from apps.school.models import AcademicYear, Classroom, Enrollment, Grade, School, Teacher, UserProfile
 
@@ -23,6 +23,7 @@ def test_learning_risk_alerts_report():
     grade = Grade.objects.create(number=6, cycle=1, name="")
     area = CurriculumArea.objects.create(name="Ciencias")
     subject = Subject.objects.create(name="Ciencias", area=area, cycle=grade.cycle)
+    specialty = SubjectSpecialty.objects.create(subject=subject, name="Ciencias")
 
     user = get_user_model().objects.create_user(username="director_risk", password="pass1234")
     profile = user.school_profile
@@ -31,7 +32,7 @@ def test_learning_risk_alerts_report():
     profile.tenant_id = tenant_id
     profile.save(update_fields=["role", "school", "tenant_id"])
 
-    teacher = Teacher.objects.create(user=user, school=school, name="Prof. R", tenant_id=tenant_id)
+    teacher = Teacher.objects.create(user=user, school=school, name="Prof. R", tenant_id=tenant_id, specialty_subject=specialty)
     classroom = Classroom.objects.create(
         name="6A",
         tenant_id=tenant_id,

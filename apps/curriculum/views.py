@@ -8,6 +8,7 @@ from .models import (
     LearningOutcome,
     LocalCurriculum,
     Subject,
+    SubjectSpecialty,
     SubjectCurriculumPlan,
 )
 from .serializers import (
@@ -17,6 +18,7 @@ from .serializers import (
     CurriculumAreaSerializer,
     LearningOutcomeSerializer,
     LocalCurriculumSerializer,
+    SubjectSpecialtySerializer,
     SubjectCurriculumPlanSerializer,
     SubjectSerializer,
 )
@@ -36,6 +38,14 @@ class SubjectViewSet(RobustModelViewSet):
     search_fields = ("name", "area__name")
     ordering_fields = ("id", "name", "cycle", "area__name")
     ordering = ("name",)
+
+
+class SubjectSpecialtyViewSet(RobustModelViewSet):
+    queryset = SubjectSpecialty.objects.select_related("subject").all()
+    serializer_class = SubjectSpecialtySerializer
+    search_fields = ("name", "subject__name")
+    ordering_fields = ("id", "name", "subject__name")
+    ordering = ("subject__name", "name")
 
 
 class CompetencyViewSet(RobustModelViewSet):

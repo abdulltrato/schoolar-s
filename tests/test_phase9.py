@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from decimal import Decimal
 
 from apps.academic.models import Student, StudentOutcome
-from apps.curriculum.models import CurriculumArea, LearningOutcome, Subject
+from apps.curriculum.models import CurriculumArea, LearningOutcome, Subject, SubjectSpecialty
 from apps.reports.services import ReportGenerationService
 from apps.school.models import AcademicYear, AuditAlert, Classroom, Enrollment, Grade, School, Teacher
 
@@ -25,6 +25,7 @@ def test_learning_intervention_emits_audit_alerts():
     grade = Grade.objects.create(number=3, cycle=1, name="")
     area = CurriculumArea.objects.create(name="Humanidades")
     subject = Subject.objects.create(name="Historia", area=area, cycle=grade.cycle)
+    specialty = SubjectSpecialty.objects.create(subject=subject, name="Historia")
 
     user = get_user_model().objects.create_user(username="director_alerts", password="pass1234")
     profile = user.school_profile
@@ -33,7 +34,7 @@ def test_learning_intervention_emits_audit_alerts():
     profile.tenant_id = tenant_id
     profile.save(update_fields=["role", "school", "tenant_id"])
 
-    teacher = Teacher.objects.create(user=user, school=school, name="Prof. A", tenant_id=tenant_id)
+    teacher = Teacher.objects.create(user=user, school=school, name="Prof. A", tenant_id=tenant_id, specialty_subject=specialty)
     classroom = Classroom.objects.create(
         name="3A",
         tenant_id=tenant_id,

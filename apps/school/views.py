@@ -2,6 +2,7 @@ import csv
 
 from django.http import HttpResponse
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.response import Response
 
 from core.viewsets import RobustModelViewSet
@@ -226,6 +227,19 @@ class TeacherViewSet(RobustModelViewSet):
         "list": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher"},
         "retrieve": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher"},
     }
+
+    def _assert_specialty_readonly(self, serializer) -> None:
+        initial_data = getattr(serializer, "initial_data", None)
+        if isinstance(initial_data, dict) and "specialty" in initial_data:
+            raise DRFValidationError({"specialty": "Este campo é herdado da especialidade da disciplina e é somente leitura."})
+
+    def perform_create(self, serializer):
+        self._assert_specialty_readonly(serializer)
+        super().perform_create(serializer)
+
+    def perform_update(self, serializer):
+        self._assert_specialty_readonly(serializer)
+        super().perform_update(serializer)
 
 
 class ClassroomViewSet(RobustModelViewSet):

@@ -4,7 +4,7 @@ import pytest
 from django.contrib.auth import get_user_model
 
 from apps.assessment.models import Assessment, AssessmentComponent, AssessmentOutcomeMap, AssessmentPeriod
-from apps.curriculum.models import CurriculumArea, LearningOutcome, Subject
+from apps.curriculum.models import CurriculumArea, LearningOutcome, Subject, SubjectSpecialty
 from apps.reports.services import ReportGenerationService
 from apps.school.models import AcademicYear, Classroom, Enrollment, Grade, GradeSubject, School, Teacher, TeachingAssignment
 from apps.academic.models import Student
@@ -24,6 +24,7 @@ def test_bloom_distribution_report_counts():
     grade = Grade.objects.create(number=4, cycle=2, name="")
     area = CurriculumArea.objects.create(name="Linguagens")
     subject = Subject.objects.create(name="Portugues", area=area, cycle=2)
+    specialty = SubjectSpecialty.objects.create(subject=subject, name="Portugues")
     grade_subject = GradeSubject.objects.create(
         academic_year=academic_year,
         grade=grade,
@@ -38,7 +39,7 @@ def test_bloom_distribution_report_counts():
     profile.school = school
     profile.tenant_id = tenant_id
     profile.save(update_fields=["role", "school", "tenant_id"])
-    teacher = Teacher.objects.create(user=user, school=school, name="Prof. Bloom", tenant_id=tenant_id)
+    teacher = Teacher.objects.create(user=user, school=school, name="Prof. Bloom", tenant_id=tenant_id, specialty_subject=specialty)
     classroom = Classroom.objects.create(
         name="4A",
         tenant_id=tenant_id,

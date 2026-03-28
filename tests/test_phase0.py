@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from apps.academic.models import Student
 from apps.assessment.models import AssessmentPeriod
-from apps.curriculum.models import CurriculumArea, Subject, Competency, SubjectCurriculumPlan
+from apps.curriculum.models import CurriculumArea, Subject, Competency, SubjectCurriculumPlan, SubjectSpecialty
 from apps.learning.models import Course, CourseOffering, Assignment, Submission
 from apps.school.models import AcademicYear, Grade, Classroom, Teacher, Enrollment, School, GradeSubject
 
@@ -15,6 +15,9 @@ from apps.school.models import AcademicYear, Grade, Classroom, Teacher, Enrollme
 @pytest.mark.django_db
 def test_submission_requires_enrollment_when_classroom_present():
     school = School.objects.create(code="ESC-1", name="Escola Central", tenant_id="tenant-esc-1")
+    area = CurriculumArea.objects.create(name="Ciencias")
+    subject = Subject.objects.create(name="Matematica", area=area, cycle=1)
+    specialty = SubjectSpecialty.objects.create(subject=subject, name="Matematica")
     grade = Grade.objects.create(number=1, cycle=1)
     academic_year = AcademicYear.objects.create(
         code="2026-2027",
@@ -24,7 +27,7 @@ def test_submission_requires_enrollment_when_classroom_present():
         active=True,
     )
     teacher_user = User.objects.create_user(username="prof1", password="pass123")
-    teacher = Teacher.objects.create(user=teacher_user, name="Prof. Maria", school=school)
+    teacher = Teacher.objects.create(user=teacher_user, name="Prof. Maria", school=school, specialty_subject=specialty)
     classroom = Classroom.objects.create(
         name="Turma A",
         school=school,

@@ -8,6 +8,7 @@ from .views import (
     CurriculumAreaViewSet,
     LearningOutcomeViewSet,
     LocalCurriculumViewSet,
+    SubjectSpecialtyViewSet,
     SubjectCurriculumPlanViewSet,
     SubjectViewSet,
 )
@@ -16,6 +17,8 @@ router = DefaultRouter()
 router.register(r"areas", CurriculumAreaViewSet)
 router.register(r"subjects", SubjectViewSet)
 router.register(r"disciplinas", SubjectViewSet, basename="legacy-subjects")
+router.register(r"subject-specialties", SubjectSpecialtyViewSet)
+router.register(r"especialidades", SubjectSpecialtyViewSet, basename="legacy-subject-specialties")
 router.register(r"competencies", CompetencyViewSet)
 router.register(r"base-curricula", BaseCurriculumViewSet)
 router.register(r"curriculos-base", BaseCurriculumViewSet, basename="legacy-base-curricula")

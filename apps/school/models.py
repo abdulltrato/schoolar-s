@@ -132,7 +132,14 @@ class Teacher(BaseNamedCodeModel):
         related_name="teachers",
         verbose_name="Escola",
     )
-    specialty = models.CharField(max_length=100, blank=True, verbose_name="Especialidade")
+    specialty_subject = models.ForeignKey(
+        "curriculum.SubjectSpecialty",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        verbose_name="Especialidade (referência)",
+    )
+    specialty = models.CharField(max_length=100, blank=True, editable=False, verbose_name="Especialidade")
 
     def clean(self):
         profile_tenant_id = tenant_id_from_user(self.user)
@@ -147,6 +154,19 @@ class Teacher(BaseNamedCodeModel):
                 raise ValidationError({"tenant_id": "Teacher tenant must match the school tenant."})
             if not self.tenant_id:
                 self.tenant_id = school_tenant
+
+        specialty_tenant = (self.specialty_subject.tenant_id or "").strip() if self.specialty_subject_id else ""
+        if specialty_tenant:
+            if self.tenant_id and self.tenant_id != specialty_tenant:
+                raise ValidationError({"tenant_id": "Teacher tenant must match the specialty tenant."})
+            if not self.tenant_id:
+                self.tenant_id = specialty_tenant
+
+        if not self.specialty_subject_id:
+            if not self.pk:
+                raise ValidationError({"specialty_subject": "A especialidade do professor é obrigatória."})
+        else:
+            self.specialty = (self.specialty_subject.name or "").strip()
         if not (self.tenant_id or "").strip():
             raise ValidationError({"tenant_id": "tenant_id is required."})
 
@@ -582,6 +602,7 @@ class Announcement(BaseCodeModel):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
+        editable=False,
         verbose_name="Autor",
     )
     title = models.CharField(max_length=180, verbose_name="Título")

@@ -147,9 +147,13 @@ class TenantModel(models.Model):
         except Exception:
             user_model = None
 
+        excluded_field_names = set(self._configured_request_user_field_names() or ())
+
         inferred = []
         for field in self._meta.get_fields():
             if getattr(field, "auto_created", False):
+                continue
+            if field.name in excluded_field_names:
                 continue
             if not getattr(field, "is_relation", False):
                 continue
@@ -488,6 +492,18 @@ class NamedModel(models.Model):
 
 
 class BaseModel(TenantModel, AuditModel, SoftDeleteModel):
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        editable=False,
+        related_name="+",
+        verbose_name="Usuário",
+    )
+
+    REQUEST_USER_CREATE_FIELD = "usuario"
+
     class Meta:
         abstract = True
 

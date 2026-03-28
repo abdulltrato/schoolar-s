@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 
 from apps.academic.models import Student, StudentOutcome
 from apps.assessment.models import Assessment, AssessmentComponent, AssessmentOutcomeMap, AssessmentPeriod
-from apps.curriculum.models import CurriculumArea, LearningOutcome, Subject
+from apps.curriculum.models import CurriculumArea, LearningOutcome, Subject, SubjectSpecialty
 from apps.school.models import AcademicYear, Classroom, Enrollment, Grade, GradeSubject, School, Teacher, TeachingAssignment
 
 
@@ -22,6 +22,7 @@ def _build_assessment_context(*, tenant_id="tenant-x"):
     grade = Grade.objects.create(number=3, cycle=1, name="")
     area = CurriculumArea.objects.create(name="Linguagens")
     subject = Subject.objects.create(name="Portugues", area=area, cycle=1)
+    specialty = SubjectSpecialty.objects.create(subject=subject, name="Portugues")
     grade_subject = GradeSubject.objects.create(
         academic_year=academic_year,
         grade=grade,
@@ -31,7 +32,7 @@ def _build_assessment_context(*, tenant_id="tenant-x"):
     )
 
     user = get_user_model().objects.create_user(username="teacher_ctx", password="pass1234")
-    teacher = Teacher.objects.create(user=user, school=school, name="Prof. Ana", tenant_id=tenant_id)
+    teacher = Teacher.objects.create(user=user, school=school, name="Prof. Ana", tenant_id=tenant_id, specialty_subject=specialty)
 
     classroom = Classroom.objects.create(
         name="3A",

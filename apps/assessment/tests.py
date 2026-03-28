@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from apps.academic.models import Student
-from apps.curriculum.models import CurriculumArea, Competency, Subject
+from apps.curriculum.models import CurriculumArea, Competency, Subject, SubjectSpecialty
 from apps.school.models import TeachingAssignment, AcademicYear, Grade, GradeSubject, School, Enrollment, Teacher, Classroom
 from .models import Assessment, AssessmentComponent, AssessmentPeriod, SubjectPeriodResult
 
@@ -14,8 +14,12 @@ from .models import Assessment, AssessmentComponent, AssessmentPeriod, SubjectPe
 class AvaliacaoModelTests(TestCase):
     def setUp(self):
         self.school = School.objects.create(code="ESC-01", name="School Primaria Central", tenant_id="tenant-esc-01")
+        area = CurriculumArea.objects.create(name="Ciencias Naturais")
+        self.subject = Subject.objects.create(name="Matematica", area=area, cycle=1)
+        self.outra_disciplina = Subject.objects.create(name="Historia", area=area, cycle=1)
+        specialty = SubjectSpecialty.objects.create(subject=self.subject, name="Matematica")
         user = get_user_model().objects.create_user(username="prof", password="secret")
-        self.teacher = Teacher.objects.create(user=user, name="Prof. Ana", school=self.school)
+        self.teacher = Teacher.objects.create(user=user, name="Prof. Ana", school=self.school, specialty_subject=specialty)
         self.academic_year = AcademicYear.objects.create(
             code="2026-2027",
             tenant_id=self.school.tenant_id,
@@ -47,10 +51,6 @@ class AvaliacaoModelTests(TestCase):
             tenant_id=self.school.tenant_id,
         )
         Enrollment.objects.create(student=self.student, classroom=self.classroom)
-
-        area = CurriculumArea.objects.create(name="Ciencias Naturais")
-        self.subject = Subject.objects.create(name="Matematica", area=area, cycle=1)
-        self.outra_disciplina = Subject.objects.create(name="Historia", area=area, cycle=1)
         self.grade_subject = GradeSubject.objects.create(
             academic_year=self.academic_year,
             grade=self.grade,
