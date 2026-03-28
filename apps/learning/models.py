@@ -66,7 +66,7 @@ class CourseOffering(BaseCodeModel):
         if self.tenant_id and course_tenant and self.tenant_id != course_tenant:
             raise ValidationError({"tenant_id": "Course offering tenant must match the course tenant."})
         self.tenant_id = self.tenant_id or course_tenant or classroom_tenant or teacher_tenant or academic_year_tenant
-        if self.end_date <= self.start_date:
+        if self.start_date and self.end_date and self.end_date <= self.start_date:
             raise ValidationError({"end_date": "End date must be later than the start date."})
         if self.classroom_id and self.course_id:
             course_school_id = self.course.school_id
@@ -187,7 +187,7 @@ class Assignment(BaseCodeModel):
             self.tenant_id = offering_tenant
         if not (self.tenant_id or "").strip():
             raise ValidationError({"tenant_id": "tenant_id is required."})
-        if self.due_at <= self.opens_at:
+        if self.opens_at and self.due_at and self.due_at <= self.opens_at:
             raise ValidationError({"due_at": "Due date must be later than the opening date."})
 
     def save(self, *args, **kwargs):

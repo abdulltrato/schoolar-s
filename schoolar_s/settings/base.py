@@ -52,6 +52,7 @@ TENANT_APPS = [
     "apps.school",
     "apps.reports",
     "apps.events",
+    "apps.transferencia",
 ]
 
 INSTALLED_APPS = SHARED_APPS + TENANT_APPS  # list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
@@ -290,6 +291,7 @@ JAZZMIN_SETTINGS = {
         "school.Enrollment": "fas fa-user-plus",
         "reports.Report": "fas fa-chart-bar",
         "events.Event": "fas fa-calendar-alt",
+        "transferencia.Transfer": "fas fa-exchange-alt",
     },
     "default_icon_parents": "fas fa-chevron-circle-right",
     "default_icon_children": "fas fa-circle",
