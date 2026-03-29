@@ -43,6 +43,7 @@ class CourseModuleInline(admin.TabularInline):
 @admin.register(Course)
 class CourseAdmin(TenantAwareAdmin):
     inlines = [CourseModuleInline, CourseStudentInline]
+    filter_horizontal = ("curriculum_areas",)
 
 
 @admin.register(CourseOffering)
@@ -57,7 +58,21 @@ class LessonAdmin(TenantAwareAdmin):
 
 @admin.register(LessonMaterial)
 class LessonMaterialAdmin(TenantAwareAdmin):
-    pass
+    list_display = ("title", "lesson_title", "course_title", "classroom_name", "material_type", "required")
+    readonly_fields = ("lesson", "lesson_title", "course_title", "classroom_name")
+
+    def lesson_title(self, obj):
+        return obj.lesson.title if obj.lesson_id else None
+
+    def course_title(self, obj):
+        return obj.lesson.offering.course.title if obj.lesson_id and obj.lesson.offering_id else None
+
+    def classroom_name(self, obj):
+        return obj.lesson.offering.classroom.name if obj.lesson_id and obj.lesson.offering_id and obj.lesson.offering.classroom_id else None
+
+    lesson_title.short_description = "Aula"
+    course_title.short_description = "Curso"
+    classroom_name.short_description = "Turma"
 
 
 @admin.register(Assignment)

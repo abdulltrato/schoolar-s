@@ -505,6 +505,31 @@ def test_school_crud(admin_client, tenant_header, base_data):
         tenant_header,
     )
 
+    extra_students = [
+        Student.objects.create(
+            name=f"Aluno Batch {i}",
+            tenant_id=base_data["tenant_id"],
+            birth_date=date(2014, 1, i + 2),
+            grade=base_data["grade"].number,
+            cycle=base_data["grade"].cycle,
+            estado="active",
+            identification_document=SimpleUploadedFile(f"id-{i}.pdf", b"pdf"),
+            previous_certificate=SimpleUploadedFile(f"cert-{i}.pdf", b"pdf"),
+        )
+        for i in range(2)
+    ]
+    batch_response = admin_client.post(
+        "/api/v1/school/enrollments/por-turma/",
+        {
+            "classroom": base_data["classroom"].id,
+            "student_ids": [s.id for s in extra_students],
+        },
+        format="json",
+        **tenant_header,
+    )
+    assert batch_response.status_code == 201
+    assert batch_response.data["criados"] == len(extra_students)
+
     _crud(
         admin_client,
         "/api/v1/school/management-assignments/",
@@ -744,6 +769,7 @@ def test_learning_crud(admin_client, tenant_header, base_data):
             "description": "Descricao",
             "modality": "online",
             "active": True,
+            "curriculum_area_ids": [base_data["area"].id],
         },
         {"title": "Curso CRUD 2"},
         tenant_header,
@@ -757,6 +783,7 @@ def test_learning_crud(admin_client, tenant_header, base_data):
             "description": "Descricao",
             "modality": "online",
             "active": True,
+            "curriculum_area_ids": [base_data["area"].id],
         },
         format="json",
         **tenant_header,

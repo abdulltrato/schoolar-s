@@ -26,7 +26,7 @@ from .serializers import (
 
 
 class CourseViewSet(RobustModelViewSet):
-    queryset = Course.objects.select_related("school").prefetch_related("modules").all()
+    queryset = Course.objects.select_related("school").prefetch_related("modules", "curriculum_areas").all()
     serializer_class = CourseSerializer
     search_fields = ("title", "description", "school__name", "tenant_id")
     ordering_fields = ("id", "tenant_id", "title", "school__name", "modality", "cycle_model__code")
@@ -127,7 +127,12 @@ class LessonViewSet(RobustModelViewSet):
 
 
 class LessonMaterialViewSet(RobustModelViewSet):
-    queryset = LessonMaterial.objects.select_related("lesson").all()
+    queryset = LessonMaterial.objects.select_related(
+        "lesson",
+        "lesson__offering",
+        "lesson__offering__course",
+        "lesson__offering__classroom",
+    ).all()
     serializer_class = LessonMaterialSerializer
     search_fields = ("title", "material_type", "lesson__title")
     ordering_fields = ("id", "title", "material_type")

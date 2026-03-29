@@ -6,7 +6,7 @@ from django.db import models
 from core.models import BaseCodeModel
 from core.tenant_mixins import TenantValidationMixin
 from .validators import validate_offering_conflicts
-from apps.curriculum.models import Subject
+from apps.curriculum.models import CurriculumArea, Subject
 
 
 class Course(BaseCodeModel, TenantValidationMixin):
@@ -30,6 +30,11 @@ class Course(BaseCodeModel, TenantValidationMixin):
     description = models.TextField(blank=True, verbose_name="Descrição")
     modality = models.CharField(max_length=20, choices=MODALITY_CHOICES, default="online", verbose_name="Modalidade")
     active = models.BooleanField(default=True, verbose_name="Ativo")
+    curriculum_areas = models.ManyToManyField(
+        CurriculumArea,
+        related_name="courses",
+        verbose_name="Áreas curriculares",
+    )
 
     def clean(self):
         school_tenant = ""
