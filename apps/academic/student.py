@@ -148,6 +148,8 @@ class Student(BaseNamedCodeModel):
                 raise ValidationError({"tenant_id": "O tenant do aluno deve coincidir com o tenant do perfil do usuário vinculado."})
         if not (self.tenant_id or "").strip():
             raise ValidationError({"tenant_id": "tenant_id é obrigatório. Envie o header X-Tenant-ID ou configure tenant_id no seu perfil (UserProfile)."})
+        if self.grade is None:
+            raise ValidationError({"grade": "A classe é obrigatória."})
         if not 1 <= self.grade <= 12:
             raise ValidationError({"grade": "A grade deve estar entre 1 e 12."})
         self.cycle = self.cycle_for_grade(self.grade)
