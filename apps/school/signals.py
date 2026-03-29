@@ -1,3 +1,6 @@
+from datetime import date
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.db import connection
 from django.db.models.signals import post_save, pre_delete
@@ -5,7 +8,13 @@ from django.dispatch import receiver
 
 from apps.academic.models import Guardian, Student
 
-from .models import Teacher, UserProfile
+from .models import (
+    Teacher,
+    UserProfile,
+    Enrollment,
+    Invoice,
+    PaymentPlan,
+)
 
 
 def _upsert_profile_for_user(
@@ -119,3 +128,86 @@ def sync_guardian_profile(sender, instance, **kwargs):
         role="guardian",
         tenant_id=instance.tenant_id or "",
     )
+
+
+def _month_range(start: date, end: date):
+    current = date(start.year, start.month, 1)
+    while current <= end:
+        yield current
+        # next month
+        if current.month == 12:
+            current = date(current.year + 1, 1, 1)
+        else:
+            current = date(current.year, current.month + 1, 1)
+
+
+@receiver(post_save, sender=Enrollment)
+def create_finance_on_enrollment(sender, instance: Enrollment, created, **kwargs):
+    if not created:
+        return
+
+    tenant_id = instance.tenant_id
+    student = instance.student
+    classroom = instance.classroom
+    school = classroom.school if classroom else None
+    academic_year = classroom.academic_year if classroom else None
+
+    # 1) Fatura de matrícula em rascunho
+    if instance.enrollment_fee and instance.enrollment_fee > 0:
+        inv = Invoice.objects.create(
+            tenant_id=tenant_id,
+            student=student,
+            school=school,
+            reference=f"MAT-{instance.code}",
+            description=f"Taxa de matrícula {student.name}",
+            amount=instance.enrollment_fee,
+            due_date=instance.enrollment_date,
+            status="draft",
+        )
+        PaymentPlan.objects.create(
+            tenant_id=tenant_id,
+            enrollment=instance,
+            student=student,
+            school=school,
+            invoice=inv,
+            type="enrollment_fee",
+            description="Taxa de matrícula",
+            amount=instance.enrollment_fee,
+            due_date=instance.enrollment_date,
+            status="invoiced",
+        )
+
+    # 2) Mensalidades até fim do ano letivo
+    if instance.monthly_fee and instance.monthly_fee > 0 and academic_year:
+        start_date = instance.monthly_fee_start or instance.enrollment_date
+        end_date = instance.monthly_fee_end or academic_year.end_date
+        for first_of_month in _month_range(start_date, end_date):
+            due = date(first_of_month.year, first_of_month.month, min(first_of_month.day, academic_year.start_date.day))
+            PaymentPlan.objects.create(
+                tenant_id=tenant_id,
+                enrollment=instance,
+                student=student,
+                school=school,
+                type="tuition_monthly",
+                description=f"Mensalidade {first_of_month.strftime('%m/%Y')}",
+                amount=instance.monthly_fee,
+                due_date=due,
+                status="scheduled",
+            )
+
+    # 3) Propina (usa mensalidade como valor base, se existir)
+    propina_val = instance.monthly_fee if instance.monthly_fee and instance.monthly_fee > 0 else Decimal("0")
+    if propina_val > 0 and academic_year:
+        PaymentPlan.objects.create(
+            tenant_id=tenant_id,
+            enrollment=instance,
+            student=student,
+            school=school,
+            type="propina",
+            description="Propina anual",
+            amount=propina_val,
+            due_date=academic_year.start_date,
+            status="scheduled",
+        )
+
+    # 4) Taxas de exame NÃO são geradas no ato da matrícula; serão criadas apenas ao agendar o exame.

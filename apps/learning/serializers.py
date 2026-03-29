@@ -66,6 +66,8 @@ class CourseOfferingSerializer(serializers.ModelSerializer):
 
 class LessonSerializer(serializers.ModelSerializer):
     offering_title = serializers.CharField(source="offering.course.title", read_only=True)
+    nome = serializers.CharField(source="title", read_only=True)
+    classroom_name = serializers.CharField(source="offering.classroom.name", read_only=True)
 
     class Meta:
         model = Lesson

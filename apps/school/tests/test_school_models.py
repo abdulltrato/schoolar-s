@@ -138,3 +138,26 @@ class EscolaModelTests(TestCase):
 
         self.assertEqual(grade.education_level, "secundario")
         self.assertEqual(grade.cycle, 1)
+
+    def test_nao_cria_planos_de_exame_na_matricula(self):
+        grade_subject = GradeSubject.objects.create(
+            academic_year=self.academic_year,
+            grade=self.grade,
+            subject=self.subject,
+        )
+        TeachingAssignment.objects.create(
+            teacher=self.teacher,
+            classroom=self.classroom,
+            grade_subject=grade_subject,
+        )
+        enrollment = Enrollment.objects.create(
+            student=self.student,
+            classroom=self.classroom,
+            enrollment_fee=0,
+            monthly_fee=0,
+            exam_fee=100,
+            exam_recurrence_fee=200,
+            exam_special_fee=300,
+        )
+
+        self.assertEqual(enrollment.payment_plans.count(), 0)

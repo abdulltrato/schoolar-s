@@ -25,17 +25,19 @@ class Progression(BaseCodeModel):
         student_tenant = (self.student.tenant_id or "").strip() if self.student_id else ""
         if student_tenant:
             if self.tenant_id and self.tenant_id != student_tenant:
-                raise ValidationError({"tenant_id": "Progression tenant must match the student tenant."})
+                raise ValidationError({"tenant_id": "O tenant da progressão deve coincidir com o tenant do aluno."})
             if not self.tenant_id:
                 self.tenant_id = student_tenant
         if not (self.tenant_id or "").strip():
             raise ValidationError({"tenant_id": "tenant_id is required."})
         if self.cycle not in {1, 2}:
-            raise ValidationError({"cycle": "The progression cycle must be 1 or 2."})
+            raise ValidationError({"cycle": "O ciclo da progressão deve ser 1 ou 2."})
         if self.student_id and self.student.cycle != self.cycle:
-            raise ValidationError({"cycle": "The progression cycle must match the student cycle."})
-        if not re.fullmatch(r"\d{4}-\d{4}", self.academic_year):
-            raise ValidationError({"academic_year": "Use the YYYY-YYYY format."})
+            raise ValidationError({"cycle": "O ciclo da progressão deve coincidir com o ciclo do aluno."})
+        normalized = (self.academic_year or "").replace("/", "-").strip()
+        if not re.fullmatch(r"\d{4}-\d{4}", normalized):
+            raise ValidationError({"academic_year": "Use o formato YYYY-YYYY."})
+        self.academic_year = normalized
 
     def save(self, *args, **kwargs):
         self.full_clean()

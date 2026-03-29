@@ -17,3 +17,15 @@ frontend/.next/
 frontend/.env.local
 frontend/tsconfig.tsbuildinfo
 frontend-dev*.log
+# Windows & workspace artefacts
+Thumbs.db
+desktop.ini
+*.tmp
+*.log
+pytest-cache-files-*/
+pytest-cache-file*/
+# Local DB dumps / backups
+*.sqlite3.bak
+*.sql
+# Editor specific
+.vscode/

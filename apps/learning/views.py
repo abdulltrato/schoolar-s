@@ -1,4 +1,7 @@
 from core.viewsets import RobustModelViewSet
+from django.utils import timezone
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from .models import (
     Assignment,
@@ -97,6 +100,30 @@ class LessonViewSet(RobustModelViewSet):
     ordering_fields = ("id", "tenant_id", "scheduled_at", "title", "published")
     ordering = ("scheduled_at",)
     allowed_roles = CourseViewSet.allowed_roles
+
+    @action(detail=False, methods=["get"])
+    def proximas(self, request, *args, **kwargs):
+        """Retorna próximas aulas a partir de agora (ordenadas asc)."""
+        now = timezone.now()
+        qs = self.filter_queryset(self.get_queryset().filter(scheduled_at__gte=now).order_by("scheduled_at"))
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["get"])
+    def passadas(self, request, *args, **kwargs):
+        """Retorna aulas já ocorridas (ordenadas desc)."""
+        now = timezone.now()
+        qs = self.filter_queryset(self.get_queryset().filter(scheduled_at__lt=now).order_by("-scheduled_at"))
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
 
 
 class LessonMaterialViewSet(RobustModelViewSet):

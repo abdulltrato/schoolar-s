@@ -84,7 +84,34 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     school_name = serializers.CharField(source="classroom.school.name", read_only=True)
     academic_year_code = serializers.CharField(source="classroom.academic_year.code", read_only=True)
     grade_number = serializers.IntegerField(source="classroom.grade.number", read_only=True)
+    payment_plans = serializers.SerializerMethodField(read_only=True)
+
+    def get_payment_plans(self, obj):
+        plans = getattr(obj, "payment_plans", None)
+        if plans is None:
+            return []
+        return [
+            {
+                "id": plan.id,
+                "type": plan.type,
+                "type_label": plan.get_type_display(),
+                "amount": str(plan.amount),
+                "status": plan.status,
+                "status_label": plan.get_status_display(),
+                "due_date": plan.due_date,
+                "invoice_id": plan.invoice_id,
+            }
+            for plan in plans.all().order_by("due_date", "type")
+        ]
 
     class Meta:
         model = Enrollment
         fields = "__all__"
+        read_only_fields = ("exam_fee", "exam_recurrence_fee", "exam_special_fee")
+
+    def validate(self, attrs):
+        # Bloqueia alteração/inclusão de taxas de exame via payload de matrícula.
+        attrs.pop("exam_fee", None)
+        attrs.pop("exam_recurrence_fee", None)
+        attrs.pop("exam_special_fee", None)
+        return super().validate(attrs)

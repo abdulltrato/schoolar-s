@@ -8,6 +8,25 @@ O sistema traduz o **Plano Curricular do Ensino Primário (PCEP)** numa infraest
 
 ---
 
+## 🆕 Endpoint rápido para agendar avaliações/exames
+
+Use este endpoint para marcar testes ou exames para a turma inteira, alunos selecionados ou um único aluno, já calculando e faturando a taxa de exame (regular, recorrência ou especial) conforme configurada na matrícula.
+
+- **POST** `/assessments/agendar/`
+  ```json
+  {
+    "teaching_assignment": 1,
+    "component": 2,
+    "date": "2026-06-01",
+    "target": "turma",           // turma | selecionados | individual
+    "student_ids": [10, 11],     // obrigatório se target for selecionados ou individual
+    "exam_tipo": "exam_regular"  // exam_regular | exam_recurrence | exam_special
+  }
+  ```
+  Resposta: `{ "criados": <quantidade> }` ou `{ "erro": "mensagem" }`.
+
+---
+
 ## 🎯 Objetivo
 
 Digitalizar e operacionalizar o ensino básico com base em:

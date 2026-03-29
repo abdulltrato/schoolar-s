@@ -1,4 +1,11 @@
+from datetime import date
+
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
 from core.viewsets import RobustModelViewSet
+from .scheduler import ScheduleError, schedule_assessments
 
 from .models import Assessment, AssessmentComponent, AssessmentOutcomeMap, AssessmentPeriod, SubjectPeriodResult
 from .serializers import (
@@ -85,6 +92,31 @@ class AssessmentViewSet(RobustModelViewSet):
         "list": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher", "student", "guardian"},
         "retrieve": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher", "student", "guardian"},
     }
+
+    @action(methods=["post"], detail=False, url_path="agendar")
+    def agendar(self, request):
+        """
+        Agenda avaliações/exames para uma turma inteira, seleção ou aluno único.
+        Considera automaticamente as taxas de exame ao criar avaliações do tipo exame.
+        """
+        data = request.data or {}
+        try:
+            raw_date = data.get("date")
+            if raw_date:
+                parsed_date = date.fromisoformat(raw_date)
+            else:
+                raise ScheduleError("O campo date é obrigatório (YYYY-MM-DD).")
+            created = schedule_assessments(
+                teaching_assignment_id=data.get("teaching_assignment"),
+                component_id=data.get("component"),
+                date_avaliacao=parsed_date,
+                target=data.get("target", "turma"),
+                student_ids=data.get("student_ids") or [],
+                exam_tipo=data.get("exam_tipo", "exam_regular"),
+            )
+        except ScheduleError as exc:
+            return Response({"erro": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"criados": created}, status=status.HTTP_201_CREATED)
 
 
 class SubjectPeriodResultViewSet(RobustModelViewSet):
