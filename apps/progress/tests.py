@@ -4,10 +4,10 @@ from .evaluation import EvaluationError, evaluate_student_progress
 
 
 class EvaluateStudentProgressTests(TestCase):
-    def test_reprovado_por_media_dos_testes(self):
+    def test_reprovado_por_evento_de_testes(self):
         resultado = evaluate_student_progress(teste1=5, teste2=12, teste3=12)
-        self.assertEqual(resultado["estado"], "reprovado_media_testes")
-        self.assertIn("não deve realizar exame", resultado["motivo"])
+        self.assertEqual(resultado["estado"], "reprovado_testes")
+        self.assertIn("abaixo de 10 valores", resultado["motivo"])
 
     def test_aguarda_exame_quando_testes_ok(self):
         resultado = evaluate_student_progress(teste1=10, teste2=11, teste3=12)

@@ -16,4 +16,5 @@ urlpatterns = [
     path("events/", include("apps.events.urls")),
     path("transfer/", include("apps.transfer.urls")),
     path("transferencia/", include("apps.transfer.urls")),
+    path("certificate/", include("apps.certificate.urls")),
 ]

@@ -7,6 +7,7 @@ from django.utils.crypto import get_random_string
 from apps.school.models import Enrollment, Invoice, PaymentPlan, TeachingAssignment
 from .assessment import Assessment
 from .component import AssessmentComponent
+from .question_service import assign_questions_to_assessment
 
 
 class ScheduleError(ValueError):
@@ -133,7 +134,7 @@ def schedule_assessments(
         if exists:
             continue
 
-        Assessment.objects.create(
+        assessment = Assessment.objects.create(
             tenant_id=teaching_assignment.tenant_id,
             student_id=student_id,
             teaching_assignment=teaching_assignment,
@@ -142,6 +143,7 @@ def schedule_assessments(
             type=component.type,
             date=date_avaliacao,
         )
+        assign_questions_to_assessment(assessment)
         created += 1
 
         if component.type == "exam":

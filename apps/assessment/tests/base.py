@@ -7,6 +7,7 @@ from django.test import TestCase
 
 from apps.academic.models import Student
 from apps.curriculum.models import CurriculumArea, Competency, Subject, SubjectSpecialty
+from apps.assessment.question import Question
 from apps.school.models import (
     AcademicYear,
     Classroom,
@@ -98,3 +99,19 @@ class AssessmentTestCaseBase(TestCase):
             cycle=1,
             subject=self.outra_disciplina,
         )
+        for idx in range(6):
+            Question.objects.create(
+                subject=self.subject,
+                question_type="test",
+                text=f"Questão de teste {idx + 1}",
+                vocational=False,
+                tenant_id=self.school.tenant_id,
+            )
+        for idx in range(6):
+            Question.objects.create(
+                subject=self.subject,
+                question_type="exam",
+                text=f"Questão de exame {idx + 1}",
+                vocational=False,
+                tenant_id=self.school.tenant_id,
+            )

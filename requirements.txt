@@ -8,3 +8,4 @@ django-cors-headers==4.0
 django-jazzmin==2.6
 pytest>=8.3,<9
 pytest-django>=4.8,<5
+reportlab==3.7.6

@@ -29,3 +29,5 @@ pytest-cache-file*/
 *.sql
 # Editor specific
 .vscode/
+students/identification/
+students/certificates/

@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from django.db import transaction
 from django.utils import timezone
 
@@ -45,6 +43,30 @@ def create_certificate(student, course, *, notes=""):
     if not assessments.exists():
         raise CertificateError("Nenhum exame encontrado para o curso e aluno informados.")
 
+    record_payloads = []
+    for assessment in assessments:
+        subject = (
+            assessment.component.grade_subject.subject
+            if assessment.component and assessment.component.grade_subject
+            else None
+        )
+        if not subject:
+            continue
+        if assessment.score is None:
+            continue
+        record_payloads.append(
+            {
+                "assessment": assessment,
+                "subject": subject,
+                "exam_type": assessment.type or assessment.component.type,
+                "score": assessment.score,
+                "exam_date": assessment.date,
+            }
+        )
+
+    if not record_payloads:
+        raise CertificateError("Nenhum exame válido foi encontrado.")
+
     with transaction.atomic():
         certificate = Certificate.objects.create(
             student=student,
@@ -53,26 +75,8 @@ def create_certificate(student, course, *, notes=""):
             issued_at=timezone.now(),
             notes=notes or "",
         )
-        records = []
-        for assessment in assessments:
-            subject = (
-                assessment.component.grade_subject.subject
-                if assessment.component and assessment.component.grade_subject
-                else None
-            )
-            if not subject:
-                continue
-            if assessment.score is None:
-                continue
-            records.append(
-                CertificateExamRecord(
-                    certificate=certificate,
-                    assessment=assessment,
-                    subject=subject,
-                    exam_type=assessment.type or assessment.component.type,
-                    score=Decimal(assessment.score),
-                    exam_date=assessment.date,
-                )
-            )
+        records = [
+            CertificateExamRecord(certificate=certificate, **payload) for payload in record_payloads
+        ]
         CertificateExamRecord.objects.bulk_create(records)
         return certificate

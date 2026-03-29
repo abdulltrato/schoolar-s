@@ -3,9 +3,10 @@ from django.db import models
 from django.utils import timezone
 
 from core.models import BaseCodeModel
+from core.tenant_mixins import TenantValidationMixin
 
 
-class Certificate(BaseCodeModel):
+class Certificate(BaseCodeModel, TenantValidationMixin):
     CODE_PREFIX = "CRT"
     STATUS_CHOICES = [
         ("draft", "Rascunho"),
@@ -23,7 +24,8 @@ class Certificate(BaseCodeModel):
         course_tenant = (self.course.tenant_id or "").strip() if self.course_id else ""
         if student_tenant and course_tenant and student_tenant != course_tenant:
             raise ValidationError({"course": "O curso e o aluno devem pertencer ao mesmo tenant."})
-        self.ensure_tenant(student_tenant, course_tenant, self.tenant_id)
+        if student_tenant or course_tenant or (self.tenant_id or "").strip():
+            self.ensure_tenant(student_tenant, course_tenant, self.tenant_id)
 
     def save(self, *args, **kwargs):
         if self.status == "issued" and not self.issued_at:
@@ -35,7 +37,7 @@ class Certificate(BaseCodeModel):
         return f"{self.student} - {self.course} ({self.get_status_display()})"
 
 
-class CertificateExamRecord(BaseCodeModel):
+class CertificateExamRecord(BaseCodeModel, TenantValidationMixin):
     CODE_PREFIX = "CER"
     certificate = models.ForeignKey(
         Certificate,
@@ -60,7 +62,8 @@ class CertificateExamRecord(BaseCodeModel):
         subject_tenant = (self.subject.tenant_id or "").strip() if self.subject_id else ""
         if subject_tenant and certificate_tenant and subject_tenant != certificate_tenant:
             raise ValidationError({"subject": "A disciplina deve pertencer ao mesmo tenant do certificado."})
-        self.ensure_tenant(certificate_tenant, subject_tenant, self.tenant_id)
+        if subject_tenant or certificate_tenant or (self.tenant_id or "").strip():
+            self.ensure_tenant(certificate_tenant, subject_tenant, self.tenant_id)
 
     def __str__(self):
         return f"{self.subject} - {self.score}"
