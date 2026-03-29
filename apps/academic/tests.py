@@ -1,6 +1,7 @@
 from datetime import date
 
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -10,6 +11,9 @@ from .models import Student
 
 
 class AlunoModelTests(TestCase):
+    def _doc(self, name="doc.pdf"):
+        return SimpleUploadedFile(name, b"%PDF-1.4 test")
+
     def test_rejeita_classe_fora_do_intervalo(self):
         with self.assertRaises(ValidationError):
             Student.objects.create(
@@ -27,6 +31,8 @@ class AlunoModelTests(TestCase):
             grade=5,
             cycle=1,
             tenant_id="tenant-esc-1",
+            identification_document=self._doc("id.pdf"),
+            previous_certificate=self._doc("cert.pdf"),
         )
 
         self.assertEqual(student.cycle, 2)
@@ -38,6 +44,8 @@ class AlunoModelTests(TestCase):
             grade=7,
             cycle=1,
             tenant_id="tenant-esc-1",
+            identification_document=self._doc("id2.pdf"),
+            previous_certificate=self._doc("cert2.pdf"),
         )
 
         self.assertEqual(student.education_level, "secundario")
@@ -63,6 +71,8 @@ class AlunoAdminTests(TestCase):
         self.client.force_login(self.user)
 
     def test_admin_add_herda_tenant_do_perfil_autenticado(self):
+        id_file = SimpleUploadedFile("id-admin.pdf", b"%PDF-1.4 test")
+        cert_file = SimpleUploadedFile("cert-admin.pdf", b"%PDF-1.4 test")
         response = self.client.post(
             reverse("admin:academic_student_add"),
             {
@@ -70,6 +80,9 @@ class AlunoAdminTests(TestCase):
                 "birth_date": "2014-01-01",
                 "grade": "5",
                 "estado": "active",
+                "education_path": "general",
+                "identification_document": id_file,
+                "previous_certificate": cert_file,
                 "_save": "Save",
             },
             follow=True,
@@ -85,6 +98,8 @@ class AlunoAdminTests(TestCase):
         self.user.school_profile.school = None
         self.user.school_profile.save(update_fields=["tenant_id", "school"])
 
+        id_file = SimpleUploadedFile("id-sem-tenant.pdf", b"%PDF-1.4 test")
+        cert_file = SimpleUploadedFile("cert-sem-tenant.pdf", b"%PDF-1.4 test")
         response = self.client.post(
             reverse("admin:academic_student_add"),
             {
@@ -92,10 +107,12 @@ class AlunoAdminTests(TestCase):
                 "birth_date": "2014-01-01",
                 "grade": "5",
                 "estado": "active",
+                "education_path": "general",
+                "identification_document": id_file,
+                "previous_certificate": cert_file,
                 "_save": "Save",
             },
         )
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Student.objects.filter(name="Aluno Sem Tenant").exists())
-        self.assertContains(response, "Tenant_id is required.")

@@ -75,10 +75,11 @@ export default async function Home() {
 
   return (
     <DashboardShell
-      title="Plataforma escolar executiva"
-      description="Visão de alto nível das operações escolares, estrutura curricular e avaliação. Os detalhes estão organizados em módulos dedicados."
+      title="Painel escolar"
+      description="Operações, currículo e avaliação em módulos dedicados."
+      headerLinks={modules.map(({ href, title }) => ({ href, label: title }))}
       aside={(
-        <section className="overflow-hidden rounded-[1.5rem] border border-white/15 bg-[linear-gradient(180deg,#13203c_0%,#1b2d52_100%)] p-4 text-sand shadow-card">
+        <section className="overflow-hidden rounded-[var(--radius-lg)] border border-white/15 bg-[linear-gradient(180deg,#13203c_0%,#1b2d52_100%)] p-4 text-sand shadow-card">
           <div aria-hidden className="mb-4 h-px bg-[linear-gradient(90deg,transparent,rgba(247,243,233,0.4),transparent)]" />
           <SectionTitle
             eyebrow="Módulos"
@@ -86,7 +87,7 @@ export default async function Home() {
             description="A interface está dividida por área funcional para reduzir ruído e melhorar a leitura operacional."
             inverse
           />
-          <div className="mt-5 rounded-[1.1rem] border border-white/10 bg-white/5 px-4 py-3">
+          <div className="mt-5 rounded-[var(--radius-md)] border border-white/10 bg-white/5 px-4 py-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sand/55">Direção</p>
             <p className="mt-2 text-sm leading-6 text-sand/76">
               Atalhos para áreas críticas com descrição curta e leitura rápida para operação diária.
@@ -97,7 +98,7 @@ export default async function Home() {
               <Link
                 key={module.href}
                 href={module.href}
-                className="rounded-[1rem] border border-white/10 bg-white/5 px-3 py-3 transition hover:border-white/25 hover:bg-white/10"
+                className="rounded-[var(--radius-md)] border border-white/10 bg-white/5 px-3 py-3 transition hover:border-white/25 hover:bg-white/10"
               >
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-sand sm:text-xs">
                   {module.title}
@@ -111,7 +112,7 @@ export default async function Home() {
         </section>
       )}
     >
-      <section className="overflow-hidden rounded-[1.6rem] border border-white/70 bg-[linear-gradient(135deg,rgba(20,33,61,0.98),rgba(32,52,85,0.94))] p-5 text-sand shadow-card">
+      <section className="overflow-hidden rounded-[var(--radius-lg)] border border-white/70 bg-[linear-gradient(135deg,rgba(20,33,61,0.98),rgba(32,52,85,0.94))] p-5 text-sand shadow-card">
         <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-ember">Centro de controlo</p>

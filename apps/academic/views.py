@@ -16,7 +16,16 @@ class StudentViewSet(RobustModelViewSet):
     ).all()
     serializer_class = StudentSerializer
     search_fields = ("name", "estado", "tenant_id")
-    ordering_fields = ("id", "name", "tenant_id", "grade", "cycle", "birth_date")
+    ordering_fields = (
+        "id",
+        "name",
+        "tenant_id",
+        "grade",
+        "cycle",
+        "cycle_model__code",
+        "education_path",
+        "birth_date",
+    )
     ordering = ("name",)
     allowed_roles = {
         "*": {
@@ -44,6 +53,22 @@ class StudentViewSet(RobustModelViewSet):
             "guardian",
         },
     }
+
+    @staticmethod
+    def _apply_track_filters(queryset, params):
+        track = (params.get("track") or params.get("education_track") or "").lower()
+        if track in {"general", "geral"}:
+            queryset = queryset.filter(grade__lte=12)
+        elif track in {"technical", "tecnico", "technical_professional"}:
+            queryset = queryset.filter(grade__gte=13)
+        cycle_code = (params.get("cycle_model") or "").strip()
+        if cycle_code:
+            queryset = queryset.filter(cycle_model__code=cycle_code)
+        return queryset
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return self._apply_track_filters(queryset, self.request.query_params)
 
 
 class GuardianViewSet(RobustModelViewSet):

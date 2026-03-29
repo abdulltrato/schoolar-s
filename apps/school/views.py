@@ -244,13 +244,40 @@ class ClassroomViewSet(RobustModelViewSet):
     queryset = Classroom.objects.select_related("school", "grade", "academic_year", "lead_teacher").all()
     serializer_class = ClassroomSerializer
     search_fields = ("name", "tenant_id", "academic_year__code", "grade__name", "lead_teacher__name", "school__name")
-    ordering_fields = ("id", "name", "tenant_id", "cycle", "academic_year__code", "grade__number", "school__name")
+    ordering_fields = (
+        "id",
+        "name",
+        "tenant_id",
+        "cycle",
+        "cycle_model__code",
+        "academic_year__code",
+        "grade__number",
+        "school__name",
+    )
     ordering = ("academic_year__code", "grade__number", "name")
     allowed_roles = {
         "*": {"national_admin", "provincial_admin", "district_admin", "school_director"},
         "list": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher", "student", "guardian"},
         "retrieve": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher", "student", "guardian"},
     }
+
+    @staticmethod
+    def _apply_track_filters(queryset, params):
+        track = (params.get("track") or params.get("education_track") or "").lower()
+        if track in {"general", "geral"}:
+            return queryset.filter(grade__number__lte=12)
+        if track in {"technical", "tecnico", "technical_professional"}:
+            return queryset.filter(grade__number__gte=13)
+        return queryset
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        params = self.request.query_params
+        queryset = self._apply_track_filters(queryset, params)
+        cycle_code = (params.get("cycle_model") or "").strip()
+        if cycle_code:
+            queryset = queryset.filter(cycle_model__code=cycle_code)
+        return queryset
 
 
 class GradeSubjectViewSet(RobustModelViewSet):
@@ -301,6 +328,48 @@ class EnrollmentViewSet(RobustModelViewSet):
         "list": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher", "student", "guardian"},
         "retrieve": {"national_admin", "provincial_admin", "district_admin", "school_director", "teacher", "student", "guardian"},
     }
+
+    def get_serializer_class(self):
+        if self.action in {"list", "retrieve"}:
+            from .serializers import EnrollmentSummarySerializer
+
+            return EnrollmentSummarySerializer
+        return super().get_serializer_class()
+
+    @staticmethod
+    def _apply_track_filters(queryset, params):
+        track = (params.get("track") or "").lower()
+        band = (params.get("cycle_band") or "").lower()
+
+        # Track filters
+        if track == "primary":
+            queryset = queryset.filter(classroom__grade__number__lte=6)
+        elif track == "secondary":
+            queryset = queryset.filter(classroom__grade__number__gte=7, classroom__grade__number__lte=12)
+        elif track in {"technical", "technical_professional"}:
+            queryset = queryset.filter(classroom__grade__number__gte=13)
+
+        # Band filters
+        if band == "primary_cycle_1":
+            queryset = queryset.filter(classroom__grade__number__lte=3)
+        elif band == "primary_cycle_2":
+            queryset = queryset.filter(classroom__grade__number__gte=4, classroom__grade__number__lte=6)
+        elif band == "secondary_cycle_1":
+            queryset = queryset.filter(classroom__grade__number__gte=7, classroom__grade__number__lte=9)
+        elif band == "secondary_cycle_2":
+            queryset = queryset.filter(classroom__grade__number__gte=10, classroom__grade__number__lte=12)
+        elif band == "technical_basic":
+            queryset = queryset.filter(classroom__grade__number__gte=13, classroom__grade__number__lte=15)
+        elif band == "technical_medium":
+            queryset = queryset.filter(classroom__grade__number__gte=16, classroom__grade__number__lte=18)
+        elif band == "technical_superior":
+            queryset = queryset.filter(classroom__grade__number__gte=19)
+
+        return queryset
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return self._apply_track_filters(queryset, self.request.query_params)
 
 
 class ManagementAssignmentViewSet(RobustModelViewSet):

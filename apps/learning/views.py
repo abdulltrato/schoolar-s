@@ -7,6 +7,7 @@ from .models import (
     Lesson,
     LessonMaterial,
     Submission,
+    SubmissionAttachment,
 )
 from .serializers import (
     AssignmentSerializer,
@@ -15,6 +16,7 @@ from .serializers import (
     LessonMaterialSerializer,
     LessonSerializer,
     SubmissionSerializer,
+    SubmissionAttachmentSerializer,
 )
 
 
@@ -22,7 +24,7 @@ class CourseViewSet(RobustModelViewSet):
     queryset = Course.objects.select_related("school").all()
     serializer_class = CourseSerializer
     search_fields = ("title", "description", "school__name", "tenant_id")
-    ordering_fields = ("id", "tenant_id", "title", "school__name", "modality")
+    ordering_fields = ("id", "tenant_id", "title", "school__name", "modality", "cycle_model__code")
     ordering = ("title",)
     allowed_roles = {
         "*": {
@@ -105,7 +107,7 @@ class AssignmentViewSet(RobustModelViewSet):
 
 
 class SubmissionViewSet(RobustModelViewSet):
-    queryset = Submission.objects.select_related("assignment", "student").all()
+    queryset = Submission.objects.select_related("assignment", "student").prefetch_related("attachments").all()
     serializer_class = SubmissionSerializer
     search_fields = ("assignment__title", "student__name", "status", "tenant_id")
     ordering_fields = ("id", "tenant_id", "submitted_at", "status", "score")
@@ -138,3 +140,11 @@ class SubmissionViewSet(RobustModelViewSet):
             "guardian",
         },
     }
+
+
+class SubmissionAttachmentViewSet(RobustModelViewSet):
+    queryset = SubmissionAttachment.objects.select_related("submission", "submission__student").all()
+    serializer_class = SubmissionAttachmentSerializer
+    search_fields = ("title", "submission__student__name", "tenant_id")
+    ordering_fields = ("id", "tenant_id", "created_at")
+    ordering = ("-created_at",)

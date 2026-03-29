@@ -4,12 +4,15 @@
 
 :root {
   color-scheme: light;
-  --shell-gutter: 0.25rem;
-  --shell-top-offset: 0.25rem;
-  --shell-bottom-offset: 0.25rem;
-  --content-gap: 0.5rem;
-  --content-stack-gap: 0.75rem;
-  --section-scroll-offset: 8rem;
+  --shell-gutter: 0.2rem;
+  --shell-top-offset: 0.2rem;
+  --shell-bottom-offset: 0.2rem;
+  --content-gap: 0.45rem;
+  --content-stack-gap: 0.65rem;
+  --section-scroll-offset: 6.5rem;
+  --radius-sm: 0.45rem;
+  --radius-md: 0.7rem;
+  --radius-lg: 0.95rem;
 }
 
 html {

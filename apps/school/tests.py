@@ -2,6 +2,7 @@ from datetime import date
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from rest_framework.test import APIClient
 
@@ -21,6 +22,9 @@ from .models import (
 
 
 class EscolaModelTests(TestCase):
+    def _doc(self, name="doc.pdf"):
+        return SimpleUploadedFile(name, b"%PDF-1.4 test")
+
     def setUp(self):
         self.school = School.objects.create(code="ESC-01", name="School Primaria Central", tenant_id="tenant-esc-01")
         area = CurriculumArea.objects.create(name="Ciencias")
@@ -34,6 +38,8 @@ class EscolaModelTests(TestCase):
             grade=2,
             cycle=1,
             tenant_id=self.school.tenant_id,
+            identification_document=self._doc("id-beto.pdf"),
+            previous_certificate=self._doc("cert-beto.pdf"),
         )
         self.academic_year = AcademicYear.objects.create(
             code="2026-2027",
@@ -181,6 +187,8 @@ class UserProfileSignalTests(TestCase):
             grade=6,
             cycle=1,
             tenant_id="tenant-student",
+            identification_document=SimpleUploadedFile("id-portal.pdf", b"%PDF-1.4 test"),
+            previous_certificate=SimpleUploadedFile("cert-portal.pdf", b"%PDF-1.4 test"),
         )
 
         user.refresh_from_db()

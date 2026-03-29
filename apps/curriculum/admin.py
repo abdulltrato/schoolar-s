@@ -5,6 +5,7 @@ from core.admin_utils import DerivedTenantAdmin, TenantAwareAdmin
 from .models import (
     CurriculumArea,
     Subject,
+    SubjectSpecialty,
     Competency,
     LearningOutcome,
     CompetencyOutcome,
@@ -37,6 +38,11 @@ class LearningOutcomeAdmin(TenantAwareAdmin):
 @admin.register(Subject)
 class SubjectAdmin(DerivedTenantAdmin):
     pass
+
+
+@admin.register(SubjectSpecialty)
+class SubjectSpecialtyAdmin(DerivedTenantAdmin):
+    list_display = ("name", "subject", "tenant_id", "deleted_at")
 
 
 @admin.register(Competency)

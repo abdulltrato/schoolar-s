@@ -54,10 +54,11 @@ class StudentAdminForm(forms.ModelForm):
 @admin.register(Student)
 class AlunoAdmin(TenantAwareAdmin):
     form = StudentAdminForm
-    list_display = ("name", "grade", "education_level", "cycle", "estado")
-    list_filter = ("cycle", "estado", "grade")
+    list_display = ("name", "grade", "education_level", "cycle", "education_path", "technical_level", "estado")
+    list_filter = ("cycle", "estado", "grade", "education_path", "technical_level")
     search_fields = ("name",)
     readonly_fields = ("tenant_id", "education_level", "cycle")
+    filter_horizontal = ("courses",)
     fieldsets = (
         (
             "Dados do aluno",
@@ -69,6 +70,26 @@ class AlunoAdmin(TenantAwareAdmin):
                     "education_level",
                     "cycle",
                     "estado",
+                    "courses",
+                )
+            },
+        ),
+        (
+            "Trilho de ensino",
+            {
+                "fields": (
+                    "education_path",
+                    "technical_level",
+                    "technical_course",
+                )
+            },
+        ),
+        (
+            "Documentos obrigatórios",
+            {
+                "fields": (
+                    "identification_document",
+                    "previous_certificate",
                 )
             },
         ),

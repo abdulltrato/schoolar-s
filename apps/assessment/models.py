@@ -268,6 +268,21 @@ class Assessment(BaseCodeModel):
             raise ValidationError({"tenant_id": "Assessment student and classroom must belong to the same tenant."})
         self.tenant_id = self.tenant_id or student_tenant or classroom_tenant
 
+        # Avoid double-booking assessments for the same teaching assignment on the same date
+        if self.date and self.teaching_assignment_id:
+            conflicts = (
+                Assessment.objects.filter(
+                    tenant_id=self.tenant_id,
+                    teaching_assignment_id=self.teaching_assignment_id,
+                    date=self.date,
+                    deleted_at__isnull=True,
+                )
+                .exclude(pk=self.pk)
+                .exists()
+            )
+            if conflicts:
+                raise ValidationError({"date": "Já existe uma avaliação marcada para esta turma/disciplina nesta data."})
+
         if self.student_id:
             if self.student.cycle != classroom.cycle:
                 raise ValidationError({"student": "Student and classroom must belong to the same cycle."})

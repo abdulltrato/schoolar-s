@@ -7,7 +7,33 @@ from django.db import models
 from core.models import BaseCodeModel, BaseNamedCodeModel, tenant_id_from_user
 
 
+class Cycle(BaseNamedCodeModel):
+    CODE_PREFIX = "CYC"
+    TRACK_CHOICES = [
+        ("general", "Ensino geral"),
+        ("technical", "Ensino técnico profissional"),
+    ]
+
+    code = models.CharField(max_length=40, unique=True, verbose_name="Código do ciclo")
+    track = models.CharField(max_length=20, choices=TRACK_CHOICES, default="general", verbose_name="Trilho")
+    order = models.PositiveSmallIntegerField(default=0, verbose_name="Ordem")
+
+    def __str__(self):
+        return f"{self.name or self.code} ({self.get_track_display()})"
+
+    class Meta:
+        verbose_name = "Ciclo"
+        verbose_name_plural = "Ciclos"
+        ordering = ["track", "order", "code"]
+
+
 def validate_academic_year_code(code: str):
+    """
+    Accepts codes in the form YYYY-YYYY where the second year is the first + 1.
+    If code is falsy, caller should build it from the dates.
+    """
+    if not code:
+        return
     if not re.fullmatch(r"\d{4}-\d{4}", code):
         raise ValidationError("Use the YYYY-YYYY format.")
 
@@ -25,12 +51,22 @@ class AcademicYear(BaseCodeModel):
     active = models.BooleanField(default=False, verbose_name="Ativo")
 
     def clean(self):
-        validate_academic_year_code(self.code)
         self.tenant_id = (self.tenant_id or "").strip()
         if not self.tenant_id:
             raise ValidationError({"tenant_id": "tenant_id is required."})
-        if self.end_date <= self.start_date:
-            raise ValidationError({"end_date": "End date must be later than the start date."})
+
+        # If code is missing or malformed, try to build it from dates.
+        provided_code = (self.code or "").strip()
+
+        if self.start_date and self.end_date:
+            if self.end_date <= self.start_date:
+                raise ValidationError({"end_date": "End date must be later than the start date."})
+            if not provided_code:
+                provided_code = f"{self.start_date.year}-{self.end_date.year}"
+
+        # Only validate; do not overwrite a non-empty provided code.
+        self.code = provided_code
+        validate_academic_year_code(self.code)
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -56,6 +92,14 @@ class Grade(BaseNamedCodeModel):
     CODE_PREFIX = "GRA"
     number = models.PositiveSmallIntegerField(unique=True, verbose_name="Classe")
     cycle = models.PositiveSmallIntegerField(verbose_name="Ciclo")
+    cycle_model = models.ForeignKey(
+        Cycle,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="grades",
+        verbose_name="Ciclo (model)",
+    )
     name = models.CharField(max_length=50, blank=True, verbose_name="Nome")
 
     @staticmethod
@@ -80,6 +124,19 @@ class Grade(BaseNamedCodeModel):
 
         if not self.name:
             self.name = f"Classe {self.number}"
+
+        # Link to Cycle model when available
+        code = None
+        if self.number <= 3:
+            code = "primary_cycle_1"
+        elif self.number <= 6:
+            code = "primary_cycle_2"
+        elif self.number <= 9:
+            code = "secondary_cycle_1"
+        elif self.number <= 12:
+            code = "secondary_cycle_2"
+        if code:
+            self.cycle_model = Cycle.objects.filter(code=code).first()
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -181,6 +238,35 @@ class Teacher(BaseNamedCodeModel):
     def __str__(self):
         return self.name
 
+
+class TeacherSpecialty(BaseNamedCodeModel):
+    CODE_PREFIX = "TSY"
+
+    teacher = models.ForeignKey(
+        Teacher,
+        on_delete=models.CASCADE,
+        related_name="extra_specialties",
+        verbose_name="Professor",
+    )
+    notes = models.TextField(blank=True, verbose_name="Notas")
+
+    def clean(self):
+        teacher_tenant = (self.teacher.tenant_id or "").strip() if self.teacher_id else ""
+        if teacher_tenant:
+            if self.tenant_id and self.tenant_id != teacher_tenant:
+                raise ValidationError({"tenant_id": "Teacher specialty tenant must match the teacher tenant."})
+            if not self.tenant_id:
+                self.tenant_id = teacher_tenant
+        if not (self.tenant_id or "").strip():
+            raise ValidationError({"tenant_id": "tenant_id is required."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.name} ({self.teacher})"
+
     class Meta:
         verbose_name = "Professor"
         verbose_name_plural = "Professores"
@@ -199,6 +285,14 @@ class Classroom(BaseNamedCodeModel):
     )
     grade = models.ForeignKey(Grade, on_delete=models.PROTECT, null=True, blank=True, verbose_name="Classe")
     cycle = models.IntegerField(verbose_name="Ciclo")
+    cycle_model = models.ForeignKey(
+        Cycle,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="classrooms",
+        verbose_name="Ciclo (model)",
+    )
     academic_year = models.ForeignKey(
         AcademicYear,
         on_delete=models.PROTECT,
@@ -247,6 +341,8 @@ class Classroom(BaseNamedCodeModel):
 
         if self.grade_id:
             self.cycle = self.grade.cycle
+            if not self.cycle_model_id and self.grade.cycle_model_id:
+                self.cycle_model = self.grade.cycle_model
         if not (self.tenant_id or "").strip():
             raise ValidationError({"tenant_id": "tenant_id is required."})
 

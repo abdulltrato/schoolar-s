@@ -46,6 +46,10 @@ class StudentSerializer(serializers.ModelSerializer):
     )
     cycle = serializers.IntegerField(read_only=True)
     education_level = serializers.CharField(read_only=True)
+    cycle_model_code = serializers.CharField(source="cycle_model.code", read_only=True)
+    cycle_model_name = serializers.CharField(source="cycle_model.name", read_only=True)
+    technical_level = serializers.CharField(read_only=True)
+    education_path = serializers.CharField(read_only=True)
     status = serializers.CharField(source="estado")
 
     class Meta:
@@ -59,7 +63,12 @@ class StudentSerializer(serializers.ModelSerializer):
             "birth_date",
             "grade",
             "cycle",
+            "cycle_model",
+            "cycle_model_code",
+            "cycle_model_name",
             "education_level",
+            "education_path",
+            "technical_level",
             "status",
             "competencies",
             "outcomes",
