@@ -13,6 +13,7 @@ class Teacher(BaseNamedCodeModel):
     class Meta:
         verbose_name = "Professor"
         verbose_name_plural = "Professores"
+        ordering = ["name"]
 
 
 class TeacherSpecialty(BaseNamedCodeModel):

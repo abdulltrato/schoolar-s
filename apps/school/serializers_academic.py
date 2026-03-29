@@ -5,6 +5,15 @@ from .models import AcademicYear, Grade, GradeSubject
 
 
 class AcademicYearSerializer(serializers.ModelSerializer):
+    def to_internal_value(self, data):
+        mutable = data.copy()
+        mutable.setdefault("deleted_at", None)
+        return super().to_internal_value(mutable)
+
+    def validate(self, attrs):
+        attrs.setdefault("deleted_at", None)
+        return super().validate(attrs)
+
     class Meta:
         model = AcademicYear
         fields = "__all__"

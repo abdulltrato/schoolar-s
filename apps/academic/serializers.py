@@ -70,6 +70,8 @@ class StudentSerializer(serializers.ModelSerializer):
             "education_path",
             "technical_level",
             "status",
+            "identification_document",
+            "previous_certificate",
             "competencies",
             "outcomes",
             "created_at",

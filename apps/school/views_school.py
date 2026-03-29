@@ -13,7 +13,7 @@ class SchoolViewSet(RobustModelViewSet):
 
 
 class TeacherViewSet(RobustModelViewSet):
-    queryset = Teacher.objects.select_related("school", "specialty")
+    queryset = Teacher.objects.select_related("school", "specialty").order_by("name")
     serializer_class = TeacherSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ["name", "school__name", "specialty__name"]

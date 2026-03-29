@@ -75,6 +75,11 @@ class LessonSerializer(serializers.ModelSerializer):
 class LessonMaterialSerializer(serializers.ModelSerializer):
     lesson_title = serializers.CharField(source="lesson.title", read_only=True)
 
+    def to_internal_value(self, data):
+        mutable = data.copy()
+        mutable.setdefault("deleted_at", None)
+        return super().to_internal_value(mutable)
+
     class Meta:
         model = LessonMaterial
         fields = "__all__"
@@ -99,6 +104,11 @@ class SubmissionSerializer(serializers.ModelSerializer):
     assignment_title = serializers.CharField(source="assignment.title", read_only=True)
     student_name = serializers.CharField(source="student.name", read_only=True)
     attachments = SubmissionAttachmentSerializer(many=True, required=False)
+
+    def to_internal_value(self, data):
+        mutable = data.copy()
+        mutable.setdefault("deleted_at", None)
+        return super().to_internal_value(mutable)
 
     class Meta:
         model = Submission

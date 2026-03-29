@@ -76,6 +76,7 @@ def test_student_outcome_requires_matching_tenant():
         cycle=1,
         estado="active",
         identification_document=SimpleUploadedFile("id.pdf", b"pdf"),
+        previous_certificate=SimpleUploadedFile("cert.pdf", b"pdf"),
     )
     grade = Grade.objects.create(number=5, cycle=2, name="")
     outcome = LearningOutcome.objects.create(

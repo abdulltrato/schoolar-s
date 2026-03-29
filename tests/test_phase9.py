@@ -54,6 +54,7 @@ def test_learning_intervention_emits_audit_alerts():
         cycle=grade.cycle,
         estado="active",
         identification_document=SimpleUploadedFile("id.pdf", b"pdf"),
+        previous_certificate=SimpleUploadedFile("cert.pdf", b"pdf"),
     )
     Enrollment.objects.create(student=student, classroom=classroom, tenant_id=tenant_id)
 

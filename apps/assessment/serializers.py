@@ -9,6 +9,15 @@ class AssessmentPeriodSerializer(serializers.ModelSerializer):
     academic_year = TenantAcademicYearField()
     academic_year_code = serializers.CharField(source="academic_year.code", read_only=True)
 
+    def to_internal_value(self, data):
+        mutable = data.copy()
+        mutable.setdefault("deleted_at", None)
+        return super().to_internal_value(mutable)
+
+    def validate(self, attrs):
+        attrs.setdefault("deleted_at", None)
+        return super().validate(attrs)
+
     class Meta:
         model = AssessmentPeriod
         fields = "__all__"
@@ -19,6 +28,11 @@ class AssessmentComponentSerializer(serializers.ModelSerializer):
     subject_name = serializers.CharField(source="grade_subject.subject.name", read_only=True)
     grade_number = serializers.IntegerField(source="grade_subject.grade.number", read_only=True)
     academic_year_code = serializers.CharField(source="grade_subject.academic_year.code", read_only=True)
+
+    def to_internal_value(self, data):
+        mutable = data.copy()
+        mutable.setdefault("deleted_at", None)
+        return super().to_internal_value(mutable)
 
     class Meta:
         model = AssessmentComponent

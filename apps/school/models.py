@@ -172,6 +172,11 @@ class School(BaseNamedCodeModel):
         return self.name
 
     class Meta:
+        verbose_name = "Professor"
+        verbose_name_plural = "Professores"
+        ordering = ["name"]
+
+    class Meta:
         verbose_name = "Escola"
         verbose_name_plural = "Escolas"
         ordering = ["name"]

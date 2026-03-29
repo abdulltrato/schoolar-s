@@ -140,7 +140,17 @@ def base_data(db, tenant_header):
 
 
 def _crud(client, url, payload, update_payload, headers):
-    create = client.post(url, payload, format="json", **headers)
+    if "deleted_at" not in payload:
+        payload = {**payload, "deleted_at": None}
+    if "deleted_at" not in update_payload:
+        update_payload = {**update_payload, "deleted_at": None}
+    request_format = "json"
+    if any(hasattr(v, "read") for v in payload.values()) or any(hasattr(v, "read") for v in update_payload.values()):
+        request_format = "multipart"
+        payload = {k: v for k, v in payload.items() if v is not None}
+        update_payload = {k: v for k, v in update_payload.items() if v is not None}
+
+    create = client.post(url, payload, format=request_format, **headers)
     assert create.status_code in {200, 201}, create.data
     obj_id = create.data.get("id")
     assert obj_id
@@ -151,7 +161,7 @@ def _crud(client, url, payload, update_payload, headers):
     retrieve = client.get(f"{url}{obj_id}/", **headers)
     assert retrieve.status_code == 200
 
-    update = client.patch(f"{url}{obj_id}/", update_payload, format="json", **headers)
+    update = client.patch(f"{url}{obj_id}/", update_payload, format=request_format, **headers)
     assert update.status_code in {200, 202}, update.data
 
     delete = client.delete(f"{url}{obj_id}/", **headers)
@@ -166,6 +176,8 @@ def test_academic_crud(admin_client, tenant_header, base_data):
         "birth_date": "2014-02-02",
         "grade": base_data["grade"].number,
         "status": "active",
+        "identification_document": SimpleUploadedFile("id.pdf", b"pdf"),
+        "previous_certificate": SimpleUploadedFile("cert.pdf", b"pdf"),
     }
     _crud(
         admin_client,
@@ -191,13 +203,13 @@ def test_academic_crud(admin_client, tenant_header, base_data):
     )
 
     guardian = admin_client.post("/api/v1/academic/guardians/", guardian_payload, format="json", **tenant_header).data
-    student = admin_client.post("/api/v1/academic/students/", student_payload, format="json", **tenant_header).data
+    student_id = base_data["student"].id
 
     _crud(
         admin_client,
         "/api/v1/academic/student-guardians/",
         {
-            "student": student["id"],
+            "student": student_id,
             "guardian": guardian["id"],
             "primary_contact": True,
             "tenant_id": base_data["tenant_id"],
@@ -227,16 +239,26 @@ def test_curriculum_crud(admin_client, tenant_header, base_data):
     _crud(
         admin_client,
         "/api/v1/curriculum/areas/",
-        {"name": "Area CRUD"},
+        {"name": "Area CRUD", "tenant_id": base_data["tenant_id"]},
         {"name": "Area CRUD 2"},
         tenant_header,
     )
 
-    area = admin_client.post("/api/v1/curriculum/areas/", {"name": "Area CRUD Sub"}, format="json", **tenant_header).data
+    area = admin_client.post(
+        "/api/v1/curriculum/areas/",
+        {"name": "Area CRUD Sub", "tenant_id": base_data["tenant_id"], "deleted_at": None},
+        format="json",
+        **tenant_header,
+    ).data
     _crud(
         admin_client,
         "/api/v1/curriculum/subjects/",
-        {"name": "Disciplina CRUD", "area_id": area["id"], "cycle": base_data["grade"].cycle},
+        {
+            "name": "Disciplina CRUD",
+            "area_id": area["id"],
+            "cycle": base_data["grade"].cycle,
+            "tenant_id": base_data["tenant_id"],
+        },
         {"name": "Disciplina CRUD 2"},
         tenant_header,
     )
@@ -400,9 +422,10 @@ def test_school_crud(admin_client, tenant_header, base_data):
             "user": user.id,
             "school": base_data["school"].id,
             "name": "Professor CRUD",
-            "specialty_subject": specialty.id,
+            "specialty": specialty.id,
+            "tenant_id": base_data["tenant_id"],
         },
-        {"specialty_subject": specialty.id},
+        {"specialty": specialty.id},
         tenant_header,
     )
 
@@ -471,6 +494,8 @@ def test_school_crud(admin_client, tenant_header, base_data):
         grade=base_data["grade"].number,
         cycle=base_data["grade"].cycle,
         estado="active",
+        identification_document=SimpleUploadedFile("id.pdf", b"pdf"),
+        previous_certificate=SimpleUploadedFile("cert.pdf", b"pdf"),
     )
     _crud(
         admin_client,
@@ -643,6 +668,7 @@ def test_assessment_crud(admin_client, tenant_header, base_data):
             "weight": "40",
             "max_score": "20",
             "mandatory": True,
+            "tenant_id": base_data["tenant_id"],
         },
         {"weight": "35"},
         tenant_header,
@@ -805,7 +831,8 @@ def test_learning_crud(admin_client, tenant_header, base_data):
             "lesson": lesson["id"],
             "title": "Material CRUD",
             "material_type": "link",
-            "url": "https://example.com/material",
+            "link_enabled": True,
+            "link_url": "https://example.com/material",
             "required": True,
         },
         {"title": "Material CRUD 2"},
@@ -852,6 +879,7 @@ def test_learning_crud(admin_client, tenant_header, base_data):
             "submitted_at": datetime(2026, 3, 14, 10, 0).isoformat(),
             "text_response": "Resposta",
             "status": "submitted",
+            "tenant_id": base_data["tenant_id"],
         },
         {"status": "graded"},
         tenant_header,
