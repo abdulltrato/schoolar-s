@@ -30,6 +30,14 @@ function formatDateTime(value: string) {
   }).format(new Date(value));
 }
 
+function formatWeekdayTime(value: string) {
+  return new Intl.DateTimeFormat("pt-PT", {
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
@@ -150,6 +158,34 @@ export default async function LearningPage({ searchParams }: PageProps) {
     return true;
   });
 
+  const now = new Date();
+  const agenda = [...filteredLessons]
+    .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
+    .slice(0, 6)
+    .map((lesson) => {
+      const start = new Date(lesson.scheduled_at);
+      const end = new Date(start.getTime() + (lesson.duration_minutes || 45) * 60000);
+      const isLive = start <= now && now <= end;
+      const isRecorded = Boolean(lesson.recording_url);
+      const state = isLive ? "ao_vivo" : isRecorded ? "gravado" : start > now ? "agendado" : "encerrado";
+      return { lesson, state, start, end };
+    });
+
+  const dueSoonAssignments = [...filteredAssignments]
+    .sort((a, b) => new Date(a.due_at).getTime() - new Date(b.due_at).getTime())
+    .slice(0, 4);
+
+  const submissionStats = snapshot.submissions.items.reduce(
+    (acc, item) => {
+      const status = item.status || "pending";
+      acc.total += 1;
+      acc.byStatus[status] = (acc.byStatus[status] || 0) + 1;
+      return acc;
+    },
+    { total: 0, byStatus: {} as Record<string, number> },
+  );
+  const submissionStatusEntries = Object.entries(submissionStats.byStatus);
+
   return (
     <DashboardShell
       title="Operações de ensino"
@@ -240,6 +276,92 @@ export default async function LearningPage({ searchParams }: PageProps) {
           {status === "session-expired" && "A sua sessão expirou. Entre novamente para continuar."}
         </section>
       ) : null}
+
+      <section className="overflow-hidden rounded-[1.3rem] border border-white/65 bg-white/95 p-4 shadow-[0_20px_55px_rgba(20,33,61,0.08)]">
+        <div className="flex flex-col gap-4 lg:flex-row">
+          <div className="lg:w-7/12">
+            <SectionTitle
+              eyebrow="Agenda"
+              title="Próximas aulas (7 dias)"
+              description="Estados claros: ao vivo, agendado ou gravado, com acesso rápido."
+            />
+            <div className="mt-3 grid gap-3">
+              {agenda.length === 0 ? (
+                <p className="rounded-[1rem] border border-ink/10 bg-ink/5 px-3 py-2 text-sm text-ink/70">Nenhuma aula encontrada.</p>
+              ) : agenda.map(({ lesson, state, start }) => {
+                const badgeColor =
+                  state === "ao_vivo"
+                    ? "bg-ember/10 text-ember"
+                    : state === "gravado"
+                      ? "bg-fern/10 text-fern"
+                      : "bg-mist text-ink/80";
+                const ctaLabel = state === "gravado" ? "Rever" : "Entrar";
+                const ctaUrl = lesson.recording_url || lesson.meeting_url || "";
+                return (
+                  <div key={lesson.id} className="flex items-center justify-between gap-3 rounded-[1rem] border border-ink/10 bg-sand px-4 py-3">
+                    <div>
+                      <p className="text-sm font-semibold text-ink">{lesson.title}</p>
+                      <p className="text-xs text-ink/60">
+                        {formatWeekdayTime(lesson.scheduled_at)} · {lesson.offering_title || "Oferta não identificada"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${badgeColor}`}>
+                        {state.replace("_", " ")}
+                      </span>
+                      {ctaUrl ? (
+                        <a
+                          href={ctaUrl}
+                          className="rounded-full border border-ink/10 bg-white px-3 py-1.5 text-[11px] font-semibold text-ink transition hover:border-ink/30"
+                        >
+                          {ctaLabel}
+                        </a>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="lg:w-5/12">
+            <SectionTitle
+              eyebrow="Prazos"
+              title="Tarefas a vencer"
+              description="Veja o que expira primeiro e priorize correções/entregas."
+            />
+            <div className="mt-3 grid gap-3">
+              {dueSoonAssignments.length === 0 ? (
+                <p className="rounded-[1rem] border border-ink/10 bg-ink/5 px-3 py-2 text-sm text-ink/70">Nenhuma tarefa próxima do vencimento.</p>
+              ) : dueSoonAssignments.map((assignment) => (
+                <div key={assignment.id} className="rounded-[1rem] border border-ink/10 bg-white px-4 py-3 shadow-[0_8px_24px_rgba(20,33,61,0.05)]">
+                  <p className="text-sm font-semibold text-ink">{assignment.title}</p>
+                  <p className="text-xs text-ink/60">
+                    Vence {formatWeekdayTime(assignment.due_at)} · {assignment.offering_title || "Oferta não identificada"}
+                  </p>
+                  <span className="mt-2 inline-block rounded-full bg-ember/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ember">
+                    {assignment.max_score} pts
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-[1.1rem] border border-white/65 bg-white/95 p-4 shadow-[0_16px_45px_rgba(20,33,61,0.08)]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink/60">Submissões</p>
+          <p className="mt-1 text-2xl font-semibold text-ink">{submissionStats.total}</p>
+          <p className="text-xs text-ink/55">Total registado</p>
+        </div>
+        {(submissionStatusEntries.length ? submissionStatusEntries : [["pending", 0]]).map(([key, value]) => (
+          <div key={key} className="rounded-[1.1rem] border border-white/65 bg-white/95 p-4 shadow-[0_16px_45px_rgba(20,33,61,0.08)]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink/60">{formatSubmissionStatus(key)}</p>
+            <p className="mt-1 text-2xl font-semibold text-ink">{value}</p>
+            <p className="text-xs text-ink/55">Estado</p>
+          </div>
+        ))}
+      </section>
 
       <div className="mt-6 overflow-hidden rounded-[1.25rem] border border-white/60 bg-white/95 p-4 shadow-[0_18px_55px_rgba(20,33,61,0.08)]">
         <FilterBar
@@ -408,13 +530,15 @@ export default async function LearningPage({ searchParams }: PageProps) {
           renderRow={(lesson: Lesson) => (
             <div key={lesson.id} className={panelClass}>
               <div className="flex items-center justify-between gap-3">
-                <p className="font-semibold text-ink">{lesson.title}</p>
+                <div>
+                  <a href={`/learning/${lesson.id}`} className="font-semibold text-ink underline-offset-4 hover:underline">
+                    {lesson.title}
+                  </a>
+                  <p className="text-xs text-ink/60">{lesson.offering_title || "Oferta não identificada"}</p>
+                </div>
                 <span className={badgeClass}>{formatPublishedState(lesson.published)}</span>
               </div>
-              <p className="mt-2 text-sm leading-6 text-ink/70">
-                {lesson.offering_title || "Oferta não identificada"}
-              </p>
-              <p className="mt-1 text-sm leading-6 text-ink/55">
+              <p className="mt-2 text-sm leading-6 text-ink/55">
                 {formatDateTime(lesson.scheduled_at)} | {lesson.duration_minutes} min
               </p>
               <form action={toggleLessonPublicationAction} className="mt-2">

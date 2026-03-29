@@ -2,6 +2,7 @@ from datetime import date
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from apps.academic.models import Student, StudentOutcome
 from apps.curriculum.models import CurriculumArea, LearningOutcome, Subject, SubjectSpecialty
@@ -50,6 +51,7 @@ def test_learning_intervention_plan_report():
         grade=grade.number,
         cycle=grade.cycle,
         estado="active",
+        identification_document=SimpleUploadedFile("id.pdf", b"pdf"),
     )
     Enrollment.objects.create(student=student, classroom=classroom, tenant_id=tenant_id)
 

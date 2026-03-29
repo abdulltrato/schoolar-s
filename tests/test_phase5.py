@@ -2,6 +2,7 @@ from datetime import date
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 
 from apps.academic.models import Student, StudentOutcome
@@ -55,6 +56,7 @@ def _seed_context(tenant_id="tenant-z"):
         grade=grade.number,
         cycle=grade.cycle,
         estado="active",
+        identification_document=SimpleUploadedFile("id.pdf", b"pdf"),
     )
     Enrollment.objects.create(student=student, classroom=classroom, tenant_id=tenant_id)
 

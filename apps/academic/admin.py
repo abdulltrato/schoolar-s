@@ -88,8 +88,8 @@ class AlunoAdmin(TenantAwareAdmin):
             "Documentos obrigatórios",
             {
                 "fields": (
-                    "identification_document",
-                    "previous_certificate",
+                    ("identification_document", "identification_document_name"),
+                    ("previous_certificate", "previous_certificate_name"),
                 )
             },
         ),

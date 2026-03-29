@@ -3,6 +3,7 @@ import datetime
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 
 from apps.learning.models import Course, CourseOffering, Lesson
@@ -213,6 +214,7 @@ def test_assessment_conflict_same_teaching_assignment_same_date_raises():
         grade=grade.number,
         cycle=grade.cycle,
         birth_date=datetime.date(2012, 6, 15),
+        identification_document=SimpleUploadedFile("id.pdf", b"pdf"),
     )
     # Matricular aluno na turma para satisfazer validação
     from apps.school.models import Enrollment

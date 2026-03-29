@@ -3,6 +3,7 @@ from datetime import date, timedelta
 import pytest
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 
 from apps.academic.models import Student
@@ -44,6 +45,7 @@ def test_submission_requires_enrollment_when_classroom_present():
         cycle=1,
         estado="active",
         tenant_id=school.tenant_id,
+        identification_document=SimpleUploadedFile("id.pdf", b"pdf"),
     )
     Enrollment.objects.create(student=student, classroom=classroom)
 
@@ -54,6 +56,7 @@ def test_submission_requires_enrollment_when_classroom_present():
         cycle=1,
         estado="active",
         tenant_id=school.tenant_id,
+        identification_document=SimpleUploadedFile("id.pdf", b"pdf"),
     )
 
     course = Course.objects.create(

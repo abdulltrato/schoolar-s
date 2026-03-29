@@ -5,6 +5,7 @@ from core.serializers import TenantAcademicYearField
 from .models import (
     Assignment,
     Course,
+    CourseModule,
     CourseOffering,
     Lesson,
     LessonMaterial,
@@ -13,14 +14,42 @@ from .models import (
 )
 
 
+class CourseModuleSerializer(serializers.ModelSerializer):
+    subject_name = serializers.CharField(source="subject.name", read_only=True)
+
+    class Meta:
+        model = CourseModule
+        fields = "__all__"
+        read_only_fields = ("tenant_id",)
+
+
 class CourseSerializer(serializers.ModelSerializer):
     school_name = serializers.CharField(source="school.name", read_only=True)
     cycle_model_code = serializers.CharField(source="cycle_model.code", read_only=True)
     cycle_model_name = serializers.CharField(source="cycle_model.name", read_only=True)
+    modules = CourseModuleSerializer(many=True, required=False)
 
     class Meta:
         model = Course
         fields = "__all__"
+
+    def create(self, validated_data):
+        modules_data = validated_data.pop("modules", [])
+        course = super().create(validated_data)
+        self._save_modules(course, modules_data)
+        return course
+
+    def update(self, instance, validated_data):
+        modules_data = validated_data.pop("modules", None)
+        course = super().update(instance, validated_data)
+        if modules_data is not None:
+            course.modules.all().delete()
+            self._save_modules(course, modules_data)
+        return course
+
+    def _save_modules(self, course, modules_data):
+        for module in modules_data:
+            CourseModule.objects.create(course=course, tenant_id=course.tenant_id, **module)
 
 
 class CourseOfferingSerializer(serializers.ModelSerializer):

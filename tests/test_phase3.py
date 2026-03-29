@@ -2,6 +2,7 @@ from datetime import date
 
 import pytest
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from apps.academic.models import Student, StudentOutcome
 from apps.curriculum.models import Competency, CompetencyOutcome, CurriculumArea, LearningOutcome, Subject
@@ -74,6 +75,7 @@ def test_student_outcome_requires_matching_tenant():
         grade=5,
         cycle=1,
         estado="active",
+        identification_document=SimpleUploadedFile("id.pdf", b"pdf"),
     )
     grade = Grade.objects.create(number=5, cycle=2, name="")
     outcome = LearningOutcome.objects.create(

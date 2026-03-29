@@ -4,6 +4,7 @@ from core.admin_utils import TenantAwareAdmin
 
 from .models import (
     Course,
+    CourseModule,
     CourseOffering,
     Lesson,
     LessonMaterial,
@@ -31,9 +32,17 @@ class CourseStudentInline(admin.TabularInline):
     can_delete = True
 
 
+class CourseModuleInline(admin.TabularInline):
+    model = CourseModule
+    extra = 1
+    fields = ("subject", "name", "workload_hours", "required", "order")
+    autocomplete_fields = ("subject",)
+    can_delete = True
+
+
 @admin.register(Course)
 class CourseAdmin(TenantAwareAdmin):
-    inlines = [CourseStudentInline]
+    inlines = [CourseModuleInline, CourseStudentInline]
 
 
 @admin.register(CourseOffering)

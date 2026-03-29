@@ -37,7 +37,7 @@ class LearningOutcomeAdmin(TenantAwareAdmin):
 
 @admin.register(Subject)
 class SubjectAdmin(DerivedTenantAdmin):
-    pass
+    search_fields = ("name", "code", "tenant_id")
 
 
 @admin.register(SubjectSpecialty)

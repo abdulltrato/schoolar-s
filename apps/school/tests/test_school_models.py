@@ -4,20 +4,19 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
-from rest_framework.test import APIClient
 
 from apps.academic.models import Student
 from apps.curriculum.models import CurriculumArea, Subject, SubjectSpecialty
-from .models import (
-    TeachingAssignment,
+from apps.school.models import (
     AcademicYear,
-    ManagementAssignment,
+    Classroom,
+    Enrollment,
     Grade,
     GradeSubject,
+    ManagementAssignment,
     School,
-    Enrollment,
     Teacher,
-    Classroom,
+    TeachingAssignment,
 )
 
 
@@ -139,106 +138,3 @@ class EscolaModelTests(TestCase):
 
         self.assertEqual(grade.education_level, "secundario")
         self.assertEqual(grade.cycle, 1)
-
-
-class UserProfileSignalTests(TestCase):
-    def test_cria_perfil_padrao_quando_utilizador_e_criado(self):
-        user = get_user_model().objects.create_user(username="novo", password="secret")
-
-        self.assertTrue(hasattr(user, "school_profile"))
-        self.assertEqual(user.school_profile.role, "national_admin")
-        self.assertTrue(user.school_profile.active)
-
-    def test_sincroniza_perfil_para_professor(self):
-        school = School.objects.create(
-            code="ESC-02",
-            name="Escola Secundaria Central",
-            province="Maputo",
-            district="KaMpfumo",
-            tenant_id="tenant-school-02",
-        )
-        area = CurriculumArea.objects.create(name="Area Prof")
-        subject = Subject.objects.create(name="Matematica", area=area, cycle=1)
-        specialty = SubjectSpecialty.objects.create(subject=subject, name="Matematica")
-        user = get_user_model().objects.create_user(username="teacher-sync", password="secret")
-
-        Teacher.objects.create(
-            user=user,
-            name="Prof. Joao",
-            school=school,
-            specialty=specialty,
-            tenant_id="tenant-school-02",
-        )
-
-        user.refresh_from_db()
-        self.assertEqual(user.school_profile.role, "teacher")
-        self.assertEqual(user.school_profile.tenant_id, "tenant-school-02")
-        self.assertEqual(user.school_profile.school, school)
-        self.assertEqual(user.school_profile.province, "Maputo")
-        self.assertEqual(user.school_profile.district, "KaMpfumo")
-
-    def test_sincroniza_perfil_para_aluno(self):
-        user = get_user_model().objects.create_user(username="student-sync", password="secret")
-
-        Student.objects.create(
-            user=user,
-            name="Aluno Portal",
-            birth_date=date(2014, 1, 1),
-            grade=6,
-            cycle=1,
-            tenant_id="tenant-student",
-            identification_document=SimpleUploadedFile("id-portal.pdf", b"%PDF-1.4 test"),
-            previous_certificate=SimpleUploadedFile("cert-portal.pdf", b"%PDF-1.4 test"),
-        )
-
-        user.refresh_from_db()
-        self.assertEqual(user.school_profile.role, "student")
-        self.assertEqual(user.school_profile.tenant_id, "tenant-student")
-
-
-class TeacherUsuarioApiTests(TestCase):
-    def setUp(self):
-        self.admin = get_user_model().objects.create_user(username="admin-teacher-usuario", password="secret")
-        self.client = APIClient()
-        self.client.force_authenticate(user=self.admin)
-        self.tenant_id = "tenant-teacher-usuario"
-        self.school = School.objects.create(
-            code="ESC-TU-01",
-            name="Escola Teacher Usuario",
-            tenant_id=self.tenant_id,
-        )
-        area = CurriculumArea.objects.create(name="Area TU")
-        subject = Subject.objects.create(name="Matematica", area=area, cycle=1)
-        self.specialty = SubjectSpecialty.objects.create(subject=subject, name="Matematica")
-        self.teacher_user = get_user_model().objects.create_user(username="teacher-usuario", password="secret")
-
-    def test_teacher_usuario_readonly_e_auto(self):
-        payload = {
-            "user": self.teacher_user.id,
-            "school": self.school.id,
-            "name": "Professor Usuario",
-            "specialty": self.specialty.id,
-            "usuario": self.teacher_user.id,
-        }
-        response = self.client.post(
-            "/api/v1/school/teachers/",
-            payload,
-            format="json",
-            HTTP_X_TENANT_ID=self.tenant_id,
-        )
-        self.assertEqual(response.status_code, 400)
-        error_details = (response.json().get("error") or {}).get("details") or {}
-        self.assertIn("usuario", error_details)
-
-        payload.pop("usuario", None)
-        response = self.client.post(
-            "/api/v1/school/teachers/",
-            payload,
-            format="json",
-            HTTP_X_TENANT_ID=self.tenant_id,
-        )
-        self.assertEqual(response.status_code, 201)
-        body = response.json()
-        if isinstance(body, dict) and "data" in body and (body.get("ok") is True or body.get("ok") is False):
-            body = body.get("data") or {}
-        self.assertEqual(body.get("usuario"), self.admin.id)

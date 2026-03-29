@@ -3,6 +3,7 @@ from datetime import date
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from apps.academic.models import Student, StudentOutcome
 from apps.assessment.models import Assessment, AssessmentComponent, AssessmentOutcomeMap, AssessmentPeriod
@@ -57,6 +58,7 @@ def _build_assessment_context(*, tenant_id="tenant-x"):
         grade=grade.number,
         cycle=grade.cycle,
         estado="active",
+        identification_document=SimpleUploadedFile("id.pdf", b"pdf"),
     )
     Enrollment.objects.create(student=student, classroom=classroom, tenant_id=tenant_id)
 

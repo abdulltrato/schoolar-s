@@ -2,6 +2,7 @@ from datetime import date
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from apps.assessment.models import Assessment, AssessmentComponent, AssessmentOutcomeMap, AssessmentPeriod
 from apps.curriculum.models import CurriculumArea, LearningOutcome, Subject, SubjectSpecialty
@@ -63,6 +64,7 @@ def test_bloom_distribution_report_counts():
         grade=grade.number,
         cycle=grade.cycle,
         estado="active",
+        identification_document=SimpleUploadedFile("id.pdf", b"pdf"),
     )
     Enrollment.objects.create(student=student, classroom=classroom, tenant_id=tenant_id)
 

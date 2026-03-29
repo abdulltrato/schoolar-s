@@ -3,6 +3,7 @@ from decimal import Decimal
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIClient
 
 from apps.academic.models import Student
@@ -80,6 +81,7 @@ def base_data(db, tenant_header):
         grade=grade.number,
         cycle=grade.cycle,
         estado="active",
+        identification_document=SimpleUploadedFile("id.pdf", b"pdf"),
     )
     enrollment = Enrollment.objects.create(student=student, classroom=classroom, tenant_id=tenant_id)
     competency = Competency.objects.create(

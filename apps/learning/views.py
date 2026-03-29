@@ -3,6 +3,7 @@ from core.viewsets import RobustModelViewSet
 from .models import (
     Assignment,
     Course,
+    CourseModule,
     CourseOffering,
     Lesson,
     LessonMaterial,
@@ -12,6 +13,7 @@ from .models import (
 from .serializers import (
     AssignmentSerializer,
     CourseOfferingSerializer,
+    CourseModuleSerializer,
     CourseSerializer,
     LessonMaterialSerializer,
     LessonSerializer,
@@ -21,7 +23,7 @@ from .serializers import (
 
 
 class CourseViewSet(RobustModelViewSet):
-    queryset = Course.objects.select_related("school").all()
+    queryset = Course.objects.select_related("school").prefetch_related("modules").all()
     serializer_class = CourseSerializer
     search_fields = ("title", "description", "school__name", "tenant_id")
     ordering_fields = ("id", "tenant_id", "title", "school__name", "modality", "cycle_model__code")
@@ -53,6 +55,15 @@ class CourseViewSet(RobustModelViewSet):
             "guardian",
         },
     }
+
+
+class CourseModuleViewSet(RobustModelViewSet):
+    queryset = CourseModule.objects.select_related("course", "subject").all()
+    serializer_class = CourseModuleSerializer
+    search_fields = ("course__title", "subject__name", "tenant_id")
+    ordering_fields = ("id", "tenant_id", "course__title", "subject__name", "order", "required")
+    ordering = ("course__title", "order", "subject__name")
+    allowed_roles = CourseViewSet.allowed_roles
 
 
 class CourseOfferingViewSet(RobustModelViewSet):

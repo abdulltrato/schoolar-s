@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     AssignmentViewSet,
     CourseOfferingViewSet,
+    CourseModuleViewSet,
     CourseViewSet,
     LessonMaterialViewSet,
     LessonViewSet,
@@ -13,6 +14,7 @@ from .views import (
 
 router = DefaultRouter()
 router.register(r"courses", CourseViewSet)
+router.register(r"course-modules", CourseModuleViewSet)
 router.register(r"offerings", CourseOfferingViewSet)
 router.register(r"lessons", LessonViewSet)
 router.register(r"lesson-materials", LessonMaterialViewSet)
