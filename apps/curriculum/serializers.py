@@ -135,6 +135,7 @@ class LearningOutcomeSerializer(serializers.ModelSerializer):
     class Meta:
         model = LearningOutcome
         fields = "__all__"
+        read_only_fields = ("code",)
 
 
 class CompetencyOutcomeSerializer(serializers.ModelSerializer):

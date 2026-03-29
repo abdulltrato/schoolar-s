@@ -8,7 +8,7 @@ from django.utils import timezone
 
 
 class TenantModel(models.Model):
-    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Identificador do tenant")
+    tenant_id = models.CharField(max_length=50, blank=True, verbose_name="Escola")
 
     REQUEST_USER_CREATE_FIELD = None
     REQUEST_USER_CREATE_FIELDS: tuple[str, ...] = ()

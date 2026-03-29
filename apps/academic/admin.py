@@ -123,6 +123,15 @@ class StudentCompetencyAdminForm(forms.ModelForm):
 @admin.register(StudentCompetency)
 class StudentCompetencyAdmin(TenantAwareAdmin):
     form = StudentCompetencyAdminForm
-    list_display = ("student", "competency", "nivel", "tenant_id")
+    list_display = ("student", "competency", "nivel", "tenant_name")
     readonly_fields = ("tenant_id",)
     fields = ("student", "competency", "nivel", "tenant_id")
+
+    def tenant_name(self, obj):
+        from apps.school.models import School
+
+        name = School.objects.filter(tenant_id=obj.tenant_id).values_list("name", flat=True).first()
+        return name or obj.tenant_id
+
+    tenant_name.short_description = "Tenant"
+    tenant_name.admin_order_field = "tenant_id"

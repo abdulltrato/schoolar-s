@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.response import Response
+from django.db.models import OuterRef, Subquery
 
 from core.viewsets import RobustModelViewSet
 
@@ -72,6 +73,11 @@ class AuditEventViewSet(RobustModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        queryset = queryset.annotate(
+            tenant_name=Subquery(
+                School.objects.filter(tenant_id=OuterRef("tenant_id")).values("name")[:1]
+            )
+        )
         params = self.request.query_params
 
         resource = params.get("resource")
@@ -161,6 +167,11 @@ class AuditAlertViewSet(RobustModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        queryset = queryset.annotate(
+            tenant_name=Subquery(
+                School.objects.filter(tenant_id=OuterRef("tenant_id")).values("name")[:1]
+            )
+        )
         params = self.request.query_params
 
         severity = params.get("severity")

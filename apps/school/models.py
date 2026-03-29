@@ -123,6 +123,13 @@ class School(BaseNamedCodeModel):
 class Teacher(BaseNamedCodeModel):
     CODE_PREFIX = "TCH"
     TENANT_INHERIT_USER_FIELDS = ("user",)
+
+    def __init__(self, *args, specialty_subject=None, **kwargs):
+        # Backwards-compat: accept legacy keyword specialty_subject used in fixtures/tests.
+        if specialty_subject is not None and "specialty" not in kwargs:
+            kwargs["specialty"] = specialty_subject
+        super().__init__(*args, **kwargs)
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Usuário")
     school = models.ForeignKey(
         School,

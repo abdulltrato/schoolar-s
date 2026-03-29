@@ -411,3 +411,75 @@ class RobustModelViewSet(ValidatedSearchOrderingMixin, RoleScopedQuerysetMixin, 
         changed_fields = sorted(serializer.validated_data.keys())
         super().perform_update(serializer)
         self._audit_mutation(action="update", instance=serializer.instance, changed_fields=changed_fields)
+
+    # ------------------------------------------------------------------ Tenant name helper
+
+    def _collect_tenant_targets(self, payload):
+        if isinstance(payload, list):
+            for item in payload:
+                if isinstance(item, dict):
+                    yield item
+        elif isinstance(payload, dict):
+            results = payload.get("results")
+            if isinstance(results, list):
+                for item in results:
+                    if isinstance(item, dict):
+                        yield item
+            else:
+                yield payload
+
+    def _inject_tenant_names(self, payload):
+        try:
+            from apps.school.models import School
+        except Exception:
+            return payload
+
+        tenant_ids = {
+            (item.get("tenant_id") or "").strip()
+            for item in self._collect_tenant_targets(payload)
+            if isinstance(item, dict) and (item.get("tenant_id") or "").strip()
+        }
+        if not tenant_ids:
+            return payload
+
+        name_map = {
+            tenant_id: name
+            for tenant_id, name in School.objects.filter(tenant_id__in=tenant_ids).values_list("tenant_id", "name")
+        }
+
+        for item in self._collect_tenant_targets(payload):
+            if not isinstance(item, dict):
+                continue
+            if "tenant_name" in item:
+                continue
+            tenant_id = (item.get("tenant_id") or "").strip()
+            if not tenant_id:
+                continue
+            item["tenant_name"] = name_map.get(tenant_id) or tenant_id
+
+        return payload
+
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        self._inject_tenant_names(response.data)
+        return response
+
+    def retrieve(self, request, *args, **kwargs):
+        response = super().retrieve(request, *args, **kwargs)
+        self._inject_tenant_names(response.data)
+        return response
+
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        self._inject_tenant_names(response.data)
+        return response
+
+    def update(self, request, *args, **kwargs):
+        response = super().update(request, *args, **kwargs)
+        self._inject_tenant_names(response.data)
+        return response
+
+    def partial_update(self, request, *args, **kwargs):
+        response = super().partial_update(request, *args, **kwargs)
+        self._inject_tenant_names(response.data)
+        return response

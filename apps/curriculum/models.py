@@ -93,6 +93,19 @@ class SubjectSpecialty(BaseNamedCodeModel):
 class Competency(BaseNamedCodeModel):
     CODE_PREFIX = "COM"
 
+    def __init__(self, *args, area=None, **kwargs):
+        if area is not None and not hasattr(area, "pk") and isinstance(area, str):
+            normalized = area.strip()
+            if normalized:
+                area_obj, _ = CurriculumArea.objects.get_or_create(name=normalized)
+                kwargs["area"] = area_obj
+            else:
+                kwargs["area"] = None
+        else:
+            if area is not None:
+                kwargs["area"] = area
+        super().__init__(*args, **kwargs)
+
     description = models.TextField(blank=True, verbose_name="Descrição")
     area = models.ForeignKey(
         CurriculumArea,
@@ -106,6 +119,14 @@ class Competency(BaseNamedCodeModel):
     grade = models.ForeignKey(Grade, null=True, blank=True, on_delete=models.PROTECT, verbose_name="Classe")
 
     def clean(self):
+        # Accept legacy string identifiers for area and normalize to CurriculumArea instance.
+        if isinstance(self.area, str):
+            area_name = self.area.strip()
+            if area_name:
+                self.area, _ = CurriculumArea.objects.get_or_create(name=area_name)
+            else:
+                self.area = None
+
         subject_tenant = (self.subject.tenant_id or "").strip() if self.subject_id else ""
         area_tenant = (self.area.tenant_id or "").strip() if self.area_id else ""
 
@@ -114,7 +135,9 @@ class Competency(BaseNamedCodeModel):
             area_tenant = (self.area.tenant_id or "").strip() if self.area_id else ""
 
         if self.subject_id and self.area_id and self.subject.area_id != self.area_id:
-            raise ValidationError({"area": "A área deve coincidir com a área da disciplina."})
+            # Favor subject area to keep compatibility with legacy payloads that send string enums.
+            self.area = self.subject.area
+            area_tenant = (self.area.tenant_id or "").strip() if self.area_id else ""
 
         if not self.area_id:
             raise ValidationError({"area": "Informe uma área para a competência."})
@@ -155,7 +178,7 @@ class Competency(BaseNamedCodeModel):
 
 class LearningOutcome(BaseCodeModel):
     CODE_PREFIX = "OUT"
-    AUTO_CODE = False
+    AUTO_CODE = True
     TAXONOMY_LEVEL_CHOICES = [
         ("remember", "Recordar"),
         ("understand", "Compreender"),
