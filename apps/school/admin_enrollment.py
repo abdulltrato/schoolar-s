@@ -1,12 +1,18 @@
 from django.contrib import admin
+# Ferramentas do Django admin.
 
 from core.admin_utils import TenantAwareAdmin
+# Mixin que aplica escopo de tenant.
 from .admin_filters import EducationTrackFilter, CycleBandFilter
+# Filtros customizados para trilha de ensino e ciclo.
 from .models import Enrollment
+# Modelo de matrícula.
 
 
 @admin.register(Enrollment)
 class EnrollmentAdmin(TenantAwareAdmin):
+    """Administra matrículas mostrando trilha, ciclo e duração."""
+
     list_display = (
         "student",
         "education_track",
@@ -29,12 +35,14 @@ class EnrollmentAdmin(TenantAwareAdmin):
 
     @admin.display(description="Ano letivo")
     def enrollment_year(self, obj):
+        """Retorna código do ano letivo ou ano da data de matrícula."""
         if obj.classroom_id and obj.classroom.academic_year_id and obj.classroom.academic_year.code:
             return obj.classroom.academic_year.code
         return obj.enrollment_date.year if obj.enrollment_date else "-"
 
     @admin.display(description="Curso / Turma")
     def course_name(self, obj):
+        """Exibe nome da turma ou da classe vinculada."""
         if obj.classroom_id:
             if obj.classroom.name:
                 return obj.classroom.name
@@ -44,6 +52,7 @@ class EnrollmentAdmin(TenantAwareAdmin):
 
     @admin.display(description="Duração (dias)")
     def duration_days(self, obj):
+        """Calcula duração do ano letivo em dias."""
         if obj.classroom_id and obj.classroom.academic_year_id:
             ay = obj.classroom.academic_year
             if ay.start_date and ay.end_date:
@@ -52,6 +61,7 @@ class EnrollmentAdmin(TenantAwareAdmin):
 
     @admin.display(description="Ensino")
     def education_track(self, obj):
+        """Retorna trilha de ensino (primário, secundário, técnico)."""
         track, _ = self._track_and_band(obj)
         return {
             "primary": "Primário",
@@ -61,6 +71,7 @@ class EnrollmentAdmin(TenantAwareAdmin):
 
     @admin.display(description="Ciclo / Nível")
     def cycle_band(self, obj):
+        """Deriva ciclo detalhado com base na classe."""
         _, band = self._track_and_band(obj)
         labels = {
             "primary_cycle_1": "Primário 1º ciclo",
@@ -75,6 +86,7 @@ class EnrollmentAdmin(TenantAwareAdmin):
 
     @staticmethod
     def _track_and_band(obj):
+        """Determina trilha e subciclo a partir do número da classe."""
         if not (obj.classroom_id and obj.classroom.grade_id):
             return None, None
         number = obj.classroom.grade.number

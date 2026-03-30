@@ -1,11 +1,15 @@
 from django.contrib import admin
+# Base para filtros customizados no Django admin.
 
 
 class EducationTrackFilter(admin.SimpleListFilter):
+    """Filtra matrículas/turmas por trilha de ensino."""
+
     title = "Ensino"
     parameter_name = "education_track"
 
     def lookups(self, request, model_admin):
+        """Define opções exibidas no filtro."""
         return (
             ("primary", "Primário"),
             ("secondary", "Secundário"),
@@ -13,6 +17,7 @@ class EducationTrackFilter(admin.SimpleListFilter):
         )
 
     def queryset(self, request, queryset):
+        """Aplica filtro com base no número da classe."""
         value = (self.value() or "").lower()
         if value == "primary":
             return queryset.filter(classroom__grade__number__lte=6)
@@ -24,10 +29,13 @@ class EducationTrackFilter(admin.SimpleListFilter):
 
 
 class CycleBandFilter(admin.SimpleListFilter):
+    """Filtra por subciclos (primário/ secundário/ técnico)."""
+
     title = "Ciclo / Nível"
     parameter_name = "cycle_band"
 
     def lookups(self, request, model_admin):
+        """Define opções amigáveis por subciclo."""
         return (
             ("primary_cycle_1", "Primário 1º ciclo"),
             ("primary_cycle_2", "Primário 2º ciclo"),
@@ -39,6 +47,7 @@ class CycleBandFilter(admin.SimpleListFilter):
         )
 
     def queryset(self, request, queryset):
+        """Restringe resultados conforme número da classe."""
         value = (self.value() or "").lower()
         if value == "primary_cycle_1":
             return queryset.filter(classroom__grade__number__lte=3)

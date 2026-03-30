@@ -1,16 +1,28 @@
 from hashlib import sha256
+# Gera hash para o código de segurança.
 from io import BytesIO
+# Buffer em memória para o PDF.
 import math
+# Funções trigonométricas para desenhar ornamentos.
 
 from reportlab.graphics import renderPDF
+# Renderiza objetos gráficos em PDF.
 from reportlab.graphics.barcode import code128
+# Gera códigos de barras Code128.
 from reportlab.graphics.shapes import Drawing
+# Contêiner para o QR code.
 from reportlab.graphics.barcode.qr import QrCodeWidget
+# Widget de QR code.
 from reportlab.lib import colors
+# Paleta de cores.
 from reportlab.lib.pagesizes import A4
+# Tamanho de página A4.
 from reportlab.lib.units import mm
+# Conversão para milímetros.
 from reportlab.pdfgen import canvas
+# Canvas principal do ReportLab.
 
+# Sequência de dígitos de PI usada como fundo pseudoaleatório.
 PI_DIGITS = (
     "3141592653589793238462643383279502884197169399375105820974944592"
     "3078164062862089986280348253421170679821480865132823066470938446"
@@ -28,34 +40,47 @@ PI_DIGITS = (
 
 
 def _pi_slice(offset: int, length: int) -> str:
+    """Retorna um trecho pseudoaleatório dos dígitos de PI dado um deslocamento."""
+    # Repete a sequência para evitar overflow de index.
     doubled = PI_DIGITS * ((length // len(PI_DIGITS)) + 2)
+    # Calcula início respeitando o ciclo da string.
     start = offset % len(PI_DIGITS)
+    # Fatia o tamanho solicitado.
     return doubled[start : start + length]
 
 
 def generate_certificate_pdf(certificate):
+    """Gera bytes de um PDF decorativo com dados e notas do certificado."""
+    # Buffer em memória que receberá o PDF.
     buffer = BytesIO()
+    # Define largura e altura padrão A4.
     width, height = A4
+    # Cria canvas vinculado ao buffer.
     pdf = canvas.Canvas(buffer, pagesize=A4)
 
+    # Cria fundo repetindo dígitos de PI deslocados pelo id do certificado.
     bg = _pi_slice(certificate.pk * 13, 800)
     pdf.setFont("Courier", 6)
     pdf.setFillColor(colors.HexColor("#cfd4df"))
     y = height - 20
+    # Pinta linhas horizontais com a sequência para efeito anti-fraude.
     while y > 20:
         pdf.drawString(20, y, bg[:80])
         y -= 10
 
+    # Define margem e moldura externa dourada.
     margin = 20 * mm
     pdf.setLineWidth(4)
     pdf.setStrokeColor(colors.HexColor("#f2c14e"))
     pdf.rect(margin, margin, width - margin * 2, height - margin * 2)
+    # Desenha camadas adicionais com traços alternados.
     pdf.setLineWidth(2)
     for layer in range(3):
         offset = layer * 12
         pdf.setStrokeColor(colors.HexColor("#d4af37" if layer % 2 == 0 else "#914e2c"))
         pdf.setDash(3, 2)
         pdf.rect(margin + offset, margin + offset, width - margin * 2 - offset * 2, height - margin * 2 - offset * 2)
+    # Reseta dash e desenha arcos concêntricos suaves.
     pdf.setDash()
     pdf.setStrokeColor(colors.HexColor("#f6e7c1"))
     for arc in range(6):
@@ -63,6 +88,7 @@ def generate_certificate_pdf(certificate):
         radius = (width / 2 - margin) - arc * 20
         pdf.arc(width / 2 - radius, height / 2 - radius, width / 2 + radius, height / 2 + radius, startAng=0, extent=180)
         pdf.arc(width / 2 - radius, height / 2 - radius, width / 2 + radius, height / 2 + radius, startAng=180, extent=180)
+    # Desenha “pétalas” radiais para dar aparência de selo.
     pdf.setStrokeColor(colors.HexColor("#f4c5c5"))
     for petal in range(12):
         angle = petal * 30
@@ -75,19 +101,23 @@ def generate_certificate_pdf(certificate):
             height / 2 + (height / 2 - margin) * math.sin(rad),
         )
 
+    # Título principal do certificado.
     pdf.setFont("Times-Bold", 32)
     pdf.setFillColor(colors.HexColor("#0a0a0a"))
     pdf.drawCentredString(width / 2, height - margin - 40, "CERTIFICADO")
+    # Subtítulo.
     pdf.setFont("Times-Bold", 16)
     pdf.setFillColor(colors.HexColor("#173f7e"))
     pdf.drawCentredString(width / 2, height - margin - 64, "OFICIAL")
 
+    # Dados principais do certificado (aluno, curso e datas).
     pdf.setFont("Helvetica", 12)
     pdf.drawString(margin + 10, height - margin - 80, f"Aluno: {certificate.student.name}")
     pdf.drawString(margin + 10, height - margin - 100, f"Curso: {certificate.course.title}")
     pdf.drawString(margin + 10, height - margin - 120, f"Emitido em: {certificate.issued_at.strftime('%d/%m/%Y %H:%M') if certificate.issued_at else '—'}")
     pdf.drawString(margin + 10, height - margin - 140, f"Código: {certificate.code or certificate.pk}")
 
+    # Seção de notas de exames listadas no certificado.
     pdf.setFont("Helvetica-Bold", 14)
     pdf.drawString(margin + 10, height - margin - 180, "Notas de exames")
     pdf.setFont("Helvetica", 11)
@@ -96,24 +126,29 @@ def generate_certificate_pdf(certificate):
     pdf.drawString(margin + 200, table_y, "Tipo")
     pdf.drawString(margin + 320, table_y, "Nota")
     table_y -= 20
+    # Lista os primeiros 10 registros de exames.
     for record in certificate.records.all()[:10]:
         pdf.drawString(margin + 10, table_y, record.subject.name)
         pdf.drawString(margin + 200, table_y, record.exam_type.capitalize())
         pdf.drawString(margin + 320, table_y, f"{record.score}")
         table_y -= 18
+        # Evita ultrapassar a área útil da página.
         if table_y < margin + 50:
             break
 
+    # Código de segurança derivado de tenant e id.
     security_code = sha256(f"{certificate.tenant_id}-{certificate.pk}".encode()).hexdigest()[:16]
     pdf.setFillColor(colors.HexColor("#4b4b4b"))
     pdf.setFont("Helvetica-Oblique", 10)
     pdf.drawString(margin + 10, margin + 30, f"Documento seguro – código de verificação: {security_code}")
     pdf.drawString(margin + 10, margin + 15, "Documento emitido digitalmente; qualquer tentativa de edição invalida o registro.")
 
+    # Gera código de barras para leitura rápida.
     barcode_value = f"{certificate.tenant_id}-{certificate.code or certificate.pk}"
     barcode = code128.Code128(barcode_value, barHeight=30, barWidth=1.2)
     barcode.drawOn(pdf, margin, margin + 50)
 
+    # Gera QR code com link de verificação.
     qr_value = f"https://schoolar.example.com/certificates/{certificate.pk}"
     qr = QrCodeWidget(qr_value)
     size = 70
@@ -121,6 +156,7 @@ def generate_certificate_pdf(certificate):
     qr_drawing.add(qr)
     renderPDF.draw(qr_drawing, pdf, width - margin - size, height - margin - size - 10)
 
+    # Finaliza página e retorna bytes do buffer.
     pdf.showPage()
     pdf.save()
     return buffer.getvalue()

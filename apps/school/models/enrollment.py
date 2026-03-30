@@ -1,17 +1,27 @@
 from django.core.exceptions import ValidationError
+# Exceção de validação.
 from django.db import models
+# Campos do ORM.
 
 from core.models import BaseCodeModel
+# Modelo base com código e auditoria.
 
 from .classroom import Classroom
+# Turma associada à matrícula.
 
 
 class Enrollment(BaseCodeModel):
+    """Matrícula de aluno em uma turma, com taxas configuráveis."""
+
     CODE_PREFIX = "MAT"
 
+    # Aluno matriculado.
     student = models.ForeignKey("academic.Student", on_delete=models.CASCADE, verbose_name="Aluno")
+    # Turma onde o aluno está matriculado.
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, verbose_name="Turma")
+    # Data de criação da matrícula.
     enrollment_date = models.DateField(auto_now_add=True, verbose_name="Data de matrícula")
+    # Taxas associadas.
     enrollment_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Taxa de matrícula")
     monthly_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Mensalidade")
     monthly_fee_start = models.DateField(null=True, blank=True, verbose_name="Início cobrança mensalidade")
@@ -25,6 +35,7 @@ class Enrollment(BaseCodeModel):
     )
 
     def clean(self):
+        """Valida coerência de tenant e de ciclo/classe entre aluno e turma."""
         if self.student_id and self.classroom_id:
             student_tenant = (self.student.tenant_id or "").strip()
             classroom_tenant = (self.classroom.tenant_id or "").strip()
@@ -41,13 +52,16 @@ class Enrollment(BaseCodeModel):
                 raise ValidationError("A classe da turma deve coincidir com a classe do aluno.")
 
     def save(self, *args, **kwargs):
+        """Valida antes de persistir."""
         self.full_clean()
         return super().save(*args, **kwargs)
 
     def __str__(self):
+        """Exibe aluno e turma na representação."""
         return f"Enrollment for {self.student} in {self.classroom}"
 
     class Meta:
+        # Impede matrícula duplicada na mesma turma enquanto ativa.
         constraints = [
             models.UniqueConstraint(
                 fields=["student", "classroom"],

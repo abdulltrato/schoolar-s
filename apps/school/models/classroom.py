@@ -1,17 +1,27 @@
 from django.core.exceptions import ValidationError
+# Exceção de validação.
 from django.db import models
+# Componentes do ORM.
 
 from core.models import BaseNamedCodeModel
+# Modelo base com nome, código e auditoria.
 
 from .cycle_grade import Cycle, Grade
+# Ciclo e classe/ano.
 from .academic_year import AcademicYear
+# Ano letivo vinculado.
 from .school import School
+# Escola (tenant) dona da turma.
 from .teacher import Teacher
+# Professor diretor de turma.
 
 
 class Classroom(BaseNamedCodeModel):
+    """Turma vinculada a classe, ano letivo e escola, com ciclo derivado."""
+
     CODE_PREFIX = "CLS"
 
+    # Escola a que a turma pertence.
     school = models.ForeignKey(
         School,
         on_delete=models.SET_NULL,
@@ -20,8 +30,11 @@ class Classroom(BaseNamedCodeModel):
         related_name="classrooms",
         verbose_name="Escola",
     )
+    # Classe/ano associado.
     grade = models.ForeignKey(Grade, on_delete=models.PROTECT, null=True, blank=True, verbose_name="Classe")
+    # Ciclo derivado da classe.
     cycle = models.IntegerField(verbose_name="Ciclo")
+    # Modelo de ciclo (legado/compatibilidade).
     cycle_model = models.ForeignKey(
         Cycle,
         null=True,
@@ -30,6 +43,7 @@ class Classroom(BaseNamedCodeModel):
         related_name="classrooms",
         verbose_name="Ciclo (model)",
     )
+    # Ano letivo em que a turma ocorre.
     academic_year = models.ForeignKey(
         AcademicYear,
         on_delete=models.PROTECT,
@@ -37,6 +51,7 @@ class Classroom(BaseNamedCodeModel):
         blank=True,
         verbose_name="Ano letivo",
     )
+    # Professor responsável/diretor.
     lead_teacher = models.ForeignKey(
         Teacher,
         on_delete=models.SET_NULL,
@@ -46,6 +61,7 @@ class Classroom(BaseNamedCodeModel):
     )
 
     def clean(self):
+        """Valida vínculos obrigatórios, sincroniza ciclo e garante tenant coerente."""
         if not self.grade_id:
             raise ValidationError({"grade": "A turma deve estar associada a uma classe."})
         if not self.academic_year_id:
@@ -83,13 +99,16 @@ class Classroom(BaseNamedCodeModel):
             raise ValidationError({"tenant_id": "tenant_id é obrigatório."})
 
     def save(self, *args, **kwargs):
+        """Valida antes de salvar."""
         self.full_clean()
         return super().save(*args, **kwargs)
 
     def __str__(self):
+        """Exibe nome e ano letivo para fácil identificação."""
         return f"{self.name} - {self.academic_year}"
 
     class Meta:
+        # Rótulos, ordenação e unicidade por tenant/ano/classe/nome.
         verbose_name = "Turma"
         verbose_name_plural = "Turmas"
         ordering = ["academic_year__code", "grade__number", "name"]

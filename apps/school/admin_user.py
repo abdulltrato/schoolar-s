@@ -1,11 +1,17 @@
 from django.contrib import admin
+# Ferramentas do Django admin.
 from django.contrib.auth import get_user_model
+# Helper para obter modelo de usuário customizado.
 from django.contrib.auth.admin import UserAdmin as DefaultUserAdmin
+# Admin padrão para User.
 
 from .models import UserProfile
+# Perfil escolar associado ao usuário.
 
 
 class UserProfileInline(admin.StackedInline):
+    """Inline para editar perfil escolar junto ao usuário."""
+
     model = UserProfile
     fk_name = "user"
     can_delete = False
@@ -14,6 +20,7 @@ class UserProfileInline(admin.StackedInline):
     fields = ("tenant_id", "role", "school", "province", "district", "active")
 
     def has_add_permission(self, request, obj=None):
+        """Impede criar inline quando usuário ainda não existe ou já tem perfil."""
         if obj is None:
             return False
         try:
@@ -29,21 +36,26 @@ admin.site.unregister(UserModel)
 
 @admin.register(UserModel)
 class TenantUserAdmin(DefaultUserAdmin):
+    """Admin customizado para User com inline de perfil escolar."""
+
     inlines = [UserProfileInline]
     list_display = DefaultUserAdmin.list_display + ("tenant_id",)
     list_select_related = ("school_profile",)
 
     def get_inline_instances(self, request, obj=None):
+        """Só exibe inlines quando o usuário já foi criado."""
         if obj is None:
             return []
         return super().get_inline_instances(request, obj=obj)
 
     def tenant_id(self, obj):
+        """Exibe tenant proveniente do perfil escolar relacionado."""
         return getattr(getattr(obj, "school_profile", None), "tenant_id", "")
 
     tenant_id.short_description = "Tenant"
 
     def save_model(self, request, obj, form, change):
+        """Salva usuário garantindo criação/atualização do UserProfile com tenant herdado."""
         super().save_model(request, obj, form, change)
         profile, _ = UserProfile.objects.get_or_create(user=obj)
         if request.user and hasattr(request.user, "school_profile"):

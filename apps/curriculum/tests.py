@@ -1,21 +1,32 @@
 from datetime import date
+# Datas para criar anos letivos.
 
 from django.contrib.auth import get_user_model
+# Helper para obter model User customizado.
 from django.core.exceptions import ValidationError
+# Exceção usada em validação de modelos.
 from django.test import TestCase
+# Base de testes do Django.
 from rest_framework.test import APIClient
+# Cliente de testes para DRF.
 
 from apps.school.models import AcademicYear, Grade, GradeSubject
+# Modelos escolares usados nos testes.
 from .models import CurriculumArea, Competency, BaseCurriculum, Subject, SubjectCurriculumPlan
+# Modelos de currículo usados nos cenários.
 
 
 class CurriculoApiTests(TestCase):
+    """Testes de integração da API de currículo."""
+
     def setUp(self):
+        """Autentica um usuário padrão para chamadas protegidas."""
         self.user = get_user_model().objects.create_user(username="admin", password="secret")
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
     def test_cria_disciplina_usando_area_id(self):
+        """Disciplina é criada e vinculada à área ao usar area_id."""
         area = CurriculumArea.objects.create(name="Ciências")
 
         response = self.client.post(
@@ -29,6 +40,7 @@ class CurriculoApiTests(TestCase):
         self.assertEqual(subject.area, area)
 
     def test_cria_curriculo_base_usando_lista_de_competencias(self):
+        """Currículo base aceita ids de competências no payload."""
         area = CurriculumArea.objects.create(name="Comunicação")
         subject = Subject.objects.create(name="Português", area=area, cycle=1)
         competency = subject.competencia_set.create(
@@ -47,6 +59,7 @@ class CurriculoApiTests(TestCase):
         self.assertEqual(list(curriculum.competencies.all()), [competency])
 
     def test_curriculo_local_respeita_tenant_do_header(self):
+        """Header X-Tenant-ID deve prevalecer sobre payload em currículo local."""
         response = self.client.post(
             "/api/v1/curriculum/curriculos-local/",
             {"tenant_id": "payload-a", "cycle": 1},
@@ -58,6 +71,7 @@ class CurriculoApiTests(TestCase):
         self.assertEqual(response.json()["tenant_id"], "school-central")
 
     def test_cria_plano_curricular_para_disciplina_da_classe(self):
+        """Cria plano curricular vinculado a GradeSubject."""
         area = CurriculumArea.objects.create(name="Ciências Exatas")
         subject = Subject.objects.create(name="Matemática", area=area, cycle=1)
         academic_year = AcademicYear.objects.create(
@@ -83,6 +97,7 @@ class CurriculoApiTests(TestCase):
         self.assertEqual(plano.grade_subject, grade_subject)
 
     def test_rejeita_competencia_de_outra_disciplina_no_plano(self):
+        """Impede adicionar competência de disciplina diferente no plano."""
         area = CurriculumArea.objects.create(name="Ciências Integradas")
         subject = Subject.objects.create(name="Matemática", area=area, cycle=1)
         outra_disciplina = Subject.objects.create(name="História", area=area, cycle=1)

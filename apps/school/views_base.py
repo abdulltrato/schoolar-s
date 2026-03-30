@@ -1,19 +1,19 @@
 from rest_framework import viewsets
+# Viewsets base do DRF.
 
 from core.viewsets import TenantModelViewSet
+# ViewSet custom que aplica scoping de tenant.
 
 
 class TenantReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Base ReadOnly viewset com scoping de tenant via permission classes/filters do projeto.
-    """
+    """Base ReadOnly com escopo de tenant aplicado via filtros/permissions."""
 
+    # Nenhuma customização extra; usado para semântica.
     pass
 
 
 class TenantModelViewSetMixin(TenantModelViewSet):
-    """
-    Alias para manter nome curto nos novos módulos.
-    """
+    """Alias curto para o TenantModelViewSet usado nos módulos novos."""
 
+    # Não altera comportamento, apenas nomeia de forma sucinta.
     pass

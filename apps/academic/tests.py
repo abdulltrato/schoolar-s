@@ -10,11 +10,14 @@ from apps.school.models import School
 from .models import Student
 
 
+# Testes de validação do modelo Student.
 class AlunoModelTests(TestCase):
     def _doc(self, name="doc.pdf"):
+        # Cria arquivo simples em memória para usar nos testes.
         return SimpleUploadedFile(name, b"%PDF-1.4 test")
 
     def test_rejeita_classe_fora_do_intervalo(self):
+        # Espera que uma grade fora do intervalo gere ValidationError.
         with self.assertRaises(ValidationError):
             Student.objects.create(
                 name="Student Inválido",
@@ -25,6 +28,7 @@ class AlunoModelTests(TestCase):
             )
 
     def test_define_ciclo_automaticamente_a_partir_da_classe(self):
+        # Cria aluno com grade 5 para verificar cálculo do ciclo.
         student = Student.objects.create(
             name="Student Coerente",
             birth_date=date(2014, 1, 1),
@@ -35,9 +39,11 @@ class AlunoModelTests(TestCase):
             previous_certificate=self._doc("cert.pdf"),
         )
 
+        # Verifica se o ciclo foi calculado como 2.
         self.assertEqual(student.cycle, 2)
 
     def test_define_ensino_secundario_e_primeiro_ciclo_para_classe_7(self):
+        # Cria aluno na 7ª classe para validar nível e ciclo.
         student = Student.objects.create(
             name="Student Secundario",
             birth_date=date(2012, 1, 1),
@@ -48,31 +54,41 @@ class AlunoModelTests(TestCase):
             previous_certificate=self._doc("cert2.pdf"),
         )
 
+        # Confirma nível secundário e ciclo 1.
         self.assertEqual(student.education_level, "secundario")
         self.assertEqual(student.cycle, 1)
 
 
+# Testes do admin de Student.
 class AlunoAdminTests(TestCase):
     def setUp(self):
+        # Cria cliente de teste autenticado.
         self.client = Client()
+        # Cria superusuário.
         self.user = get_user_model().objects.create_superuser(
             username="admin-academic",
             email="admin@example.com",
             password="secret",
         )
+        # Ajusta perfil escolar para ter tenant e papel.
         self.user.school_profile.role = "school_director"
         self.user.school_profile.tenant_id = "tenant-admin"
+        # Cria escola associada.
         self.user.school_profile.school = School.objects.create(
             code="ESC-ADM",
             name="Escola Admin",
             tenant_id="tenant-admin",
         )
+        # Persiste alterações no perfil.
         self.user.school_profile.save(update_fields=["role", "tenant_id", "school"])
+        # Autentica cliente.
         self.client.force_login(self.user)
 
     def test_admin_add_herda_tenant_do_perfil_autenticado(self):
+        # Prepara arquivos obrigatórios.
         id_file = SimpleUploadedFile("id-admin.pdf", b"%PDF-1.4 test")
         cert_file = SimpleUploadedFile("cert-admin.pdf", b"%PDF-1.4 test")
+        # Envia POST para criar aluno via admin.
         response = self.client.post(
             reverse("admin:academic_student_add"),
             {
@@ -88,18 +104,22 @@ class AlunoAdminTests(TestCase):
             follow=True,
         )
 
+        # Verifica criação e herança de tenant/ciclo.
         self.assertEqual(response.status_code, 200)
         student = Student.objects.get(name="Aluno Admin")
         self.assertEqual(student.tenant_id, "tenant-admin")
         self.assertEqual(student.cycle, 2)
 
     def test_admin_add_sem_tenant_retorna_erro_de_formulario(self):
+        # Remove tenant do perfil e limpa escola.
         self.user.school_profile.tenant_id = ""
         self.user.school_profile.school = None
         self.user.school_profile.save(update_fields=["tenant_id", "school"])
 
+        # Prepara arquivos obrigatórios.
         id_file = SimpleUploadedFile("id-sem-tenant.pdf", b"%PDF-1.4 test")
         cert_file = SimpleUploadedFile("cert-sem-tenant.pdf", b"%PDF-1.4 test")
+        # Tenta criar aluno sem tenant herdado.
         response = self.client.post(
             reverse("admin:academic_student_add"),
             {
@@ -114,5 +134,6 @@ class AlunoAdminTests(TestCase):
             },
         )
 
+        # Espera resposta de erro e ausência do objeto.
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Student.objects.filter(name="Aluno Sem Tenant").exists())
