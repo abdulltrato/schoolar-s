@@ -5,6 +5,7 @@ type MetricBadgesProps = {
 };
 
 export function MetricBadges({ items }: MetricBadgesProps) {
+  // Oculta se não houver badges a exibir.
   if (!items || items.length === 0) return null;
 
   return (

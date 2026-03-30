@@ -5,10 +5,12 @@ import { SectionTitle } from "@/components/section-title";
 import { StatusCard } from "@/components/status-card";
 import { getHomeSnapshot, requireAuthSession, type CollectionSnapshot } from "@/lib/api";
 
+// Define tom (sucesso/alerta) para cartas conforme estado de coleção.
 function toneForCollection(snapshot: CollectionSnapshot<unknown>) {
   return snapshot.ok ? "success" : "warning";
 }
 
+// Determina etiqueta de status (AUTH/ONLINE/OFFLINE).
 function statusForCollection(snapshot: CollectionSnapshot<unknown>) {
   if (snapshot.requiresAuth) {
     return "AUT";

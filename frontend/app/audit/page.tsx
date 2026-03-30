@@ -16,6 +16,7 @@ import {
   type AuditEvent,
 } from "@/lib/api";
 
+// Página de auditoria: métricas, eventos e alertas (com ação de acknowledge).
 type RankedEntry = {
   label: string;
   count: number;

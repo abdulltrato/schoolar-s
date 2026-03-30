@@ -19,6 +19,7 @@ type HeaderStyleProps = {
   footerHeight: number;
 };
 
+// Calcula espaçamentos do main/aside com base em alturas de header/footer.
 export function computeShellSpacing({ headerHeight, footerHeight }: HeaderStyleProps): {
   mainStyle: CSSProperties;
   asideStyle: CSSProperties;
@@ -43,6 +44,7 @@ export function DashboardHeader({
   heroBadges,
   headerLinks,
 }: DashboardHeaderProps) {
+  // Cabeçalho do dashboard com badges e navegação secundária.
   return (
     <>
       <header
@@ -92,6 +94,7 @@ export function combineNavigationWithAside(
   mainStyle: CSSProperties,
   asideStyle: CSSProperties,
 ) {
+  // Se não há aside, retorna apenas o conteúdo principal.
   if (!asideContent) {
     return (
       <section aria-label="Conteúdo da página" className="app-content-stack">

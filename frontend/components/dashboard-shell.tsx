@@ -14,6 +14,7 @@ type DashboardShellProps = {
   headerLinks?: HeaderNavLink[];
 };
 
+// Links padrão da navegação lateral.
 const ASIDE_NAV_LINKS: HeaderNavLink[] = [
   { href: "/", label: "Visão geral" },
   { href: "/management", label: "Gestão" },
@@ -35,6 +36,8 @@ export function DashboardShell({ title, description, children, aside, headerLink
   const footerRef = useRef<HTMLElement>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
   const [footerHeight, setFooterHeight] = useState(0);
+
+  // Observa header/footer para calcular espaçamento interno e altura de sticky.
   useEffect(() => {
     const header = headerRef.current;
     const footer = footerRef.current;

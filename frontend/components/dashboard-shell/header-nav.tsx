@@ -13,6 +13,7 @@ type HeaderNavProps = {
 };
 
 export function HeaderNav({ links }: HeaderNavProps) {
+  // Oculta quando não há links de atalho.
   if (!links || links.length === 0) return null;
 
   return (

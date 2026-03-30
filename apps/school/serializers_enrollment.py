@@ -1,9 +1,13 @@
 from rest_framework import serializers
+# Base de serializers do DRF.
 
 from .models import Enrollment
+# Modelo de matrícula.
 
 
 class EnrollmentSummarySerializer(serializers.ModelSerializer):
+    """Serializer compacto para listagens, com campos derivados legíveis."""
+
     student_name = serializers.CharField(source="student.name", read_only=True)
     enrollment_year = serializers.SerializerMethodField()
     course = serializers.SerializerMethodField()
@@ -79,6 +83,8 @@ class EnrollmentSummarySerializer(serializers.ModelSerializer):
 
 
 class EnrollmentSerializer(serializers.ModelSerializer):
+    """Serializer completo de matrícula, incluindo planos de pagamento calculados."""
+
     student_name = serializers.CharField(source="student.name", read_only=True)
     classroom_name = serializers.CharField(source="classroom.name", read_only=True)
     school_name = serializers.CharField(source="classroom.school.name", read_only=True)

@@ -1,9 +1,12 @@
 from rest_framework import serializers
+# Base de serializers do DRF.
 
 from .models import Transfer
+# Modelo de transferência.
 
 
 class TransferSerializer(serializers.ModelSerializer):
+    """Serializa transferências; status/códigos são somente leitura."""
     class Meta:
         model = Transfer
         fields = "__all__"

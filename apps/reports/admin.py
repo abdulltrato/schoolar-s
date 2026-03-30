@@ -1,15 +1,22 @@
 import json
+# Parsing de conteúdo no admin.
 
 from django import forms
+# Formularios do Django.
 from django.contrib import admin
+# Admin framework.
 from django.core.exceptions import ValidationError
+# Exceção de validação.
 
 from core.admin_utils import TenantAwareAdmin, TenantAdminForm
+# Mixins de admin com suporte a tenant.
 
 from .models import Report
+# Modelo de relatório.
 
 
 class ReportAdminForm(TenantAdminForm):
+    """Form do admin que aceita conteúdo em texto ou JSON para Report."""
     content = forms.CharField(
         required=False,
         label="Conteúdo",
@@ -22,6 +29,7 @@ class ReportAdminForm(TenantAdminForm):
         fields = "__all__"
 
     def clean_content(self):
+        """Aceita str, dict ou list; tenta parsear JSON ou encapsula em {'text': ...}."""
         raw = self.cleaned_data.get("content")
         if raw in (None, ""):
             return {}
@@ -49,6 +57,7 @@ class ReportAdminForm(TenantAdminForm):
 
 @admin.register(Report)
 class ReportAdmin(TenantAwareAdmin):
+    """Administra relatórios com campos de verificação somente leitura."""
     form = ReportAdminForm
     list_display = ("title", "type", "tenant_id", "student", "generated_at")
     readonly_fields = ("serial_number", "verification_code", "verification_hash", "verification_version")

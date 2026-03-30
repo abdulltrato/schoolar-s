@@ -6,6 +6,7 @@ from core.models import BaseNamedCodeModel, tenant_id_from_user
 
 # Modelo principal de aluno.
 class Student(BaseNamedCodeModel):
+    """Registro de aluno com dados acadêmicos, documentos e trilhos de ensino."""
     # Prefixo para geração automática de códigos.
     CODE_PREFIX = "STD"
     # Não herda tenant automaticamente de nenhum campo de usuário.

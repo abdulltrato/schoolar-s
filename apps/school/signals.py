@@ -1,12 +1,19 @@
 from datetime import date
+# Manipulação de datas para planos de pagamento.
 from decimal import Decimal
+# Operações monetárias sem perda de precisão.
 
 from django.contrib.auth import get_user_model
+# Modelo de usuário para conectar sinais.
 from django.db import connection
+# Acesso direto ao DB para limpeza de tabelas legadas.
 from django.db.models.signals import post_save, pre_delete
+# Sinais disparados em salvamento/deleção.
 from django.dispatch import receiver
+# Decorador de registro de handlers.
 
 from apps.academic.models import Guardian, Student
+# Modelos acadêmicos com vínculos a perfis.
 
 from .models import (
     Teacher,
@@ -15,6 +22,7 @@ from .models import (
     Invoice,
     PaymentPlan,
 )
+# Modelos escolares usados nas rotinas de sinal.
 
 
 def _upsert_profile_for_user(
@@ -26,6 +34,7 @@ def _upsert_profile_for_user(
     province="",
     district="",
 ):
+    """Cria ou atualiza UserProfile com dados fornecidos, reativando se necessário."""
     if user is None:
         return
 
@@ -67,6 +76,7 @@ def _upsert_profile_for_user(
 
 @receiver(post_save, sender=get_user_model())
 def ensure_user_profile(sender, instance, created, **kwargs):
+    """Ao criar usuário, garante perfil padrão de admin nacional ativo."""
     if not created:
         return
 
@@ -84,6 +94,7 @@ def ensure_user_profile(sender, instance, created, **kwargs):
 
 @receiver(pre_delete, sender=get_user_model())
 def hard_delete_user_dependents(sender, instance, **kwargs):
+    """Remove dependentes soft-delete antes de deletar usuário para evitar FKs."""
     # Ensure soft-deletable dependents are removed before the user to avoid FK violations.
     Teacher.all_objects.filter(user=instance).hard_delete()
     UserProfile.all_objects.filter(user=instance).hard_delete()
@@ -101,6 +112,7 @@ def hard_delete_user_dependents(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Teacher)
 def sync_teacher_profile(sender, instance, **kwargs):
+    """Mantém UserProfile sincronizado quando um Teacher é salvo."""
     school = instance.school
     _upsert_profile_for_user(
         instance.user,
@@ -114,6 +126,7 @@ def sync_teacher_profile(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Student)
 def sync_student_profile(sender, instance, **kwargs):
+    """Garante perfil de aluno para o usuário do Student."""
     _upsert_profile_for_user(
         instance.user,
         role="student",
@@ -123,6 +136,7 @@ def sync_student_profile(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Guardian)
 def sync_guardian_profile(sender, instance, **kwargs):
+    """Garante perfil de encarregado para o usuário do Guardian."""
     _upsert_profile_for_user(
         instance.user,
         role="guardian",
@@ -131,6 +145,7 @@ def sync_guardian_profile(sender, instance, **kwargs):
 
 
 def _month_range(start: date, end: date):
+    """Gera datas do primeiro dia de cada mês entre start e end (inclusive)."""
     current = date(start.year, start.month, 1)
     while current <= end:
         yield current
@@ -143,6 +158,7 @@ def _month_range(start: date, end: date):
 
 @receiver(post_save, sender=Enrollment)
 def create_finance_on_enrollment(sender, instance: Enrollment, created, **kwargs):
+    """Cria fatura de matrícula e planos de pagamento ao matricular um aluno."""
     if not created:
         return
 

@@ -11,6 +11,7 @@ export function SectionTitle({
   description,
   inverse = false,
 }: SectionTitleProps) {
+  // Ajusta paleta de cores conforme modo inverso.
   const tone = inverse ? "text-sand" : "text-ink";
   const bodyTone = inverse ? "text-sand/78" : "text-ink/70";
 

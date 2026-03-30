@@ -1,5 +1,7 @@
 from django.urls import include, path
+# Utilidades de roteamento do Django.
 from rest_framework.routers import DefaultRouter
+# Router padrão do DRF.
 
 from .views import (
     AssignmentViewSet,
@@ -11,7 +13,9 @@ from .views import (
     SubmissionViewSet,
     SubmissionAttachmentViewSet,
 )
+# Viewsets da app learning.
 
+# Cria router e registra todos os recursos REST.
 router = DefaultRouter()
 router.register(r"courses", CourseViewSet)
 router.register(r"course-modules", CourseModuleViewSet)
@@ -22,6 +26,7 @@ router.register(r"assignments", AssignmentViewSet)
 router.register(r"submissions", SubmissionViewSet)
 router.register(r"submission-attachments", SubmissionAttachmentViewSet)
 
+# Expõe as rotas na raiz da app.
 urlpatterns = [
     path("", include(router.urls)),
 ]

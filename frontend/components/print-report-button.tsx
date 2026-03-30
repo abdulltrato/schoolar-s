@@ -1,4 +1,5 @@
 "use client";
+// Botão simples que chama print() no browser.
 
 export function PrintReportButton() {
   return (

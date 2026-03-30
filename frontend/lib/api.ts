@@ -852,6 +852,7 @@ function formatReadinessMessage(payload?: ReadinessPayload) {
   return `Verificações reportadas: ${summary}.`;
 }
 
+// Normaliza respostas paginadas do backend ou arrays simples para um formato comum.
 function normalizeCollection<T>(payload?: PaginatedResponse<T> | T[]) {
   if (Array.isArray(payload)) {
     return {

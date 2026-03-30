@@ -19,6 +19,19 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Tema escuro simples invertendo cores; ajusta fundo para evitar flashes claros. */
+body.dark-mode {
+  color-scheme: dark;
+  background: #0f1628;
+  filter: invert(0.92) hue-rotate(180deg);
+}
+
+body.dark-mode img,
+body.dark-mode video,
+body.dark-mode canvas {
+  filter: invert(1) hue-rotate(180deg);
+}
+
 body {
   color: #14213d;
   font-family: "IBM Plex Sans", "Segoe UI", sans-serif;

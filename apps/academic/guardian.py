@@ -7,6 +7,7 @@ from core.models import BaseNamedCodeModel, tenant_id_from_user
 
 # Modelo que representa o encarregado/guardião de um aluno.
 class Guardian(BaseNamedCodeModel):
+    """Encarregado/guardião do aluno, opcionalmente vinculado a um usuário."""
     # Prefixo usado na geração de códigos automáticos.
     CODE_PREFIX = "GRD"
     # Campos que herdam tenant de um usuário relacionado.

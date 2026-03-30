@@ -1,8 +1,12 @@
 from datetime import date
+# Datas para anos letivos.
 
 from django.contrib.auth import get_user_model
+# Helper para modelo de usuário.
 from django.test import TestCase
+# Base de testes do Django.
 from rest_framework.test import APIClient
+# Cliente DRF para testes de API.
 
 from apps.academic.models import Student
 from apps.curriculum.models import CurriculumArea, Subject, SubjectSpecialty
@@ -10,6 +14,8 @@ from apps.school.models import AcademicYear, Classroom, Enrollment, Grade, Grade
 
 
 class TransferApiTests(TestCase):
+    """Testes de API cobrindo fluxos de transferência de alunos e professores."""
+
     def setUp(self):
         self.admin = get_user_model().objects.create_user(username="admin-transfer", password="secret")
         self.client = APIClient()

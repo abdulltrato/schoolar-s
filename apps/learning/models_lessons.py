@@ -1,15 +1,24 @@
 from __future__ import annotations
+# Suporte a anotações forward.
 
 from django.core.exceptions import ValidationError
+# Exceção de validação.
 from django.db import models
+# Componentes do ORM.
 
 from core.models import BaseCodeModel
+# Modelo base com código e auditoria.
 from core.tenant_mixins import TenantValidationMixin
+# Mixin de validação de tenant.
 from .models_courses import CourseOffering
+# Oferta de curso à qual a aula pertence.
 from .validators import validate_lesson_conflicts
+# Validador de conflitos de agenda.
 
 
 class Lesson(BaseCodeModel, TenantValidationMixin):
+    """Aula agendada dentro de uma oferta de curso, com links e gravações."""
+
     CODE_PREFIX = "LES"
     offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name="lessons", verbose_name="Oferta")
     title = models.CharField(max_length=180, verbose_name="Título")
@@ -21,6 +30,7 @@ class Lesson(BaseCodeModel, TenantValidationMixin):
     published = models.BooleanField(default=False, verbose_name="Publicada")
 
     def clean(self):
+        """Valida tenant alinhado com a oferta e checa conflitos de agenda."""
         offering_tenant = (self.offering.tenant_id or "").strip() if self.offering_id else ""
         if self.tenant_id and offering_tenant and self.tenant_id != offering_tenant:
             raise ValidationError({"tenant_id": "O tenant da aula deve coincidir com o tenant da oferta."})
@@ -41,6 +51,8 @@ class Lesson(BaseCodeModel, TenantValidationMixin):
 
 
 class LessonMaterial(BaseCodeModel):
+    """Recurso/mídia vinculada a uma aula, com múltiplos canais opcionais."""
+
     CODE_PREFIX = "LMT"
     TYPE_CHOICES = [
         ("link", "Link"),
@@ -50,8 +62,11 @@ class LessonMaterial(BaseCodeModel):
         ("other", "Outro"),
     ]
 
+    # Aula dona do material.
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="materials", verbose_name="Aula")
+    # Título do recurso.
     title = models.CharField(max_length=180, verbose_name="Título")
+    # Tipo principal do material (informativo).
     material_type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name="Tipo")
     # Campos individuais por tipo, habilitados por checkbox
     link_enabled = models.BooleanField(default=False, verbose_name="Usar link")
@@ -69,9 +84,11 @@ class LessonMaterial(BaseCodeModel):
     image_enabled = models.BooleanField(default=False, verbose_name="Usar imagem")
     image_file = models.ImageField(upload_to="lesson_materials/images/", blank=True, null=True, verbose_name="Imagem")
 
+    # Indica se o material é obrigatório.
     required = models.BooleanField(default=False, verbose_name="Obrigatório")
 
     def clean(self):
+        """Valida tenant, garante pelo menos um canal e checa presença de arquivos/links."""
         lesson_tenant = (self.lesson.tenant_id or "").strip() if self.lesson_id else ""
         if lesson_tenant:
             if self.tenant_id and self.tenant_id != lesson_tenant:
@@ -108,6 +125,7 @@ class LessonMaterial(BaseCodeModel):
             raise ValidationError(errors)
 
     def save(self, *args, **kwargs):
+        """Valida antes de persistir."""
         self.full_clean()
         return super().save(*args, **kwargs)
 

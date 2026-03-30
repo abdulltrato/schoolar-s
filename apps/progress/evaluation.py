@@ -1,5 +1,7 @@
 from decimal import Decimal, InvalidOperation
+# Precisão decimal para notas.
 from typing import Dict, Optional
+# Tipagem para clareza.
 
 
 class EvaluationError(ValueError):
@@ -7,6 +9,7 @@ class EvaluationError(ValueError):
 
 
 def _to_score(value: Optional[float], field: str) -> Optional[Decimal]:
+    """Converte valor para Decimal e valida faixa [0,20]; aceita None."""
     if value is None:
         return None
     try:

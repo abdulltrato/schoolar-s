@@ -13,6 +13,7 @@ from .serializers import (
 
 # ViewSet que expõe CRUD de alunos com filtros e permissões.
 class StudentViewSet(RobustModelViewSet):
+    """CRUD de alunos com filtros por trilho/ciclo e controle de papéis."""
     # Consulta base com prefetch para reduzir consultas em séries.
     queryset = Student.objects.prefetch_related(
         "studentcompetency_set__competency",
@@ -89,6 +90,7 @@ class StudentViewSet(RobustModelViewSet):
 
 # ViewSet para encarregados.
 class GuardianViewSet(RobustModelViewSet):
+    """CRUD de encarregados (guardians) com busca por contatos."""
     # Consulta base simples.
     queryset = Guardian.objects.all()
     # Serializer usado.
@@ -128,6 +130,7 @@ class GuardianViewSet(RobustModelViewSet):
 
 # ViewSet para vínculo aluno-encarregado.
 class StudentGuardianViewSet(RobustModelViewSet):
+    """CRUD de relações aluno-encarregado."""
     # Usa select_related para reduzir consultas nas FK.
     queryset = StudentGuardian.objects.select_related("student", "guardian").all()
     # Serializer correspondente.

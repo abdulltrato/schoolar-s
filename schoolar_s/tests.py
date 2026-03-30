@@ -1,12 +1,17 @@
 from django.test import TestCase
+# Base de testes do Django.
 from django.test.utils import override_settings
+# Permite alterar settings em testes.
 from django.contrib.auth import get_user_model
+# Modelo de usuário configurado.
 from rest_framework.test import APIClient
+# Cliente de testes DRF.
 
 from apps.school.models import AuditAlert, AuditEvent, UserProfile, School
 
 
 class HealthcheckTests(TestCase):
+    """Contratos básicos de health/readiness e request-id."""
     def test_healthcheck_retorna_status_ok(self):
         response = self.client.get("/health/")
 
@@ -27,6 +32,7 @@ class HealthcheckTests(TestCase):
 
 
 class ErrorContractTests(TestCase):
+    """Garante envelope de erro padronizado."""
     def setUp(self):
         self.user = get_user_model().objects.create_user(username="apiuser", password="secret")
         self.client = APIClient()
@@ -54,6 +60,7 @@ class ErrorContractTests(TestCase):
 
 
 class AuthContractTests(TestCase):
+    """Testes de login e sessão para endpoints de auth."""
     def test_login_retorna_perfil_sincronizado(self):
         user = get_user_model().objects.create_user(username="login-user", password="secret")
         profile = user.school_profile
@@ -94,6 +101,7 @@ class AuthContractTests(TestCase):
 
 
 class AuditContractTests(TestCase):
+    """Verifica emissão de eventos de auditoria e alertas."""
     def setUp(self):
         self.user = get_user_model().objects.create_user(username="audit-user", password="secret")
         self.client = APIClient()

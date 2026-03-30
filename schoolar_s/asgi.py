@@ -1,10 +1,7 @@
 """
-ASGI config for schoolar_s project.
+ASGI config do projeto schoolar_s.
 
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/4.2/howto/deployment/asgi/
+Expõe a callable ASGI como variável de módulo ``application``.
 """
 
 import os

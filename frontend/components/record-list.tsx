@@ -17,6 +17,7 @@ export function RecordList<T>({
   rows,
   renderRow,
 }: RecordListProps<T>) {
+  // Lista genérica com cabeçalho e contador; aceita render prop para linhas.
   return (
     <article className="rounded-[0.9rem] border border-ink/10 bg-sand p-2.5 sm:p-3">
       <div className="flex items-start justify-between gap-2">

@@ -1,13 +1,19 @@
 from rest_framework.decorators import action
+# Decorador para actions customizadas.
 from rest_framework.response import Response
+# Respostas DRF.
 
 from core.viewsets import RobustModelViewSet
+# ViewSet base com tratamento robusto.
 
 from .models import Transfer
+# Modelo de transferência.
 from .serializers import TransferSerializer
+# Serializer correspondente.
 
 
 class TransferViewSet(RobustModelViewSet):
+    """CRUD de transferências; inclui ação para aplicá-las."""
     queryset = Transfer.objects.select_related(
         "student",
         "teacher",
@@ -42,6 +48,7 @@ class TransferViewSet(RobustModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="apply")
     def apply(self, request, pk=None):
+        """Aplica a transferência selecionada e retorna o estado atualizado."""
         transfer = self.get_object()
         transfer.apply()
         serializer = self.get_serializer(transfer)

@@ -1,12 +1,16 @@
 from django.contrib import admin
+# Ferramentas do Django admin.
 
 from core.admin_utils import TenantAwareAdmin
+# Mixin com scoping de tenant.
 
 from .models import Transfer
+# Modelo de transferência.
 
 
 @admin.register(Transfer)
 class TransferAdmin(TenantAwareAdmin):
+    """Admin para gerenciar transferências e aplicar em massa."""
     actions = ["apply_transfers"]
     list_display = ("code", "kind", "status", "tenant_id", "created_at", "applied_at")
     list_filter = ("kind", "status", "tenant_id")
@@ -56,6 +60,7 @@ class TransferAdmin(TenantAwareAdmin):
     )
 
     def apply_transfers(self, request, queryset):
+        """Ação em massa para aplicar transferências selecionadas."""
         applied = 0
         failed = 0
         for transfer in queryset:

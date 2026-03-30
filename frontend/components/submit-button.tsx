@@ -1,4 +1,5 @@
 "use client";
+// Botão de envio que mostra estado pending via useFormStatus.
 
 import { useFormStatus } from "react-dom";
 

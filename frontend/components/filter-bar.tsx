@@ -15,6 +15,7 @@ type FilterBarProps = {
 };
 
 export function FilterBar({ fields }: FilterBarProps) {
+  // Barra de filtros genérica com selects pré-preenchidos e ação submit/limpar.
   return (
     <form className="rounded-[0.9rem] border border-ink/10 bg-white/90 p-2.5 shadow-card backdrop-blur">
       <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">

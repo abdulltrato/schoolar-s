@@ -1,9 +1,13 @@
 from django.test import TestCase
+# Base de testes do Django.
 
 from .evaluation import EvaluationError, evaluate_student_progress
+# Função e erro customizados sob teste.
 
 
 class EvaluateStudentProgressTests(TestCase):
+    """Casos de teste para o motor de avaliação de progressão."""
+
     def test_reprovado_por_evento_de_testes(self):
         resultado = evaluate_student_progress(teste1=5, teste2=12, teste3=12)
         self.assertEqual(resultado["estado"], "reprovado_testes")

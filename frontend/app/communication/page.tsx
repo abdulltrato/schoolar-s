@@ -30,6 +30,8 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
+// Página de comunicação: cria/edita comunicados e mostra métricas de entrega.
+
 async function createAnnouncementAction(formData: FormData) {
   "use server";
 

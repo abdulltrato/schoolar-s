@@ -14,7 +14,7 @@ import {
   formatPublishedState,
   formatStudentStatus,
   formatSubmissionStatus,
-} from "../lib/labels";
+} from "../lib/labels.ts";
 
 test("formatters translate known backend values", () => {
   assert.equal(formatAttendanceStatus("present"), "Presente");

@@ -1,14 +1,16 @@
 from django.core.exceptions import ValidationError
+# Exceção de validação.
 from django.db import transaction
+# Controla atomicidade da operação.
 from django.utils import timezone
+# Timestamp para soft-delete e criação.
 
 from core.request_context import suspend_current_request
+# Context manager para suprimir request atual durante operações internas.
 
 
 def apply_student_transfer(transfer, *, actor):
-    """
-    Executa a transferência de aluno. Espera instância validada.
-    """
+    """Executa a transferência de aluno (instância já validada)."""
     from django.contrib.auth import get_user_model
     from apps.academic.models import Student
     from apps.school.models import Enrollment, UserProfile
@@ -23,6 +25,7 @@ def apply_student_transfer(transfer, *, actor):
             raise ValidationError({"to_classroom": "A turma de destino não possui tenant_id."})
 
         if target_tenant == source_tenant:
+            # Transferência dentro do mesmo tenant: apenas remaneja vínculos.
             if actor is not None and hasattr(student, "usuario_id"):
                 student.usuario = actor
                 student.save(update_fields=["usuario"])
@@ -47,6 +50,7 @@ def apply_student_transfer(transfer, *, actor):
             enrollment.save()
             return
 
+        # Transferência entre tenants: clona aluno no destino e desassocia o original.
         user = student.user
         if not user:
             raise ValidationError({"student": "A transferência de tenant requer que o aluno tenha um usuário."})

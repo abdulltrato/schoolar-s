@@ -1,6 +1,8 @@
 from rest_framework import serializers
+# Base de serializers do DRF.
 
 from core.serializers import TenantAcademicYearField
+# Campo custom para aplicar validação de tenant em anos letivos.
 
 from .models import (
     Assignment,
@@ -12,11 +14,16 @@ from .models import (
     Submission,
     SubmissionAttachment,
 )
+# Modelos de ensino.
 from apps.curriculum.serializers import CurriculumAreaSerializer
+# Serializer de áreas curriculares.
 from apps.curriculum.models import CurriculumArea
+# Modelo de área curricular.
 
 
 class CourseModuleSerializer(serializers.ModelSerializer):
+    """Serializa módulos de curso exibindo o nome da disciplina."""
+
     subject_name = serializers.CharField(source="subject.name", read_only=True)
 
     class Meta:
@@ -26,6 +33,8 @@ class CourseModuleSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    """Serializa cursos com módulos embutidos e áreas curriculares."""
+
     school_name = serializers.CharField(source="school.name", read_only=True)
     cycle_model_code = serializers.CharField(source="cycle_model.code", read_only=True)
     cycle_model_name = serializers.CharField(source="cycle_model.name", read_only=True)
@@ -72,6 +81,8 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class CourseOfferingSerializer(serializers.ModelSerializer):
+    """Serializa ofertas de curso com metadados de ano, turma e professor."""
+
     academic_year = TenantAcademicYearField()
     course_title = serializers.CharField(source="course.title", read_only=True)
     classroom_name = serializers.CharField(source="classroom.name", read_only=True)
@@ -84,6 +95,8 @@ class CourseOfferingSerializer(serializers.ModelSerializer):
 
 
 class LessonSerializer(serializers.ModelSerializer):
+    """Serializa aulas, expondo títulos da oferta e turma."""
+
     offering_title = serializers.CharField(source="offering.course.title", read_only=True)
     nome = serializers.CharField(source="title", read_only=True)
     classroom_name = serializers.CharField(source="offering.classroom.name", read_only=True)
@@ -94,6 +107,8 @@ class LessonSerializer(serializers.ModelSerializer):
 
 
 class LessonMaterialSerializer(serializers.ModelSerializer):
+    """Serializa materiais de aula, incluindo IDs relacionados para client-side."""
+
     lesson_title = serializers.CharField(source="lesson.title", read_only=True)
     lesson_id = serializers.IntegerField(source="lesson.id", read_only=True)
     offering_id = serializers.IntegerField(source="lesson.offering.id", read_only=True)
@@ -113,6 +128,8 @@ class LessonMaterialSerializer(serializers.ModelSerializer):
 
 
 class AssignmentSerializer(serializers.ModelSerializer):
+    """Serializa tarefas exibindo título do curso da oferta."""
+
     offering_title = serializers.CharField(source="offering.course.title", read_only=True)
 
     class Meta:
@@ -121,6 +138,8 @@ class AssignmentSerializer(serializers.ModelSerializer):
 
 
 class SubmissionAttachmentSerializer(serializers.ModelSerializer):
+    """Serializa anexos de submissão."""
+
     class Meta:
         model = SubmissionAttachment
         fields = "__all__"
@@ -128,6 +147,8 @@ class SubmissionAttachmentSerializer(serializers.ModelSerializer):
 
 
 class SubmissionSerializer(serializers.ModelSerializer):
+    """Serializa submissões com anexos embutidos e nomes legíveis."""
+
     assignment_title = serializers.CharField(source="assignment.title", read_only=True)
     student_name = serializers.CharField(source="student.name", read_only=True)
     attachments = SubmissionAttachmentSerializer(many=True, required=False)

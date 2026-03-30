@@ -8,6 +8,7 @@ from .student import Student
 
 # Modelo que vincula um aluno a um encarregado.
 class StudentGuardian(BaseCodeModel):
+    """Relação aluno-encarregado, com flags de contato principal e notificações."""
     # Prefixo para códigos automáticos.
     CODE_PREFIX = "STG"
 

@@ -1,14 +1,16 @@
 from django.core.exceptions import ValidationError
+# Exceção de validação.
 from django.db import transaction
+# Atomicidade.
 from django.utils import timezone
+# Marca temporal.
 
 from core.request_context import suspend_current_request
+# Context manager para suprimir request corrente.
 
 
 def apply_teacher_transfer(transfer, *, actor):
-    """
-    Executa a transferência de professor. Espera instância validada.
-    """
+    """Executa a transferência de professor (instância já validada)."""
     from apps.learning.models import CourseOffering
     from apps.school.models import Classroom, ManagementAssignment, TeachingAssignment, Teacher, UserProfile
 
@@ -35,6 +37,7 @@ def apply_teacher_transfer(transfer, *, actor):
             profile.save()
 
         if target_tenant != source_tenant:
+            # Mudança de tenant: trata especialidade e limpa vínculos antigos.
             current_specialty_tenant = (getattr(getattr(teacher, "specialty", None), "tenant_id", "") or "").strip()
             new_specialty_tenant = (getattr(transfer.new_specialty, "tenant_id", "") or "").strip() if transfer.new_specialty_id else ""
             if current_specialty_tenant and current_specialty_tenant != target_tenant:
@@ -94,6 +97,7 @@ def apply_teacher_transfer(transfer, *, actor):
             to_classroom.save(update_fields=["lead_teacher", "usuario", "updated_at"] if actor is not None else ["lead_teacher", "updated_at"])
 
         if transfer.move_teaching_assignments:
+            # Reatribui alocações docentes entre turmas compatíveis.
             from_classroom = transfer.from_classroom
             to_classroom = transfer.to_classroom
             if from_classroom.academic_year_id != to_classroom.academic_year_id:

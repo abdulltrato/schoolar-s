@@ -4,12 +4,14 @@ type DocumentSealProps = {
   size?: number;
 };
 
+// Lê par de caracteres hex a partir do hash/código.
 function pairAt(source: string, index: number) {
   const normalized = source.replace(/[^a-fA-F0-9]/g, "").padEnd(24, "0");
   return normalized.slice(index * 2, index * 2 + 2);
 }
 
 export function DocumentSeal({ code, hash, size = 112 }: DocumentSealProps) {
+  // Gera um selo pseudo-aleatório com base no código e hash para visualização.
   const seed = `${code}${hash}`;
   const cells = Array.from({ length: 25 }, (_, index) => {
     const value = parseInt(pairAt(seed, index), 16);

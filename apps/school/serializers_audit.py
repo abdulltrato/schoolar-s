@@ -1,9 +1,13 @@
 from rest_framework import serializers
+# Base de serializers do DRF.
 
 from .models import AuditAlert, AuditEvent
+# Modelos de auditoria.
 
 
 class AuditEventSerializer(serializers.ModelSerializer):
+    """Serializa eventos de auditoria, incluindo nome do tenant calculado."""
+
     tenant_name = serializers.CharField(read_only=True)
 
     class Meta:
@@ -13,6 +17,8 @@ class AuditEventSerializer(serializers.ModelSerializer):
 
 
 class AuditAlertSerializer(serializers.ModelSerializer):
+    """Serializa alertas de auditoria, incluindo nome do tenant calculado."""
+
     tenant_name = serializers.CharField(read_only=True)
 
     class Meta:

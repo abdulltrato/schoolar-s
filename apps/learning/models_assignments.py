@@ -1,14 +1,22 @@
 from __future__ import annotations
+# Suporte a anotações forward.
 
 from django.apps import apps
+# Utilitário para resolver modelos dinamicamente.
 from django.core.exceptions import ValidationError
+# Exceção de validação.
 from django.db import models
+# Componentes do ORM.
 
 from core.models import BaseCodeModel
+# Modelo base com código e auditoria.
 from .models_courses import CourseOffering
+# Oferta de curso relacionada às tarefas.
 
 
 class Assignment(BaseCodeModel):
+    """Tarefa/atividade publicada em uma oferta de curso."""
+
     CODE_PREFIX = "ASN"
     offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name="assignments", verbose_name="Oferta")
     title = models.CharField(max_length=180, verbose_name="Título")
@@ -19,6 +27,7 @@ class Assignment(BaseCodeModel):
     published = models.BooleanField(default=False, verbose_name="Publicada")
 
     def clean(self):
+        """Valida tenant, datas de abertura/prazo e coerência com a oferta."""
         offering_tenant = (self.offering.tenant_id or "").strip() if self.offering_id else ""
         if self.tenant_id and offering_tenant and self.tenant_id != offering_tenant:
             raise ValidationError({"tenant_id": "O tenant da tarefa deve coincidir com o tenant da oferta."})
@@ -30,6 +39,7 @@ class Assignment(BaseCodeModel):
             raise ValidationError({"due_at": "O prazo deve ser posterior à data de abertura."})
 
     def save(self, *args, **kwargs):
+        """Valida antes de persistir."""
         self.full_clean()
         return super().save(*args, **kwargs)
 
@@ -43,6 +53,8 @@ class Assignment(BaseCodeModel):
 
 
 class Submission(BaseCodeModel):
+    """Entrega de um aluno para uma tarefa, com nota e feedback."""
+
     CODE_PREFIX = "SBM"
     STATUS_CHOICES = [
         ("draft", "Rascunho"),
@@ -60,6 +72,7 @@ class Submission(BaseCodeModel):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft", verbose_name="Estado")
 
     def clean(self):
+        """Valida tenant, nota máxima e se aluno está vinculado à turma/curso."""
         assignment_tenant = (self.assignment.tenant_id or "").strip() if self.assignment_id else ""
         student_tenant = (self.student.tenant_id or "").strip() if self.student_id else ""
         if assignment_tenant and student_tenant and assignment_tenant != student_tenant:
@@ -87,6 +100,7 @@ class Submission(BaseCodeModel):
                     raise ValidationError({"student": "O aluno deve estar matriculado na turma da oferta."})
 
     def save(self, *args, **kwargs):
+        """Valida antes de salvar."""
         self.full_clean()
         return super().save(*args, **kwargs)
 
@@ -107,6 +121,8 @@ class Submission(BaseCodeModel):
 
 
 class SubmissionAttachment(BaseCodeModel):
+    """Anexo de arquivo para uma submissão de tarefa."""
+
     CODE_PREFIX = "SAT"
     submission = models.ForeignKey(
         Submission,
@@ -120,6 +136,7 @@ class SubmissionAttachment(BaseCodeModel):
     enabled = models.BooleanField(default=True, verbose_name="Usar este arquivo")
 
     def clean(self):
+        """Herda tenant da submissão e exige arquivo quando habilitado."""
         submission_tenant = (self.submission.tenant_id or "").strip() if self.submission_id else ""
         if submission_tenant:
             if self.tenant_id and self.tenant_id != submission_tenant:

@@ -9,6 +9,7 @@ import {
   requireAuthSession,
 } from "@/lib/api";
 
+// Página de currículo: lista disciplinas da classe e planos curriculares com filtros.
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };

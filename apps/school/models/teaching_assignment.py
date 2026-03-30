@@ -1,21 +1,33 @@
 from django.core.exceptions import ValidationError
+# Exceção de validação.
 from django.db import models
+# Campos do ORM.
 
 from core.models import BaseCodeModel
+# Modelo base com código e auditoria.
 
 from .classroom import Classroom
+# Turma para a qual o docente é alocado.
 from .grade_subject import GradeSubject
+# Disciplina ofertada em uma classe.
 from .teacher import Teacher
+# Professor alocado.
 
 
 class TeachingAssignment(BaseCodeModel):
+    """Alocação de professor para lecionar uma disciplina em determinada turma."""
+
     CODE_PREFIX = "TAS"
 
+    # Professor designado.
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, verbose_name="Professor")
+    # Turma alvo.
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, verbose_name="Turma")
+    # Disciplina da classe (ano letivo + classe + disciplina).
     grade_subject = models.ForeignKey(GradeSubject, on_delete=models.CASCADE, verbose_name="Disciplina da classe")
 
     def clean(self):
+        """Valida tenants e garante que turma, disciplina e professor combinam."""
         if self.classroom_id and self.grade_subject_id:
             teacher_tenant = (self.teacher.tenant_id or "").strip()
             classroom_tenant = (self.classroom.tenant_id or "").strip()
@@ -41,10 +53,12 @@ class TeachingAssignment(BaseCodeModel):
                 raise ValidationError({"teacher": "O professor deve pertencer à mesma escola da turma."})
 
     def save(self, *args, **kwargs):
+        """Valida antes de salvar."""
         self.full_clean()
         return super().save(*args, **kwargs)
 
     def __str__(self):
+        """Exibe professor, disciplina e turma."""
         return f"{self.teacher} - {self.grade_subject.subject} - {self.classroom}"
 
     class Meta:

@@ -11,6 +11,7 @@ const toneClasses = {
 };
 
 export function StatusCard({ title, status, body, tone }: StatusCardProps) {
+  // Cartão com selo de status (sucesso/alerta) para mensagens curtas.
   return (
     <article className="relative overflow-hidden rounded-[1.15rem] border border-white/70 bg-white/88 p-4 shadow-card">
       <div aria-hidden className="absolute right-[-1.5rem] top-[-1.5rem] h-16 w-16 rounded-full bg-mist/50 blur-2xl" />

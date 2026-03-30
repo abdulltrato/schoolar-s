@@ -1,10 +1,7 @@
 """
-WSGI config for schoolar_s project.
+WSGI config do projeto schoolar_s.
 
-It exposes the WSGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/4.2/howto/deployment/wsgi/
+Expõe a callable WSGI como variável de módulo ``application``.
 """
 
 import os

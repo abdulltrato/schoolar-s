@@ -12,6 +12,7 @@ from .models import (
 
 # Serializer para a relação de competência do aluno.
 class StudentCompetencySerializer(serializers.ModelSerializer):
+    """Exibe competências do aluno com nome e nível calculado."""
     # Exibe o nome da competência relacionada (somente leitura).
     competency_name = serializers.CharField(source="competency.name", read_only=True)
     # Campo calculado que replica o nível armazenado em `nivel`.
@@ -28,6 +29,7 @@ class StudentCompetencySerializer(serializers.ModelSerializer):
 
 # Serializer para os resultados de aprendizagem do aluno.
 class StudentOutcomeSerializer(serializers.ModelSerializer):
+    """Representa domínio do aluno em outcomes com campos derivados."""
     # Código do resultado relacionado (somente leitura).
     outcome_code = serializers.CharField(source="outcome.code", read_only=True)
     # Descrição textual do resultado (somente leitura).
@@ -52,6 +54,7 @@ class StudentOutcomeSerializer(serializers.ModelSerializer):
 
 # Serializer principal de alunos.
 class StudentSerializer(serializers.ModelSerializer):
+    """Retorna aluno com competências, outcomes e campos derivados de ciclo/trilho."""
     # Serializa competências vinculadas usando o serializer acima.
     competencies = StudentCompetencySerializer(
         source="studentcompetency_set", many=True, read_only=True
@@ -107,6 +110,7 @@ class StudentSerializer(serializers.ModelSerializer):
 
 # Serializer direto para o modelo de encarregado.
 class GuardianSerializer(serializers.ModelSerializer):
+    """Serializa encarregados/guardians."""
     class Meta:
         # Modelo representado.
         model = Guardian
@@ -116,6 +120,7 @@ class GuardianSerializer(serializers.ModelSerializer):
 
 # Serializer para o vínculo aluno-encarregado.
 class StudentGuardianSerializer(serializers.ModelSerializer):
+    """Serializa relações aluno-encarregado com nomes para leitura."""
     # Nome do aluno relacionado (somente leitura).
     student_name = serializers.CharField(source="student.name", read_only=True)
     # Nome do encarregado relacionado (somente leitura).

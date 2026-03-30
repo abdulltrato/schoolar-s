@@ -1,3 +1,4 @@
+// Tabelas de tradução de valores técnicos para rótulos em português.
 const attendanceStatusLabels: Record<string, string> = {
   present: "Presente",
   late: "Atrasado",
@@ -82,6 +83,7 @@ const assessmentTypeLabels: Record<string, string> = {
   acp: "ACP",
 };
 
+// Helpers de formatação: traduzem quando há label, preservam valor bruto caso contrário.
 export function formatAttendanceStatus(status: string) {
   return attendanceStatusLabels[status] || status;
 }

@@ -9,6 +9,7 @@ from .student import Student
 
 # Modelo que armazena o nível de domínio de um aluno em um resultado de aprendizagem.
 class StudentOutcome(BaseCodeModel):
+    """Domínio do aluno sobre um resultado de aprendizagem, com status derivado e recálculo por avaliações."""
     # Prefixo para códigos automáticos.
     CODE_PREFIX = "STO"
     # Opções de status textual associadas ao nível numérico.

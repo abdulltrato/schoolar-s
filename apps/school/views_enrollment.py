@@ -1,15 +1,23 @@
 from rest_framework import filters, status
+# Filtros de busca e códigos HTTP.
 from rest_framework.decorators import action
+# Decorador para actions customizadas.
 from rest_framework.response import Response
+# Respostas DRF.
 
 from django.shortcuts import get_object_or_404
+# Helper para 404.
 
 from core.viewsets import RobustModelViewSet
+# ViewSet com tratamento robusto de erros.
 from .models import AttendanceRecord, Classroom, Enrollment
+# Modelos de matrículas, turmas e presença.
 from .serializers import AttendanceRecordSerializer, EnrollmentSerializer, EnrollmentSummarySerializer
+# Serializers correspondentes.
 
 
 class EnrollmentViewSet(RobustModelViewSet):
+    """CRUD de matrículas; inclui action para matricular vários alunos por turma."""
     queryset = Enrollment.objects.select_related("student", "classroom")
     serializer_class = EnrollmentSerializer
     filter_backends = [filters.SearchFilter]
@@ -17,6 +25,7 @@ class EnrollmentViewSet(RobustModelViewSet):
 
     @action(methods=["post"], detail=False, url_path="por-turma")
     def matricular_por_turma(self, request):
+        """Cria matrículas em lote para uma turma a partir de student_ids."""
         data = request.data or {}
         classroom_id = data.get("classroom")
         student_ids = data.get("student_ids")
@@ -77,6 +86,7 @@ class EnrollmentViewSet(RobustModelViewSet):
 
 
 class EnrollmentSummaryViewSet(RobustModelViewSet):
+    """Lista resumida de matrículas com campos derivados de leitura."""
     queryset = Enrollment.objects.select_related("student", "classroom")
     serializer_class = EnrollmentSummarySerializer
     filter_backends = [filters.SearchFilter]
@@ -84,6 +94,7 @@ class EnrollmentSummaryViewSet(RobustModelViewSet):
 
 
 class AttendanceRecordViewSet(RobustModelViewSet):
+    """CRUD de presenças com joins para aluno e turma."""
     queryset = AttendanceRecord.objects.select_related("enrollment__student", "enrollment__classroom")
     serializer_class = AttendanceRecordSerializer
     filter_backends = [filters.SearchFilter]

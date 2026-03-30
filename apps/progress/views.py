@@ -1,15 +1,23 @@
 from rest_framework import status
+# Códigos HTTP.
 from rest_framework.decorators import action
+# Decorador para actions customizadas.
 from rest_framework.response import Response
+# Respostas DRF.
 
 from core.viewsets import RobustModelViewSet
+# ViewSet base com tratamento robusto.
 from .evaluation import EvaluationError, evaluate_student_progress
+# Motor de avaliação de progresso.
 
 from .models import Progression
+# Modelo de progressão.
 from .serializers import ProgressionSerializer
+# Serializer correspondente.
 
 
 class ProgressionViewSet(RobustModelViewSet):
+    """CRUD de progressões e utilitário para avaliar situação do aluno."""
     queryset = Progression.objects.select_related("student").all()
     serializer_class = ProgressionSerializer
     search_fields = ("student__name", "academic_year", "decision")

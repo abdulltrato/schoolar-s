@@ -1,3 +1,2 @@
 from django.shortcuts import render
-
-# Create your views here.
+# Placeholder de views para futura implementação de tenants.

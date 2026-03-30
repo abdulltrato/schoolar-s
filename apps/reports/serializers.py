@@ -1,14 +1,19 @@
 from rest_framework import serializers
+# Base de serializers do DRF.
 from rest_framework.reverse import reverse
+# Para montar URL de verificação.
 
 from apps.academic.models import Student
 from apps.school.models import AcademicYear, Classroom, Grade
 from core.serializers import TenantAcademicYearField
+# Campo custom de tenant para anos letivos.
 
 from .models import Report
+# Modelo de relatório.
 
 
 class ReportSerializer(serializers.ModelSerializer):
+    """Serializa relatórios e fornece URL/status de verificação; aceita aliases legados."""
     titulo = serializers.CharField(source="title", write_only=True, required=False)
     tipo = serializers.CharField(source="type", write_only=True, required=False)
     conteudo = serializers.JSONField(source="content", write_only=True, required=False)
@@ -32,6 +37,7 @@ class ReportSerializer(serializers.ModelSerializer):
 
 
 class ReportGenerationSerializer(serializers.Serializer):
+    """Serializer de entrada para geração de relatórios diversos com validações de escopo."""
     REPORT_KIND_CHOICES = [
         ("student_declaration", "Declaração do estudante"),
         ("student_certificate", "Certificado do estudante"),

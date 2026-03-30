@@ -5,6 +5,7 @@ type MetricCardProps = {
 };
 
 export function MetricCard({ label, value, detail }: MetricCardProps) {
+  // Cartão de métrica com destaque para o valor principal e texto de apoio.
   return (
     <article className="group relative overflow-hidden rounded-[1.25rem] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(247,243,233,0.92))] p-4 shadow-card transition hover:-translate-y-0.5">
       <div aria-hidden className="absolute inset-x-4 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(20,33,61,0.2),transparent)]" />

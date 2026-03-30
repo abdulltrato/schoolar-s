@@ -1,3 +1,2 @@
 from django.test import TestCase
-
-# Create your tests here.
+# Testes placeholder para a app de tenants.

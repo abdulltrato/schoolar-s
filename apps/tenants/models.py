@@ -1,3 +1,2 @@
 from django.db import models
-
-# Create your models here.
+# Nenhum modelo definido ainda; arquivo mantido para migrações futuras.

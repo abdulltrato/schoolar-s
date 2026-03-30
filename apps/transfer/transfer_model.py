@@ -1,17 +1,28 @@
 from __future__ import annotations
+# Suporte a anotações forward.
 
 from django.core.exceptions import ValidationError
+# Exceção de validação.
 from django.db import models
+# Componentes do ORM.
 from django.utils import timezone
+# Utilitários de data/hora.
 
 from core.models import BaseCodeModel
+# Modelo base com código e auditoria.
 from core.request_context import get_current_request
+# Permite acessar o request atual para obter o usuário.
 from .apply_student import apply_student_transfer
+# Executor de transferência de aluno.
 from .apply_teacher import apply_teacher_transfer
+# Executor de transferência de professor.
 from .validators import validate_student_transfer, validate_teacher_transfer
+# Validadores específicos de cada tipo de transferência.
 
 
 class Transfer(BaseCodeModel):
+    """Solicitação de transferência de aluno ou professor entre escolas/turmas."""
+
     CODE_PREFIX = "TRF"
 
     KIND_CHOICES = [
@@ -26,18 +37,29 @@ class Transfer(BaseCodeModel):
         ("canceled", "Cancelada"),
     ]
 
+    # Tipo de sujeito (aluno ou professor).
     kind = models.CharField(max_length=20, choices=KIND_CHOICES, verbose_name="Tipo")
+    # Aluno transferido (exclusivo para kind=student).
     student = models.ForeignKey("academic.Student", on_delete=models.PROTECT, null=True, blank=True, related_name="transfers", verbose_name="Aluno")
+    # Professor transferido (exclusivo para kind=teacher).
     teacher = models.ForeignKey("school.Teacher", on_delete=models.PROTECT, null=True, blank=True, related_name="transfers", verbose_name="Professor")
+    # Escola de origem e destino.
     from_school = models.ForeignKey("school.School", on_delete=models.SET_NULL, null=True, blank=True, related_name="+", verbose_name="Escola de origem")
     to_school = models.ForeignKey("school.School", on_delete=models.SET_NULL, null=True, blank=True, related_name="+", verbose_name="Escola de destino")
+    # Turma de origem/destino (alunos) ou onde o professor atua.
     from_classroom = models.ForeignKey("school.Classroom", on_delete=models.SET_NULL, null=True, blank=True, related_name="+", verbose_name="Turma de origem")
     to_classroom = models.ForeignKey("school.Classroom", on_delete=models.SET_NULL, null=True, blank=True, related_name="+", verbose_name="Turma de destino")
+    # Nova especialidade (para transferências de professor).
     new_specialty = models.ForeignKey("curriculum.SubjectSpecialty", on_delete=models.PROTECT, null=True, blank=True, related_name="+", verbose_name="Nova especialidade")
+    # Se verdadeiro, move alocações docentes junto com o professor.
     move_teaching_assignments = models.BooleanField(default=False, verbose_name="Mover alocações docentes")
+    # Motivo textual.
     reason = models.TextField(blank=True, verbose_name="Motivo")
+    # Estado da solicitação.
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending", verbose_name="Estado")
+    # Timestamp de aplicação.
     applied_at = models.DateTimeField(null=True, blank=True, verbose_name="Aplicada em")
+    # Mensagem de erro, quando houver.
     error_message = models.TextField(blank=True, verbose_name="Erro")
 
     class Meta:
@@ -50,10 +72,12 @@ class Transfer(BaseCodeModel):
         return f"{self.get_kind_display()} - {subject or self.pk}"
 
     def save(self, *args, **kwargs):
+        """Valida antes de persistir."""
         self.full_clean()
         return super().save(*args, **kwargs)
 
     def _resolve_actor(self):
+        """Obtém usuário autenticado do request atual (se existir)."""
         request = get_current_request()
         user = getattr(request, "user", None) if request else None
         if user and getattr(user, "is_authenticated", False):
@@ -61,6 +85,7 @@ class Transfer(BaseCodeModel):
         return None
 
     def _resolve_source_tenant(self) -> str:
+        """Determina tenant de origem a partir do aluno ou professor."""
         if self.kind == "student" and self.student_id:
             return (getattr(self.student, "tenant_id", "") or "").strip()
         if self.kind == "teacher" and self.teacher_id:
@@ -68,6 +93,7 @@ class Transfer(BaseCodeModel):
         return ""
 
     def _resolve_target_tenant(self) -> str:
+        """Determina tenant de destino a partir da turma ou escola de destino."""
         if self.to_classroom_id:
             return (getattr(self.to_classroom, "tenant_id", "") or "").strip()
         if self.to_school_id:
@@ -75,6 +101,7 @@ class Transfer(BaseCodeModel):
         return ""
 
     def clean(self):
+        """Valida tipo, regras específicas e permissões de transferência entre tenants."""
         self.kind = (self.kind or "").strip()
         self.status = (self.status or "").strip() or "pending"
 
@@ -121,6 +148,7 @@ class Transfer(BaseCodeModel):
                 raise ValidationError({"from_classroom": "O professor não é o diretor da turma de origem."})
 
     def apply(self):
+        """Executa a transferência pendente e marca como aplicada."""
         if self.status != "pending":
             raise ValidationError({"status": "Só é possível aplicar transferências pendentes."})
 

@@ -1,16 +1,23 @@
 from rest_framework import serializers
+# Base de serializers do DRF.
 
 from core.serializers import TenantAcademicYearField
+# Campo customizado para validar tenant em anos letivos.
 from .models import Classroom, School, TeachingAssignment, Grade, AcademicYear
+# Modelos escolares usados nas APIs.
 
 
 class SchoolSerializer(serializers.ModelSerializer):
+    """Serializa escolas/tenants."""
+
     class Meta:
         model = School
         fields = "__all__"
 
 
 class ClassroomSerializer(serializers.ModelSerializer):
+    """Serializa turmas com metadados derivados (trilha, códigos)."""
+
     grade = serializers.SlugRelatedField(slug_field="number", queryset=Grade.objects.all())
     academic_year = TenantAcademicYearField(queryset=AcademicYear.objects.all())
     grade_name = serializers.CharField(source="grade.name", read_only=True)
@@ -33,6 +40,8 @@ class ClassroomSerializer(serializers.ModelSerializer):
 
 
 class TeachingAssignmentSerializer(serializers.ModelSerializer):
+    """Serializa alocações docentes com campos de leitura amigáveis."""
+
     teacher_name = serializers.CharField(source="teacher.name", read_only=True)
     classroom_name = serializers.CharField(source="classroom.name", read_only=True)
     school_name = serializers.CharField(source="classroom.school.name", read_only=True)

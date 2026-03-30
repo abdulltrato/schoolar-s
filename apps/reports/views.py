@@ -1,17 +1,27 @@
 from django.http import HttpResponse
+# Respostas HTTP diretas para exportação.
 from rest_framework import status
+# Códigos HTTP.
 from rest_framework.decorators import action
+# Decorador para actions customizadas.
 from rest_framework.permissions import AllowAny
+# Permissão aberta no endpoint de verificação.
 from rest_framework.response import Response
+# Respostas DRF.
 
 from core.viewsets import RobustModelViewSet
+# ViewSet base robusta.
 
 from .models import Report
+# Modelo de relatório.
 from .serializers import ReportGenerationSerializer, ReportSerializer
+# Serializers de leitura e geração.
 from .services import ReportGenerationService, render_report_html, render_report_pdf
+# Serviços de geração e renderização.
 
 
 class ReportViewSet(RobustModelViewSet):
+    """CRUD de relatórios + geração/validação/exportação."""
     queryset = Report.objects.select_related("student").all()
     serializer_class = ReportSerializer
     search_fields = ("title", "type", "period", "student__name")
@@ -21,6 +31,7 @@ class ReportViewSet(RobustModelViewSet):
     http_method_names = ["get", "post", "head", "options"]
 
     def create(self, request, *args, **kwargs):
+        """Desabilita criação direta; deve usar action generate."""
         return Response(
             {
                 "detail": "A emissão manual de relatórios está desativada. Use o endpoint de geração assinado.",
@@ -30,10 +41,12 @@ class ReportViewSet(RobustModelViewSet):
 
     @action(detail=False, methods=["get"])
     def catalog(self, request):
+        """Lista catálogo de tipos de relatório disponíveis."""
         return Response({"results": ReportGenerationService.get_catalog()})
 
     @action(detail=False, methods=["post"])
     def generate(self, request):
+        """Gera relatório a partir de parâmetros validados; opcionalmente persiste."""
         serializer = ReportGenerationSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         validated = serializer.validated_data
@@ -73,6 +86,7 @@ class ReportViewSet(RobustModelViewSet):
 
     @action(detail=False, methods=["get"], permission_classes=[AllowAny])
     def verify(self, request):
+        """Endpoint público para verificar assinatura de um relatório."""
         verification_code = (request.query_params.get("code") or "").strip()
         provided_hash = (request.query_params.get("hash") or "").strip()
 
@@ -116,6 +130,7 @@ class ReportViewSet(RobustModelViewSet):
 
     @action(detail=True, methods=["get"])
     def export(self, request, pk=None):
+        """Exporta relatório em HTML inline ou PDF para download."""
         report = self.get_object()
         export_format = (request.query_params.get("export_format") or "html").strip().lower()
         safe_serial = (report.serial_number or f"report-{report.pk}").replace("/", "-")

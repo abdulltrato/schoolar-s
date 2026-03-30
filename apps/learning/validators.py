@@ -1,15 +1,17 @@
 from __future__ import annotations
+# Suporte a anotações forward.
 
 from datetime import timedelta
+# Cálculo de intervalos de tempo.
 
 from django.core.exceptions import ValidationError
+# Exceção de validação.
 from django.db import models
+# Q objects para filtros compostos.
 
 
 def validate_lesson_conflicts(lesson) -> None:
-    """
-    Prevent scheduling overlaps for lessons that share the same offering, classroom or teacher.
-    """
+    """Impede choques de horário entre aulas da mesma oferta, turma ou professor."""
     if not lesson.offering_id or not lesson.scheduled_at:
         return
 
@@ -55,9 +57,7 @@ def validate_lesson_conflicts(lesson) -> None:
 
 
 def validate_offering_conflicts(offering) -> None:
-    """
-    Prevent date-range overlaps for offerings that share classroom or teacher within the same tenant.
-    """
+    """Impede sobreposição de datas de ofertas que compartilham turma ou professor no mesmo tenant."""
     if not offering.start_date or not offering.end_date:
         return
     if not offering.tenant_id:

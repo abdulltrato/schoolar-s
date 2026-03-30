@@ -12,6 +12,7 @@ import {
   requireAuthSession,
 } from "@/lib/api";
 
+// Formata datas ISO para dd/mmm/aaaa em pt-PT.
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("pt-PT", {
     dateStyle: "medium",

@@ -1,7 +1,11 @@
 from core.viewsets import RobustModelViewSet
+# ViewSet base com tratamento robusto.
 from django.utils import timezone
+# Utilidades de data/hora.
 from rest_framework.decorators import action
+# Decorador para actions customizadas.
 from rest_framework.response import Response
+# Respostas DRF.
 
 from .models import (
     Assignment,
@@ -13,6 +17,7 @@ from .models import (
     Submission,
     SubmissionAttachment,
 )
+# Modelos de ensino.
 from .serializers import (
     AssignmentSerializer,
     CourseOfferingSerializer,
@@ -23,9 +28,11 @@ from .serializers import (
     SubmissionSerializer,
     SubmissionAttachmentSerializer,
 )
+# Serializers correspondentes.
 
 
 class CourseViewSet(RobustModelViewSet):
+    """CRUD de cursos, incluindo módulos e áreas curriculares."""
     queryset = Course.objects.select_related("school").prefetch_related("modules", "curriculum_areas").all()
     serializer_class = CourseSerializer
     search_fields = ("title", "description", "school__name", "tenant_id")
@@ -61,6 +68,7 @@ class CourseViewSet(RobustModelViewSet):
 
 
 class CourseModuleViewSet(RobustModelViewSet):
+    """CRUD de módulos de curso."""
     queryset = CourseModule.objects.select_related("course", "subject").all()
     serializer_class = CourseModuleSerializer
     search_fields = ("course__title", "subject__name", "tenant_id")
@@ -70,6 +78,7 @@ class CourseModuleViewSet(RobustModelViewSet):
 
 
 class CourseOfferingViewSet(RobustModelViewSet):
+    """CRUD de ofertas de curso, com filtros por curso, ano, turma e professor."""
     queryset = CourseOffering.objects.select_related(
         "course", "classroom", "teacher", "academic_year"
     ).all()
@@ -94,6 +103,7 @@ class CourseOfferingViewSet(RobustModelViewSet):
 
 
 class LessonViewSet(RobustModelViewSet):
+    """CRUD de aulas; inclui endpoints para próximas e passadas."""
     queryset = Lesson.objects.select_related("offering", "offering__course").all()
     serializer_class = LessonSerializer
     search_fields = ("title", "tenant_id", "offering__course__title")
@@ -127,6 +137,7 @@ class LessonViewSet(RobustModelViewSet):
 
 
 class LessonMaterialViewSet(RobustModelViewSet):
+    """CRUD de materiais de aula com joins necessários para contexto."""
     queryset = LessonMaterial.objects.select_related(
         "lesson",
         "lesson__offering",
@@ -141,6 +152,7 @@ class LessonMaterialViewSet(RobustModelViewSet):
 
 
 class AssignmentViewSet(RobustModelViewSet):
+    """CRUD de tarefas de curso."""
     queryset = Assignment.objects.select_related("offering", "offering__course").all()
     serializer_class = AssignmentSerializer
     search_fields = ("title", "offering__course__title", "tenant_id")
@@ -150,6 +162,7 @@ class AssignmentViewSet(RobustModelViewSet):
 
 
 class SubmissionViewSet(RobustModelViewSet):
+    """CRUD de submissões de tarefas; inclui anexos prefetch."""
     queryset = Submission.objects.select_related("assignment", "student").prefetch_related("attachments").all()
     serializer_class = SubmissionSerializer
     search_fields = ("assignment__title", "student__name", "status", "tenant_id")
@@ -186,6 +199,7 @@ class SubmissionViewSet(RobustModelViewSet):
 
 
 class SubmissionAttachmentViewSet(RobustModelViewSet):
+    """CRUD de anexos de submissões."""
     queryset = SubmissionAttachment.objects.select_related("submission", "submission__student").all()
     serializer_class = SubmissionAttachmentSerializer
     search_fields = ("title", "submission__student__name", "tenant_id")

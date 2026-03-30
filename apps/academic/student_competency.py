@@ -7,6 +7,7 @@ from .student import Student
 
 # Modelo que relaciona um aluno com uma competência e seu nível.
 class StudentCompetency(BaseCodeModel):
+    """Vínculo aluno→competência com nível de domínio (0.0–5.0)."""
     # Prefixo usado na geração de códigos.
     CODE_PREFIX = "STC"
 

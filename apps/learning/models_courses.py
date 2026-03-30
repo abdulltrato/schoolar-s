@@ -1,15 +1,24 @@
 from __future__ import annotations
+# Suporte a anotações forward.
 
 from django.core.exceptions import ValidationError
+# Exceção de validação.
 from django.db import models
+# Componentes do ORM.
 
 from core.models import BaseCodeModel
+# Modelo base com código e auditoria.
 from core.tenant_mixins import TenantValidationMixin
+# Mixin que ajuda a validar/alocar tenant.
 from .validators import validate_offering_conflicts
+# Validador de conflitos entre ofertas.
 from apps.curriculum.models import CurriculumArea, Subject
+# Áreas e disciplinas do currículo.
 
 
 class Course(BaseCodeModel, TenantValidationMixin):
+    """Curso ofertado por uma escola, vinculado a áreas curriculares e ciclo."""
+
     CODE_PREFIX = "CRS"
     MODALITY_CHOICES = [
         ("online", "Online"),
@@ -17,7 +26,9 @@ class Course(BaseCodeModel, TenantValidationMixin):
         ("offline", "Presencial"),
     ]
 
+    # Escola proprietária do curso.
     school = models.ForeignKey("school.School", on_delete=models.CASCADE, verbose_name="Escola")
+    # Ciclo de ensino (modelo) associado.
     cycle_model = models.ForeignKey(
         "school.Cycle",
         null=True,
@@ -26,10 +37,14 @@ class Course(BaseCodeModel, TenantValidationMixin):
         related_name="courses",
         verbose_name="Ciclo",
     )
+    # Título e descrição do curso.
     title = models.CharField(max_length=180, verbose_name="Título")
     description = models.TextField(blank=True, verbose_name="Descrição")
+    # Modalidade de oferta.
     modality = models.CharField(max_length=20, choices=MODALITY_CHOICES, default="online", verbose_name="Modalidade")
+    # Flag de ativação.
     active = models.BooleanField(default=True, verbose_name="Ativo")
+    # Áreas curriculares abrangidas.
     curriculum_areas = models.ManyToManyField(
         CurriculumArea,
         related_name="courses",
@@ -37,6 +52,7 @@ class Course(BaseCodeModel, TenantValidationMixin):
     )
 
     def clean(self):
+        """Valida tenant alinhado com a escola e delega ao mixin para preencher tenant."""
         school_tenant = ""
         if self.school_id and hasattr(self.school, "tenant_id"):
             school_tenant = (self.school.tenant_id or "").strip()
@@ -45,6 +61,7 @@ class Course(BaseCodeModel, TenantValidationMixin):
         self.ensure_tenant(school_tenant, self.tenant_id)
 
     def save(self, *args, **kwargs):
+        """Valida e salva curso."""
         self.full_clean()
         return super().save(*args, **kwargs)
 
@@ -58,15 +75,22 @@ class Course(BaseCodeModel, TenantValidationMixin):
 
 
 class CourseModule(BaseCodeModel, TenantValidationMixin):
+    """Módulo (disciplina aplicada) pertencente a um curso."""
+
     CODE_PREFIX = "CMO"
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="modules", verbose_name="Curso")
     subject = models.ForeignKey(Subject, on_delete=models.PROTECT, related_name="course_modules", verbose_name="Disciplina")
+    # Nome opcional (cai para o nome da disciplina se vazio).
     name = models.CharField(max_length=180, blank=True, verbose_name="Nome do módulo")
+    # Carga horária total em horas.
     workload_hours = models.PositiveSmallIntegerField(default=0, verbose_name="Carga horária (h)")
+    # Indica se é obrigatório para certificar.
     required = models.BooleanField(default=True, verbose_name="Obrigatório para certificar")
+    # Ordem de exibição.
     order = models.PositiveSmallIntegerField(default=0, verbose_name="Ordem")
 
     def clean(self):
+        """Valida tenants entre curso e disciplina; preenche nome se faltante."""
         course_tenant = (self.course.tenant_id or "").strip() if self.course_id else ""
         subject_tenant = (self.subject.tenant_id or "").strip() if hasattr(self.subject, "tenant_id") else ""
         if self.tenant_id and course_tenant and self.tenant_id != course_tenant:
@@ -80,6 +104,7 @@ class CourseModule(BaseCodeModel, TenantValidationMixin):
             self.name = self.subject.name if self.subject_id else ""
 
     def save(self, *args, **kwargs):
+        """Valida e salva módulo de curso."""
         self.full_clean()
         return super().save(*args, **kwargs)
 
@@ -100,16 +125,21 @@ class CourseModule(BaseCodeModel, TenantValidationMixin):
 
 
 class CourseOffering(BaseCodeModel, TenantValidationMixin):
+    """Oferta específica de um curso para uma turma/ano/professor."""
+
     CODE_PREFIX = "COF"
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="offerings", verbose_name="Curso")
     classroom = models.ForeignKey("school.Classroom", on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Turma")
     teacher = models.ForeignKey("school.Teacher", on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Professor")
     academic_year = models.ForeignKey("school.AcademicYear", on_delete=models.CASCADE, verbose_name="Ano letivo")
+    # Período da oferta.
     start_date = models.DateField(verbose_name="Data de início")
     end_date = models.DateField(verbose_name="Data de fim")
+    # Flag de ativação.
     active = models.BooleanField(default=True, verbose_name="Ativa")
 
     def clean(self):
+        """Valida tenants, coerência de datas e compatibilidade entre curso, turma e professor."""
         course_tenant = (self.course.tenant_id or "").strip() if self.course_id else ""
         classroom_tenant = (self.classroom.tenant_id or "").strip() if self.classroom_id else ""
         teacher_tenant = (self.teacher.tenant_id or "").strip() if self.teacher_id else ""
@@ -142,6 +172,7 @@ class CourseOffering(BaseCodeModel, TenantValidationMixin):
         validate_offering_conflicts(self)
 
     def save(self, *args, **kwargs):
+        """Valida e salva oferta de curso."""
         self.full_clean()
         return super().save(*args, **kwargs)
 
