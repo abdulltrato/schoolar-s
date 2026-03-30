@@ -141,6 +141,7 @@ a {
   left: var(--shell-gutter);
   right: var(--shell-gutter);
   z-index: 40;
+  box-shadow: 0 -14px 48px rgba(0, 0, 0, 0.08), 0 -2px 10px rgba(0, 0, 0, 0.04);
 }
 
 @media (min-width: 640px) {

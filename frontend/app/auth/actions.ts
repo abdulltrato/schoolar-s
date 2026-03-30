@@ -103,3 +103,49 @@ export async function logoutAction() {
   revalidatePath("/", "layout");
   redirect("/login");
 }
+
+export async function changePasswordLoginAction(formData: FormData) {
+  const username = String(formData.get("username") || "").trim();
+  const old_password = String(formData.get("old_password") || "");
+  const new_password = String(formData.get("new_password") || "");
+  const nextPath = String(formData.get("next") || "/");
+
+  const response = await fetch(`${resolveApiBaseUrl()}${apiPath("/auth/change-password-login/")}`, {
+    method: "POST",
+    cache: "no-store",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username, old_password, new_password }),
+  });
+
+  const setCookieHeaders = readSetCookieValues(response);
+  const sessionId = extractCookieValue(setCookieHeaders, "sessionid");
+  const csrfToken = extractCookieValue(setCookieHeaders, "csrftoken");
+
+  if (!response.ok || !sessionId) {
+    const detail = await response.json().catch(() => null);
+    const message = detail?.error?.message || "Falha ao alterar palavra-passe.";
+    redirect(`/login?mode=change&error=change_failed&detail=${encodeURIComponent(message)}&next=${encodeURIComponent(nextPath)}`);
+  }
+
+  const cookieStore = await cookies();
+  cookieStore.set("schoolar_sessionid", sessionId, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    secure: useSecureCookies(),
+  });
+  if (csrfToken) {
+    cookieStore.set("schoolar_csrftoken", csrfToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: useSecureCookies(),
+    });
+  }
+
+  revalidatePath("/", "layout");
+  redirect(nextPath);
+}

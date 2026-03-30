@@ -356,7 +356,9 @@ export default async function LearningPage({ searchParams }: PageProps) {
         </div>
         {(submissionStatusEntries.length ? submissionStatusEntries : [["pending", 0]]).map(([key, value]) => (
           <div key={key} className="rounded-[1.1rem] border border-white/65 bg-white/95 p-4 shadow-[0_16px_45px_rgba(20,33,61,0.08)]">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink/60">{formatSubmissionStatus(key)}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink/60">
+              {formatSubmissionStatus(String(key))}
+            </p>
             <p className="mt-1 text-2xl font-semibold text-ink">{value}</p>
             <p className="text-xs text-ink/55">Estado</p>
           </div>

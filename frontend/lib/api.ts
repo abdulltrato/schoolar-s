@@ -443,6 +443,7 @@ export type AuthUser = {
   username: string;
   first_name?: string;
   last_name?: string;
+   avatar_url?: string;
   role: string | null;
   tenant_id: string;
   school_id: number | null;
@@ -1418,4 +1419,12 @@ export async function generateReport(payload: {
   title?: string;
 }) {
   return writeJson<ReportRecord | GeneratedReportPayload>(apiPath("/reports/reports/generate/"), "POST", payload);
+}
+
+export async function updateProfile(payload: { first_name?: string; last_name?: string; avatar_url?: string }) {
+  return writeJson<AuthPayload>(apiPath("/auth/profile/"), "POST", payload);
+}
+
+export async function changePassword(payload: { old_password: string; new_password: string }) {
+  return writeJson<{ ok: boolean }>(apiPath("/auth/change-password/"), "POST", payload);
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties, ReactNode, RefObject } from "react";
+import Link from "next/link";
 
 import { MetricBadges } from "./metric-badges";
 import { HeaderNav, HeaderNavLink } from "./header-nav";
@@ -8,8 +9,8 @@ import { HeaderNav, HeaderNavLink } from "./header-nav";
 type DashboardHeaderProps = {
   title: string;
   description: string;
-  headerRef: RefObject<HTMLElement>;
-  footerRef: RefObject<HTMLElement>;
+  headerRef: RefObject<HTMLElement | null>;
+  footerRef: RefObject<HTMLElement | null>;
   heroBadges?: { label: string; value: string }[];
   headerLinks?: HeaderNavLink[];
 };
@@ -80,9 +81,21 @@ export function DashboardHeader({
       </header>
       <footer
         ref={footerRef}
-        className="app-footer rounded-none border border-white/60 bg-[linear-gradient(135deg,rgba(255,255,255,0.92),rgba(247,243,233,0.9))] px-3 py-1.5 text-[10px] leading-4 text-ink/65 backdrop-blur"
+        className="app-footer rounded-none border border-white/60 bg-[linear-gradient(135deg,rgba(255,255,255,0.92),rgba(247,243,233,0.9))] px-5 py-4 text-[11px] leading-5 text-ink/70 backdrop-blur"
       >
-        Painel Schoolar-S. Navegação por domínio com interface otimizada para operações escolares.
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <span className="font-semibold text-ink/80">Schoolar-S</span>
+          <span className="text-ink/70">
+            Sistema desenvolvido pela organização{" "}
+            <Link href="/substrato" className="font-semibold text-ink hover:text-ember">
+              Substrato
+            </Link>
+            .
+          </span>
+        </div>
+        <div className="mt-1 text-ink/65">
+          Copyright © {new Date().getFullYear()} Substrato. Todos os direitos reservados.
+        </div>
       </footer>
     </>
   );

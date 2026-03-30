@@ -19,6 +19,8 @@ export function LocaleToggle() {
     setLocale(next);
     localStorage.setItem(STORAGE_KEY, next);
     document.documentElement.lang = next;
+    document.cookie = `ui_locale=${next}; path=/; SameSite=Lax`;
+    window.location.reload();
   };
 
   return (

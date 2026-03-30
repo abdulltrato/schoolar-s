@@ -41,6 +41,8 @@ class UserProfile(BaseCodeModel):
     # Escopo geográfico adicional.
     province = models.CharField(max_length=100, blank=True, verbose_name="Província")
     district = models.CharField(max_length=100, blank=True, verbose_name="Distrito")
+    # Foto do utilizador (pode ser URL ou data URL inline).
+    avatar_url = models.TextField(blank=True, verbose_name="Avatar")
     # Flag de ativação.
     active = models.BooleanField(default=True, verbose_name="Ativo")
 

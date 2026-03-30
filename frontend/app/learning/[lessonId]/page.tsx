@@ -36,13 +36,14 @@ function modalityForOffering(offering?: CourseOffering, courses?: { id: number; 
 }
 
 type PageProps = {
-  params: { lessonId: string };
+  params: Promise<{ lessonId: string }>;
 };
 
 export default async function LessonDetailPage({ params }: PageProps) {
-  await requireAuthSession(`/learning/${params.lessonId}`);
+  const resolvedParams = await params;
+  await requireAuthSession(`/learning/${resolvedParams.lessonId}`);
   const snapshot = await getLearningSnapshot();
-  const lessonId = Number(params.lessonId);
+  const lessonId = Number(resolvedParams.lessonId);
   const lesson = findLesson(lessonId, snapshot.lessons.items);
   if (!lesson) {
     notFound();
